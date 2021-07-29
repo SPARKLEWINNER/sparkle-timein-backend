@@ -1,72 +1,43 @@
 const express = require('express');
-const path = require('path');
-const bodyParser = require('body-parser');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
+const morgan = require('morgan');
 const socket = require('socket.io');
-
-const config = require('./config/db');
-
-// Use Node's default promise instead of Mongoose's promise library
-mongoose.Promise = global.Promise;
+const routes = require('./api/routes');
+const port = process.env.PORT || 8000;
+const app = express();
+require('dotenv').config();
 
 // Connect to the database
-mongoose.connect(config.db, {
+mongoose.connect(process.env.MONGO_KEY, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   useCreateIndex: true
-});
-
-let db = mongoose.connection;
-
-db.on('open', () => {
-  console.log('Connected to the database.');
-});
-
-db.on('error', (err) => {
-  console.log(`Database error: ${err}`);
-});
+}).then(() => console.log(`MongoDB Connected... - ${process.env.MONGO_KEY}`))
+  .catch(err => console.log(err));
 
 // Instantiate express
-const app = express();
-
-// Don't touch this if you don't know it
-// We are using this for the express-rate-limit middleware
-// See: https://github.com/nfriedly/express-rate-limit
-app.enable('trust proxy');
-
-// Set public folder using built-in express.static middleware
-app.use(express.static('public'));
-
-// Set body parser middleware
-app.use(bodyParser.json());
-
-// Enable cross-origin access through the CORS middleware
-// NOTICE: For React development server only!
-if (process.env.CORS) {
-  app.use(cors());
-}
-
-// Initialize routes middleware
-app.use('/api/users', require('./routes/users'));
-
-// Use express's default error handling middleware
-app.use((err, req, res, next) => {
-  if (res.headersSent) return next(err);
-  res.status(400).json({ err: err });
+app.enable('trust proxy'); // We are using this for the express-rate-limit middleware See: https://github.com/nfriedly/express-rate-limit
+app.use(express.json()); // Set body parser middleware
+app.use(morgan('dev'));
+app.use(cookieParser());
+app.use(cors()); // Enable cross-origin for apex purpose;
+// app.use(express.static('public')); // Set public folder using built-in express.static middleware this will hide the default page of api
+app.use(function (req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*")
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
+  res.header('Access-Control-Expose-Headers', 'X-Total-Count')
+  next()
 });
 
-// Start the server
-const port = process.env.PORT || 3000;
-
+routes(app);
 const server = app.listen(port, () => {
   console.log(`Listening on port ${port}`);
 });
 
-// Set up socket.io
-const io = socket(server);
+const io = socket(server);  // Set up socket.io
 let online = 0;
-
 io.on('connection', (socket) => {
   online++;
   console.log(`Socket ${socket.id} connected.`);

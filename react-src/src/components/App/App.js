@@ -42,12 +42,12 @@ class App extends Component {
   // Fetch data from the back-end
   fetchUsers() {
     axios.get(`${this.server}/api/users/`)
-    .then((response) => {
-      this.setState({ users: response.data });
-    })
-    .catch((err) => {
-      console.log(err);
-    });
+      .then((response) => {
+        this.setState({ users: response.data });
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   }
 
   handleUserAdded(user) {
@@ -118,7 +118,7 @@ class App extends Component {
             socket={this.socket}
           />
         </Container>
-        <br/>
+        <br />
       </div>
     );
   }

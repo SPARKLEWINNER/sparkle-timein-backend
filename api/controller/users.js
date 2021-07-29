@@ -1,22 +1,41 @@
-const express = require('express');
-const router = express.Router();
-const RateLimit = require('express-rate-limit');
-const mongoose = require('mongoose');
+const createError = require('http-errors');
 const stringCapitalizeName = require('string-capitalize-name');
-
 const User = require('../models/user');
 
-// Attempt to limit spam post requests for inserting data
-const minutes = 5;
-const postLimiter = new RateLimit({
-  windowMs: minutes * 60 * 1000, // milliseconds
-  max: 100, // Limit each IP to 100 requests per windowMs 
-  delayMs: 0, // Disable delaying - full speed until the max limit is reached 
-  handler: (req, res) => {
-    res.status(429).json({ success: false, msg: `You made too many requests. Please try again after ${minutes} minutes.` });
-  }
-});
 
+var controllers = {
+  get_user: async function (req, res) {
+    const { _id } = req.params;
+    if (!_id) res.status(404).json({ success: false, msg: `No such user.` });
+
+    try {
+      const result = await getSpecificData({ _id: _id }, Account, 'User', _id);
+      if (!result) res.status(201).json({ success: false, msg: `No such user.` });
+
+      res.json(result);
+
+    } catch (err) {
+      res.status(400).json({ success: false, msg: err });
+      throw new createError.InternalServerError(err);
+    }
+
+  },
+  get_users: async function (req, res) {
+    try {
+      const result = await User.find({}).lean().exec();
+      if (!result) res.status(201).json({ success: false, msg: `No such users.` });
+
+      res.json(result);
+    } catch (err) {
+      res.status(400).json({ success: false, msg: err });
+      throw new createError.InternalServerError(err);
+    }
+  },
+}
+
+module.exports = controllers;
+
+/*
 // READ (ONE)
 router.get('/:id', (req, res) => {
   User.findById(req.params.id)
@@ -192,3 +211,5 @@ sanitizeGender = (gender) => {
   // Return empty if it's neither of the two
   return (gender === 'm' || gender === 'f') ? gender : '';
 }
+
+*/
