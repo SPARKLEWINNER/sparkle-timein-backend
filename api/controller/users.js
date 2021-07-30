@@ -2,7 +2,6 @@ const createError = require('http-errors');
 const stringCapitalizeName = require('string-capitalize-name');
 const User = require('../models/user');
 
-
 var controllers = {
   get_user: async function (req, res) {
     const { _id } = req.params;
@@ -22,13 +21,25 @@ var controllers = {
   },
   get_users: async function (req, res) {
     try {
-      const result = await User.find({}).lean().exec();
-      if (!result) res.status(201).json({ success: false, msg: `No such users.` });
 
-      res.json(result);
+      const result = await User.find({}).lean().exec();
+      if (!result) {
+        res.status(400).json(
+          {
+            success: false,
+            msg: 'No such users'
+          }
+        );
+        return;
+      }
+      return res.status(201).json(result);
     } catch (err) {
-      res.status(400).json({ success: false, msg: err });
-      throw new createError.InternalServerError(err);
+      res.status(400).json(
+        {
+          success: false,
+          msg: 'No such users'
+        }
+      );
     }
   },
 }

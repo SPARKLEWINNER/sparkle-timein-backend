@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "com-sparkle-timein",
+  "private_key_id": "9c59cea5ed9a304a3892d62947c39582a1a18f17",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQD2Dggr9EklJsSj\nK+TJHnAjwkSOTFqFMxrMY/RYyW1JAGYw9W3/e+naJGH1dy7EPPedkLUWbDhvFcSn\nisx8milvuE9ffnWXHJ5+4DCk5VTsDf+/0rS8wc2KDC6nPwwenDvCnnNVJgbH92D5\noTUNgJrxekA07FzpUNImmWlyNJqhARup2ZfNBqDzBa9COhcLWyZx/6AzOnKatNMs\nyQ5El3AqmvXa+7jhjHJG2jEVroztS7nn0dKEgLfiLVeh+zbvp6yQhMFmGwVUN4sN\n21IZNu8um8eN0oXc5wxWh/hHwvy5SBkzBZpZ70sayU26KU/2uQMpUKEeEs0+rGqO\naH1yPASnAgMBAAECggEAAgDEPUNcUxKZODDTyHVYeVoL/9KMTBhJ6A8KPqzJGHaJ\n3m0pC5LhKPbx2zMwrMVISL6UUs3nubPGKYz+NCd3HeM0tjTL1UKU4biGfNknE1Lb\n2Z5n/T9gonaN7KudOCSScfejPba1CGyxm+adjXIWENArdKLV8MpJI6pNCvJ1rcjV\n8BCY0YHOsoGEHQMyFQ+1BWpqJlcZlx1sIvLDjlV0fxo3XhN/+LJMcMdZII/KFUPY\nzDVisKDy/THgAIUzJwGZRgWJq+0ENt9r0EQu08AiinlPkA3dcCDDrmJEU+dsHWMc\nWQQVYNch+a2e/eyWqy7kBZm0uUMBrPrbgbOMHl3fbQKBgQD/r5ZGhON07Fg+GURa\nDmKCsSKDi9Z5mk4s4f2oxTNsfU85Xt3mWdMRZM8csAuxm5g8zB/lG1ldYZRx6rf3\n3//aCU4+bjqg0EEiTR5hW4IzcCE3ivJQuB5L4vrTq2JSdfid/Q4fozXYBoyndX+j\nUlbgtIwN5kqQfFFD61l/9AAAawKBgQD2W2p7OACGU9S7hecOreWlX7mSVbI4t/AB\nhpVpSh88wGNDbBrroMljPsF3xO0p/QqNKBVOF/4HqLrfScKQS/8FVaOVsyrxKipi\nL1hd8Fkuna4g/aHUsnuWZLNt8iaYHrvQkDYmiV+Q66SyALm0beRQxBLgAmiJiq1z\nn+njYe1rtQKBgQCcRz1JwwWnvKG+6wCtLqeljBE1aC5iSx9HLaY2Frp0sC7RORvW\nJMbulbhFp5CuMRUe7AD+rvWzLuZlrnpdhktCgHeTjxpEmqWFCq/r/9uYBww2f7XW\nAoN6DLUU1WcWUcbxAfA1BDPv4yjrXdTzBWvWkmQcRssCfwnIwrwEiiXKGwKBgCDR\n/vaZeGBs7Ktq5GRtQGnuvc9EAXFS9/OMFX2odU7nppHF5jQ8AHhrVOT65Emyv2Qc\n0fHMenhUv0ieEACfT0NLrHZ2HyNv5aOdAR3KtmbidN9KSvQGLzbTBaCBISkk9wqL\nG9u4c3XgHtnkBNmHxmIILSeQypKAWilMRaGYW0P9AoGAR8TrtrdcLxzxrquKpOcg\nOQs48rNFPl0Ll+BKDKu+vqKOGS71lDgAR+bQFOmx963qPSIHbqCOsagIObtv/lUD\n/tObsRgSngu8N5s+OWi1UdHHCVqRutdNnIFBV+6rvk+teydt6H1czc53wTvaXPOT\ndsfe+T6LshjC+ybkIyAQYeM=\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-irqxq@com-sparkle-timein.iam.gserviceaccount.com",
+  "client_id": "113032507040329090987",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-irqxq%40com-sparkle-timein.iam.gserviceaccount.com"
+}
