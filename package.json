@@ -6,22 +6,22 @@
   "scripts": {
     "start": "nodemon server",
     "server": "nodemon server",
-    "client": "npm run start --prefix client",
-    "client-install": "cd client && npm install",
+    "client": "npm run start --prefix react-src",
+    "client-install": "cd react-src && npm install",
     "dev": "concurrently --kill-others \"npm run server\" \"npm run client\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cefjoeii/mern-crud.git"
+    "url": "git+https://github.com/SPARKLEWINNER/sparkle-timein-backend.git"
   },
   "keywords": [],
   "author": "Sparkle Team",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/cefjoeii/mern-crud/issues"
+    "url": "https://github.com/SPARKLEWINNER/sparkle-timein-backendissues"
   },
-  "homepage": "https://github.com/cefjoeii/mern-crud#readme",
+  "homepage": "hhttps://github.com/SPARKLEWINNER/sparkle-timein-backend#readme",
   "dependencies": {
     "bcrypt": "^5.0.1",
     "body-parser": "1.19.0",
