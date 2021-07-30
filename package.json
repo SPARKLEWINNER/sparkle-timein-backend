@@ -4,12 +4,13 @@
   "description": "Sparkle Time in",
   "main": "server.js",
   "scripts": {
-    "start": "nodemon server",
+    "start": "node server",
     "server": "nodemon server",
     "client": "npm run start --prefix react-src",
     "client-install": "cd react-src && npm install",
     "dev": "concurrently --kill-others \"npm run server\" \"npm run client\"",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "heroku-postbuild": "cd react-src && npm install && npm run build"
   },
   "repository": {
     "type": "git",
