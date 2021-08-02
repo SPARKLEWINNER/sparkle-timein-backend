@@ -9,8 +9,7 @@
     "client": "npm run start --prefix react-src",
     "client-install": "cd react-src && npm install",
     "dev": "concurrently --kill-others \"npm run server\" \"npm run client\"",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "heroku-postbuild": "cd react-src && npm install && npm run build"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
