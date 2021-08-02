@@ -1,22 +1,21 @@
 'use strict';
-const createError = require('http-errors');
 const jwt = require('jsonwebtoken'); // to generate signed token
 const expressJwt = require('express-jwt'); // for authorization check
-const crypto = require('crypto') // to create token
 const admin = require("firebase-admin");
 const serviceAccount = require("./../../firebaseService.json");
-
 const User = require('../models/user');
-
+const send_sms = require('../services/twilio');
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
 });
+
 
 var controllers = {
     require_sign_in: function (req, res, next) {
         expressJwt({
             secret: process.env.JWT_SECRET,
-            userProperty: "auth"
+            userProperty: "auth",
+            algorithms: ['sha1', 'RS256', 'HS256'],
         });
         next();
     },
@@ -58,57 +57,56 @@ var controllers = {
         res.json({ message: "Sign out success" });
     },
     phone_sign_in: async function (req, res) {
-
         const { phone } = req.body;
-        if (!phone) res.status(400).json({ success: false, msg: 'Phone input field is empty.' });
+        const now = new Date();
+        let code = Math.floor(100000 + Math.random() * 900000);
+        const user = await User.find({ "phone": phone }).lean().exec()
+        if (user.length === 0) {
 
-        try {
-            const result = await admin.auth().createUser({ phoneNumber: phone, }).then(res => {
-                if (!res) {
-                    res.status(400).json({ success: false, msg: 'Unable to sign up' });
+            let _params = {
+                phone: phone,
+                verificationCode: code,
+                createdAt: now.toISOString(),
+                hashed_password: undefined,
+                salt: undefined,
+                isNew: true,
+            };
+
+            let new_user = new User(_params);
+            try {
+                let result = await User.create(new_user);
+                if (!result) {
+                    res.status(400).json(
+                        {
+                            success: false,
+                            msg: 'Unable to sign up'
+                        }
+                    );
                 }
-                return res;
-            }).catch(err => {
-                console.log(err);
-                return { success: false, msg: err?.errorInfo.message };
-            });
 
-            res.json(result);
+                // send_sms(phone, `Sparkle Time in verification code ${code}`);
+                const token = jwt.sign({ _id: result._id }, process.env.JWT_SECRET);
+                let response = {
+                    ...result._doc,
+                    isNew: true,
+                    token
+                };
 
-        } catch (err) {
-            console.log(err.errorInfo.code);
-            if (err.errorInfo.code !== 'auth/phone-number-already-exists') {
-                res.status(400).json({ success: false, msg: err });
+                res.json(response);
+            } catch (error) {
+                res.status(400).json(
+                    {
+                        success: false,
+                        msg: 'Unable to sign up'
+                    }
+                );
             }
-            const user = await admin.auth().getUserByPhoneNumber(phone);
-            res.status(201).json({ ...user });
+        } else {
+            const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET);
+            res.cookie("t", token, { expire: new Date() + 9999 });
+            res.json({ ...user[0], token });
         }
     },
-    google_sign: async function (req, res) {
-
-        const { email, password } = req.body;
-        if (!email || !password) {
-            res.status(400).json({ success: false, msg: 'Invalid Credentials.' });
-        }
-
-        try {
-            // const result = await admin.auth().getUserByEmail(email);
-            const result = await admin.auth().signInWithEmailAndPassword(email, password).then(res => {
-                if (!res) {
-                    res.status(400).json({ success: false, msg: 'Unable to sign up' });
-                }
-                return res;
-            }).catch(err => {
-                console.log(err);
-                return { success: false, msg: err?.errorInfo.message };
-            });;
-
-            res.json(result);
-
-        } catch (err) {
-            res.status(400).json({ success: false, msg: err });
-        }
-    }
 };
 
 module.exports = controllers;

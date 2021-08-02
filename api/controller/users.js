@@ -1,5 +1,6 @@
 const createError = require('http-errors');
 const stringCapitalizeName = require('string-capitalize-name');
+const mongoose = require('mongoose');
 const User = require('../models/user');
 
 var controllers = {
@@ -21,7 +22,6 @@ var controllers = {
   },
   get_users: async function (req, res) {
     try {
-
       const result = await User.find({}).lean().exec();
       if (!result) {
         res.status(400).json(
@@ -42,6 +42,29 @@ var controllers = {
       );
     }
   },
+  update_user: async function (req, res) {
+    const id = req.params.id;
+    try {
+      const result = await User.findOneAndUpdate({ id: mongoose.Types.ObjectId(id) }, req.body).lean().exec();
+      if (!result) {
+        res.status(400).json(
+          {
+            success: false,
+            msg: `Unable to change the user ${id}`
+          }
+        );
+        return;
+      }
+      return res.status(201).json(result);
+    } catch (err) {
+      res.status(400).json(
+        {
+          success: false,
+          msg: 'No such users'
+        }
+      );
+    }
+  }
 }
 
 module.exports = controllers;

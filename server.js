@@ -5,9 +5,11 @@ const mongoose = require('mongoose');
 const morgan = require('morgan');
 const socket = require('socket.io');
 const routes = require('./api/routes');
-const port = process.env.PORT || 8000;
+const passport = require('passport')
+const port = process.env.PORT || 7000;
 const app = express();
 require('dotenv').config();
+require('./api/services/passport')(passport)
 
 // Connect to the database
 mongoose.connect(process.env.MONGO_KEY, {
@@ -23,7 +25,9 @@ app.use(express.json()); // Set body parser middleware
 app.use(morgan('dev'));
 app.use(cookieParser());
 app.use(cors()); // Enable cross-origin for apex purpose;
-app.use(express.static('public')); // Set public folder using built-in express.static middleware this will hide the default page of api
+// app.use(express.static('public')); // Set public folder using built-in express.static middleware this will hide the default page of api
+app.use(passport.initialize())
+app.use(passport.session())
 app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "*")
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
