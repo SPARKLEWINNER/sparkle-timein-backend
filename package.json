@@ -4,11 +4,7 @@
   "description": "Sparkle Time in",
   "main": "server.js",
   "scripts": {
-    "start": "node server",
-    "server": "nodemon server",
-    "client": "npm run start --prefix react-src",
-    "client-install": "cd react-src && npm install",
-    "dev": "concurrently --kill-others \"npm run server\" \"npm run client\"",
+    "start": "nodemon server",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
