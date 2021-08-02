@@ -13,9 +13,10 @@ require('./api/services/passport')(passport)
 
 // Connect to the database
 mongoose.connect(process.env.MONGO_KEY, {
-  useNewUrlParser: true,
   useUnifiedTopology: true,
-  useCreateIndex: true
+  useNewUrlParser: true,
+  useCreateIndex: true,
+  useFindAndModify: false
 }).then(() => console.log(`MongoDB Connected... - ${process.env.MONGO_KEY}`))
   .catch(err => console.log(err));
 

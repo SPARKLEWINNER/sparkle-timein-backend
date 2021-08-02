@@ -1,14 +1,9 @@
 'use strict';
 const jwt = require('jsonwebtoken'); // to generate signed token
 const expressJwt = require('express-jwt'); // for authorization check
-const admin = require("firebase-admin");
-const serviceAccount = require("./../../firebaseService.json");
 const User = require('../models/user');
+const mongoose = require('mongoose');
 const send_sms = require('../services/twilio');
-admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
-});
-
 
 var controllers = {
     require_sign_in: function (req, res, next) {
@@ -20,6 +15,7 @@ var controllers = {
         next();
     },
     is_authenticated: function (req, res, next) {
+        console.log(req);
         let user = req.profile && req.auth && req.profile._id == req.auth._id;
         if (!user) {
             return res.status(403).json({
@@ -30,7 +26,7 @@ var controllers = {
     },
     sign_in: async function (req, res) {
         const { email, password } = req.body;
-        if (!email || password) {
+        if (!email || !password) {
             res.status(400).json({ success: false, msg: `Missing email or password field!` });
             return;
         }
@@ -47,9 +43,9 @@ var controllers = {
         res.cookie("t", token, { expire: new Date() + 9999 });
 
         if (user.role === 0) {
-            return res.json({ token, user: user });
+            return res.json({ token, ...user[0] });
         } else {
-            return res.json({ token, user: user, isAdmin: true });
+            return res.json({ token, ...user[0], isAdmin: true });
         }
     },
     sign_out: function (req, res) {
@@ -57,10 +53,15 @@ var controllers = {
         res.json({ message: "Sign out success" });
     },
     phone_sign_in: async function (req, res) {
-        const { phone } = req.body;
+        let { phone } = req.body;
         const now = new Date();
         let code = Math.floor(100000 + Math.random() * 900000);
-        const user = await User.find({ "phone": phone }).lean().exec()
+        const numberFormat = String(phone).charAt(0) + String(phone).charAt(1) + String(phone).charAt(2);
+        if (numberFormat !== '+63') {
+            phone = '+63' + phone.substring(1);
+        }
+
+        const user = await User.find({ "phone": phone }).lean().exec();
         if (user.length === 0) {
 
             let _params = {
@@ -107,6 +108,25 @@ var controllers = {
             res.json({ ...user[0], token });
         }
     },
+    phone_verify: async function (req, res) {
+        const { code } = req.body;
+        const { id } = req.params;
+        const user = await User.find({ id: mongoose.Types.ObjectId(id), verificationCode: code }).lean().exec();
+        if (!user) res.status(400).json(
+            {
+                success: false,
+                msg: `Verification code doesn't match ${id}`
+            }
+        );
+        const result = await User.findOneAndUpdate({ _id: mongoose.Types.ObjectId(id) }, { isVerified: true, verificationCode: null });
+        if (!result) res.status(400).json(
+            {
+                success: false,
+                msg: `Unable to verify account ${id}`
+            }
+        );
+        res.json(result);
+    }
 };
 
 module.exports = controllers;

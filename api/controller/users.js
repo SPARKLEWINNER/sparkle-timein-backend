@@ -2,6 +2,7 @@ const createError = require('http-errors');
 const stringCapitalizeName = require('string-capitalize-name');
 const mongoose = require('mongoose');
 const User = require('../models/user');
+const { findOneAndUpdate } = require('../models/user');
 
 var controllers = {
   get_user: async function (req, res) {
@@ -43,21 +44,42 @@ var controllers = {
     }
   },
   update_user: async function (req, res) {
-    const id = req.params.id;
+    const { firstName, lastName, password, company, position, email } = req.body
+    const { id } = req.params;
+
+    if (Object.keys(req.body).length === 0) {
+      return res.status(400).json(
+        {
+          success: false,
+          msg: `Missing fields`
+        }
+      );
+    }
+
     try {
-      const result = await User.findOneAndUpdate({ id: mongoose.Types.ObjectId(id) }, req.body).lean().exec();
-      if (!result) {
-        res.status(400).json(
-          {
-            success: false,
-            msg: `Unable to change the user ${id}`
-          }
-        );
-        return;
-      }
-      return res.status(201).json(result);
+      await User.findOne({ _id: mongoose.Types.ObjectId(id) }).then(user => {
+        if (!user) return res.status(400).json({ success: false, msg: `User not found ${id}` });
+
+        user.password = password;
+        user.firstName = firstName;
+        user.lastName = lastName;
+        user.displayName = firstName + " " + lastName;
+        user.isOnBoarded = true;
+        user.company = company;
+        user.position = position;
+        user.email = email;
+
+        user.save().then(result => {
+          if (!result) return res.status(400).json({ success: false, msg: `Unable to update details ${id}` });
+
+          return res.json(result);
+        });
+
+
+      });
     } catch (err) {
-      res.status(400).json(
+      console.log(err);
+      return res.status(400).json(
         {
           success: false,
           msg: 'No such users'

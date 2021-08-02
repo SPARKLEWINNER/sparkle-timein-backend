@@ -1,23 +1,40 @@
 const mongoose = require('mongoose')
-
-const UserSchema = new mongoose.Schema({
+const Schema = mongoose.Schema;
+const collectionName = "users";
+const crypto = require("crypto");
+const uuid = require('uuid').v1;
+const data = {
   googleId: {
     type: String,
+    default: null,
   },
   displayName: {
     type: String,
+    default: null,
   },
   firstName: {
     type: String,
+    default: null,
   },
   lastName: {
     type: String,
+    default: null,
   },
   image: {
     type: String,
+    default: null,
+  },
+  company: {
+    type: String,
+    default: null,
+  },
+  position: {
+    type: String,
+    default: null,
   },
   email: {
     type: String,
+    default: null,
   },
   phone: {
     type: String,
@@ -29,21 +46,62 @@ const UserSchema = new mongoose.Schema({
   },
   hashed_password: {
     type: String,
+    default: null
   },
-  resetToken: String,
+  resetToken: {
+    type: String,
+    default: null,
+  },
   expireToken: Date,
   salt: String,
   role: {
     type: Number,
     default: 0
   },
+  isVerified: {
+    type: Boolean,
+    default: false,
+  },
+  isOnBoarded: {
+    type: Boolean,
+    default: false,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
   },
-})
+}
+const userSchema = new Schema(data, { timestamps: true });
+userSchema
+  .virtual("password") // Here 'password' is now a property on User documents.
+  .set(function (pass) {
+    this._password = pass;
+    this.salt = uuid();
+    this.hashed_password = this.encryptPassword(pass);
+  })
+  .get(function () {
+    return this._password;
+  });
 
-module.exports = mongoose.model('User', UserSchema)
+userSchema.methods = {
+  authenticate: function (plainText) {
+    return this.encryptPassword(plainText) === this.hashed_password;
+  },
+  encryptPassword: function (password) {
+    if (!password) return "";
+    try {
+      return crypto
+        .createHmac("sha1", this.salt)
+        .update(password)
+        .digest("hex");
+    } catch (err) {
+      return "";
+    }
+  }
+};
+
+
+module.exports = mongoose.model('User', userSchema, collectionName);
 
 // const mongoose = require('mongoose');
 // const unique = require('mongoose-unique-validator');
