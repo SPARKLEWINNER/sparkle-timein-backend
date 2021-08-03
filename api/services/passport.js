@@ -19,25 +19,25 @@ module.exports = function (passport) {
                     firstName: profile.name.givenName,
                     lastName: profile.name.familyName,
                     image: profile.photos[0].value,
-                    email: profile.emails[0].value
-                }
-
+                    email: profile.emails[0].value,
+                    role: 1,
+                };
 
                 newUser.hashed_password = undefined;
                 newUser.salt = undefined;
                 newUser.verificationCode = Math.floor(100000 + Math.random() * 900000);
                 try {
                     //find the user in our database 
-                    let user = await User.findOne({ googleId: profile.id })
-                    const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET);
-
+                    let user = await User.findOne({ googleId: profile.id }).lean().exec()
                     if (user) {
+                        const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET);
                         //If user present in our database.
-                        const response = { ...user._doc, token };
+                        const response = { ...user, token };
                         done(null, response)
                     } else {
                         // if user is not preset in our database save user data to database.
                         user = await User.create(newUser)
+                        const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET);
                         const response = { ...user._doc, token };
                         done(null, response)
                     }

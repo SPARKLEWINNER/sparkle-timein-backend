@@ -2,17 +2,15 @@ const createError = require('http-errors');
 const stringCapitalizeName = require('string-capitalize-name');
 const mongoose = require('mongoose');
 const User = require('../models/user');
-const { findOneAndUpdate } = require('../models/user');
 
 var controllers = {
   get_user: async function (req, res) {
-    const { _id } = req.params;
-    if (!_id) res.status(404).json({ success: false, msg: `No such user.` });
+    const { id } = req.params;
+    if (!id) res.status(404).json({ success: false, msg: `No such user.` });
 
     try {
-      const result = await getSpecificData({ _id: _id }, Account, 'User', _id);
+      const result = await User.findOne({ _id: mongoose.Types.ObjectId(id) }).lean().exec()
       if (!result) res.status(201).json({ success: false, msg: `No such user.` });
-
       res.json(result);
 
     } catch (err) {
@@ -44,7 +42,7 @@ var controllers = {
     }
   },
   update_user: async function (req, res) {
-    const { firstName, lastName, password, company, position, email } = req.body
+    const { firstName, lastName, password, company, position, email, phone } = req.body
     const { id } = req.params;
 
     if (Object.keys(req.body).length === 0) {
@@ -68,6 +66,7 @@ var controllers = {
         user.company = company;
         user.position = position;
         user.email = email;
+        user.phone = phone
 
         user.save().then(result => {
           if (!result) return res.status(400).json({ success: false, msg: `Unable to update details ${id}` });
