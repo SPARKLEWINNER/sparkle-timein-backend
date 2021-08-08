@@ -26,7 +26,7 @@ app.use(express.json()); // Set body parser middleware
 app.use(morgan('dev'));
 app.use(cookieParser());
 app.use(cors()); // Enable cross-origin for apex purpose;
-// app.use(express.static('public')); // Set public folder using built-in express.static middleware this will hide the default page of api
+app.use(express.static('public')); // Set public folder using built-in express.static middleware this will hide the default page of api
 app.use(passport.initialize())
 app.use(passport.session())
 app.use(function (req, res, next) {
