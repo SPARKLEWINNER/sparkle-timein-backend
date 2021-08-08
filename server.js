@@ -26,7 +26,7 @@ app.use(express.json()); // Set body parser middleware
 app.use(morgan('dev'));
 app.use(cookieParser());
 app.use(cors()); // Enable cross-origin for apex purpose;
-app.use(express.static('public'));
+// app.use(express.static('public'));
 app.use(passport.initialize())
 app.use(passport.session())
 app.use(function (req, res, next) {
