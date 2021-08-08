@@ -37,6 +37,7 @@
     "react-error-overlay": "^1.0.9",
     "semantic-ui-css": "^2.2.11",
     "semantic-ui-react": "^0.71.1",
+    "serve": "^12.0.0",
     "socket.io-client": "^2.0.3",
     "style-loader": "0.18.2",
     "sw-precache-webpack-plugin": "0.11.3",
@@ -47,9 +48,11 @@
     "whatwg-fetch": "2.0.3"
   },
   "scripts": {
-    "start": "node scripts/start.js",
-    "build": "node scripts/build.js",
-    "test": "node scripts/test.js --env=jsdom"
+    "dev": "react-scripts start",
+    "start": "serve -s build",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
   },
   "jest": {
     "collectCoverageFrom": [
