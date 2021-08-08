@@ -26,7 +26,7 @@ app.use(express.json()); // Set body parser middleware
 app.use(morgan('dev'));
 app.use(cookieParser());
 app.use(cors()); // Enable cross-origin for apex purpose;
-app.use(express.static('public')); // Set public folder using built-in express.static middleware this will hide the default page of api
+app.use(express.static(path.join(__dirname, 'public')));  // Set public folder using built-in express.static middleware this will hide the default page of api
 app.use(passport.initialize())
 app.use(passport.session())
 app.use(function (req, res, next) {
@@ -34,6 +34,9 @@ app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
   res.header('Access-Control-Expose-Headers', 'X-Total-Count')
   next()
+});
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/ndex.html'));
 });
 
 routes(app);
