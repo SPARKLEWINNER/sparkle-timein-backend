@@ -7,9 +7,9 @@
     "start": "node server.js",
     "server": "nodemon server.js",
     "client": "npm run start --prefix client",
-    "client-install": "cd client && npm install",
-    "dev": "concurrently --kill-others \"npm run server\" \"npm run client\"",
-    "heroku-postbuild": "cd client && npm install && npm run build"
+    "client-install": "cd react-src && npm install",
+    "dev": "concurrently --kill-others \"npm run server\" \"npm run react-src\"",
+    "heroku-postbuild": "cd react-src && npm install && npm run build"
   },
   "repository": {
     "type": "git",
