@@ -20,7 +20,6 @@ var controllers = {
         let time = now.getTime();
         let date = without_time(now);
 
-        let result;
         if (Object.keys(req.body).length === 0) {
             return res.status(400).json(
                 {
