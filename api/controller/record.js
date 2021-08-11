@@ -1,7 +1,7 @@
 const createError = require('http-errors');
 const mongoose = require('mongoose');
-const User = require('../models/user');
-const Record = require('../models/record');
+const User = require('../models/User');
+const Record = require('../models/Record');
 
 const without_time = (dateTime) => {
     var date = new Date(dateTime.getTime());
