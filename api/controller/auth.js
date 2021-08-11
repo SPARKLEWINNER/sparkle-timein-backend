@@ -1,7 +1,7 @@
 'use strict';
 const jwt = require('jsonwebtoken'); // to generate signed token
 const expressJwt = require('express-jwt'); // for authorization check
-const User = require('../models/user');
+const User = require('../models/Users');
 const mongoose = require('mongoose');
 const send_sms = require('../services/twilio');
 
@@ -85,7 +85,7 @@ var controllers = {
                     );
                 }
 
-                // send_sms(phone, `Sparkle Time in verification code ${code}`);
+                send_sms(phone, `Sparkle Time in verification code ${code}`);
                 const token = jwt.sign({ _id: result._id }, process.env.JWT_SECRET);
                 let response = {
                     ...result._doc,
