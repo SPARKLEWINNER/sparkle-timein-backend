@@ -4,6 +4,7 @@ const querystring = require('querystring');
 var api = require('./controller/default');
 var user = require('./controller/users');
 var auth = require('./controller/auth');
+var record = require('./controller/record');
 
 module.exports = function (app) {
     app.route('/').get(api.get_app_info);
@@ -36,7 +37,8 @@ module.exports = function (app) {
     app.route('/api/signout').get(auth.require_sign_in, auth.sign_out);
 
 
-
     app.route('/api/user/:id').patch(auth.require_sign_in, user.update_user);
+    app.route('/api/user/status/:id').get(auth.require_sign_in, record.get_status_time);
+    app.route('/api/user/time/:id').post(auth.require_sign_in, record.record_time);
 
 }
