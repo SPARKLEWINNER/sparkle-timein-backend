@@ -10,7 +10,7 @@ const without_time = (dateTime) => {
 }
 
 var controllers = {
-    Reports_time: async function (req, res) {
+    report_time: async function (req, res) {
         const { id } = req.params;
         const { status } = req.body;
         const now = new Date();
