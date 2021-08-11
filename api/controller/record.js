@@ -1,7 +1,7 @@
 const createError = require('http-errors');
 const mongoose = require('mongoose');
 const User = require('../models/User');
-const Record = require('../models/Records');
+const Reports = require('../models/Reports');
 
 const without_time = (dateTime) => {
     var date = new Date(dateTime.getTime());
@@ -10,7 +10,7 @@ const without_time = (dateTime) => {
 }
 
 var controllers = {
-    record_time: async function (req, res) {
+    Reports_time: async function (req, res) {
         const { id } = req.params;
         const { status } = req.body;
         const now = new Date();
@@ -41,8 +41,8 @@ var controllers = {
 
         try {
             let result;
-            const isRecordExist = await Record.find({ "date": new Date(date) }).lean().exec();
-            const record = new Record({
+            const isReportsExist = await Reports.find({ "date": new Date(date) }).lean().exec();
+            const reports = new Reports({
                 uid: id,
                 date: date,
                 status: status,
@@ -57,8 +57,8 @@ var controllers = {
                 }
             });
 
-            if (isRecordExist.length > 0) {
-                const isSameStatus = isRecordExist[0].status === status ? true : false;
+            if (isReportsExist.length > 0) {
+                const isSameStatus = isReportsExist[0].status === status ? true : false;
                 if (isSameStatus) return res.status(400).json(
                     {
                         success: false,
@@ -66,7 +66,7 @@ var controllers = {
                     }
                 );
 
-                let newRecord = {
+                let newReports = {
                     dateTime: now,
                     status: status,
                     month: month,
@@ -78,13 +78,13 @@ var controllers = {
 
                 let update = {
                     $set: { status: status },
-                    $push: { record: newRecord }
+                    $push: { record: newReports }
                 };
 
-                result = await Record.findOneAndUpdate({ "date": new Date(date) }, update);
+                result = await Reports.findOneAndUpdate({ "date": new Date(date) }, update);
 
             } else {
-                result = await Record.create(record);
+                result = await Reports.create(reports);
             }
 
             if (!result) {
@@ -122,7 +122,7 @@ var controllers = {
         }
 
         try {
-            const result = await Record.find({ uid: mongoose.Types.ObjectId(id) }).lean().exec();
+            const result = await Reports.find({ uid: mongoose.Types.ObjectId(id) }).lean().exec();
             if (!result) res.status(400).json(
                 {
                     success: false,

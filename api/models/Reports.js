@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 const { Schema, Types } = mongoose;
-const collectionName = "records";
+const collectionName = "reports";
 const data = {
     uid: { type: Types.ObjectId, ref: 'Users' },
     date: {
@@ -22,5 +22,5 @@ const data = {
     },
 }
 
-const recordSchema = new Schema(data, { timestamps: true });
-module.exports = mongoose.model('Record', recordSchema, collectionName);
+const reportsSchema = new Schema(data, { timestamps: true });
+module.exports = mongoose.model('Reports', recordSchema, collectionName);
