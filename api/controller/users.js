@@ -1,7 +1,7 @@
 const createError = require('http-errors');
 const stringCapitalizeName = require('string-capitalize-name');
 const mongoose = require('mongoose');
-const User = require('../models/user');
+const User = require('../models/Users');
 
 var controllers = {
   get_user: async function (req, res) {

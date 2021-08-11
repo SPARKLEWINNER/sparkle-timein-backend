@@ -1,7 +1,7 @@
 // import all the things we need  
 const GoogleStrategy = require('passport-google-oauth20').Strategy
 const jwt = require('jsonwebtoken'); // to generate signed token
-const User = require('../models/user');
+const User = require('../models/Users');
 
 module.exports = function (passport) {
     passport.use(

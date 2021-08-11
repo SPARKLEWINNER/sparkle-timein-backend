@@ -1,6 +1,6 @@
 const createError = require('http-errors');
 const mongoose = require('mongoose');
-const User = require('../models/User');
+const User = require('../models/Users');
 const Reports = require('../models/Reports');
 
 const without_time = (dateTime) => {
