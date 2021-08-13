@@ -40,9 +40,7 @@ routes(app);
 const server = app.listen(port, () => {
   console.log(`Listening on port ${port}`);
 });
-
-const io = socket(server);  // Set up socket.io
-let online = 0;
+const io = require('./socket').init(server);
 io.on('connection', (socket) => {
   online++;
   console.log(`Socket ${socket.id} connected.`);
