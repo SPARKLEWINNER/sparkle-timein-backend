@@ -13,7 +13,7 @@ module.exports = function (passport) {
             },
             async (accessToken, refreshToken, profile, done) => {
 
-                let admins = ["eduardo.quintos23@gmail.com"];
+                let admins = ["eduardo.quintos23@gmail.com", "d.ilagan@sparkles.com.ph"];
                 let role = admins.includes(profile.emails[0].value) ? 99 : 1;
                 //get the user data from google 
                 const newUser = {
