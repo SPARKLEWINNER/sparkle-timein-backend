@@ -61,4 +61,6 @@ io.on('connection', (socket) => {
     };
     io.emit('visitor exits', online);
   });
+
+  console.log(online);
 });
