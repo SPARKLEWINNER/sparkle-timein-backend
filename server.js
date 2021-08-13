@@ -3,7 +3,6 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
 const morgan = require('morgan');
-const socket = require('socket.io');
 const routes = require('./api/routes');
 const passport = require('passport')
 const port = process.env.PORT || 7000;
@@ -17,7 +16,7 @@ mongoose.connect(process.env.MONGO_KEY, {
   useNewUrlParser: true,
   useCreateIndex: true,
   useFindAndModify: false
-}).then(() => console.log(`MongoDB Connected... - ${process.env.MONGO_KEY}`))
+}).then(() => console.log(`Database Connected`))
   .catch(err => console.log(err));
 
 // Instantiate express
@@ -40,21 +39,26 @@ routes(app);
 const server = app.listen(port, () => {
   console.log(`Listening on port ${port}`);
 });
-const io = require('./socket').init(server);
+
+// const io = require('./socket').init(server);
+const io = require('socket.io')(server, {
+  cors: { origin: "*" }
+});
+let online = 0;
 io.on('connection', (socket) => {
-  online++;
-  console.log(`Socket ${socket.id} connected.`);
-  console.log(`Online: ${online}`);
-  io.emit('visitor enters', online);
+  socket.on('connected', (data) => {
+    online++;
+    io.emit('visitor enters', online);
+  });
 
   socket.on('add', data => socket.broadcast.emit('add', data));
   socket.on('update', data => socket.broadcast.emit('update', data));
   socket.on('delete', data => socket.broadcast.emit('delete', data));
 
   socket.on('disconnect', () => {
-    online--;
-    console.log(`Socket ${socket.id} disconnected.`);
-    console.log(`Online: ${online}`);
+    if (online > 0) {
+      online--;
+    };
     io.emit('visitor exits', online);
   });
 });
