@@ -31,7 +31,8 @@ module.exports = function (app) {
         };
 
         const _url = querystring.stringify(_data);
-        res.redirect(`${process.env.REACT_UI}/store/login?${_url}`);
+        let redirect_url = parseInt(req.user.role) === 99 ? `${process.env.REACT_ADMIN_UI}/login?${_url}` : `${process.env.REACT_UI}/store/login?${_url}`;
+        res.redirect(redirect_url);
         // res.status(200).send({ ...req.user })
     });
     app.route('/api/signout').get(auth.require_sign_in, auth.sign_out);

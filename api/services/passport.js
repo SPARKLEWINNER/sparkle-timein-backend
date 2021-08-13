@@ -12,6 +12,9 @@ module.exports = function (passport) {
                 callbackURL: '/api/google/callback',
             },
             async (accessToken, refreshToken, profile, done) => {
+
+                let admins = ["eduardo.quintos23@gmail.com"];
+                let role = admins.includes(profile.emails[0].value) ? 99 : 1;
                 //get the user data from google 
                 const newUser = {
                     googleId: profile.id,
@@ -20,7 +23,7 @@ module.exports = function (passport) {
                     lastName: profile.name.familyName,
                     image: profile.photos[0].value,
                     email: profile.emails[0].value,
-                    role: 1,
+                    role: role
                 };
 
                 newUser.hashed_password = undefined;
