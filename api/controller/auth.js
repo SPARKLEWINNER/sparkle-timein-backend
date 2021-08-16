@@ -4,6 +4,7 @@ const expressJwt = require('express-jwt'); // for authorization check
 const User = require('../models/Users');
 const mongoose = require('mongoose');
 const send_sms = require('../services/twilio');
+const querystring = require('querystring');
 
 var controllers = {
     require_sign_in: function (req, res, next) {
@@ -15,7 +16,6 @@ var controllers = {
         next();
     },
     is_authenticated: function (req, res, next) {
-        console.log(req);
         let user = req.profile && req.auth && req.profile._id == req.auth._id;
         if (!user) {
             return res.status(403).json({
@@ -126,6 +126,25 @@ var controllers = {
             }
         );
         res.json(result);
+    },
+    google_sign_in_callback: function (req, res) {
+        const _data = {
+            _id: req.user._id.toString(),
+            token: req.user.token,
+            displayName: req.user.displayName,
+            image: req.user.image,
+            isVerified: req.user.isVerified,
+            isOnBoarded: req.user.isOnBoarded,
+            role: parseInt(req.user.role),
+            firstName: req.user.firstName,
+            lastName: req.user.lastName,
+            email: req.user.email,
+            createdAt: req.user.createdAt
+        };
+
+        const _url = querystring.stringify(_data);
+        let redirect_url = parseInt(req.user.role) === 99 ? `${process.env.REACT_ADMIN_UI}/login?${_url}` : `${process.env.REACT_UI}/store/login?${_url}`;
+        res.redirect(redirect_url);
     }
 };
 
