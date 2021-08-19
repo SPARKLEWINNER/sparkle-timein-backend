@@ -70,20 +70,28 @@ var controllers = {
           result = await Reports.create(reports);
           return res.json(result);
         } else {
-          if (record_last.status === status)
+          let last_record =
+            record_last.record.length >= 1
+              ? record_last.record.slice(-1).pop()
+              : record_last.record[0];
+          if (last_record.status === status)
             return res.status(400).json({
               success: false,
               msg: `Unable to ${status} again`,
             });
-
+          console.log(last_record);
           // check if existing break in / break out
+          let tookBreak;
           Object.values(record_last.record).forEach((v) => {
             if (v.status === "break-in" || v.status === "break-out")
-              return res.status(400).json({
-                success: false,
-                msg: `Unable to ${status} again`,
-              });
+              tookBreak = true;
           });
+
+          if ((tookBreak && status === "break-in") || status === "break-out")
+            return res.status(400).json({
+              success: false,
+              msg: `Unable to ${status} again`,
+            });
 
           let newReports = {
             dateTime: now,
