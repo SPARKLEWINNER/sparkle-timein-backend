@@ -33,4 +33,8 @@ module.exports = function (app) {
   app
     .route("/api/user/time/:id")
     .post(auth.require_sign_in, reports.report_time);
+
+  app
+    .route("/api/user/records/:id")
+    .get(auth.require_sign_in, reports.get_reports);
 };

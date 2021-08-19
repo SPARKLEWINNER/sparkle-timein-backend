@@ -155,6 +155,59 @@ var controllers = {
       throw new createError.InternalServerError(err);
     }
   },
+  get_reports: async function (req, res) {
+    const { id } = req.params;
+    if (!id) res.status(404).json({ success: false, msg: `No such user.` });
+    let user = await User.findOne({ _id: mongoose.Types.ObjectId(id) })
+      .lean()
+      .exec();
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        msg: "No such users",
+      });
+    }
+
+    try {
+      let employees = await User.find({ company: user.company, role: 0 })
+        .lean()
+        .exec();
+
+      if (!employees) {
+        return res.status(201).json({
+          success: true,
+          msg: "No registered employees",
+        });
+      }
+      let details;
+      let records = await Promise.all(
+        employees.map(async (v, k) => {
+          const reports = await Reports.find({
+            uid: mongoose.Types.ObjectId(v._id),
+          })
+            .lean()
+            .exec();
+
+          if (!reports) {
+            return { ...v, reports: [] };
+          }
+
+          return { ...v, reports: [...reports] };
+        })
+      );
+      if (records.length === 0) {
+        return res.status(201).json({
+          success: true,
+          msg: "No Records",
+        });
+      }
+
+      res.json(records);
+    } catch (err) {
+      res.status(400).json({ success: false, msg: err });
+      throw new createError.InternalServerError(err);
+    }
+  },
 };
 
 module.exports = controllers;
