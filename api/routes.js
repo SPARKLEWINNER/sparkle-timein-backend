@@ -39,7 +39,5 @@ module.exports = function (app) {
     .route("/api/user/records/:id")
     .get(auth.require_sign_in, reports.get_reports);
 
-  app
-    .route("/api/store/users/:id")
-    .get(auth.require_sign_in, auth.is_authenticated, stores.get_users);
+  app.route("/api/store/users/:id").get(auth.require_sign_in, stores.get_users);
 };
