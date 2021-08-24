@@ -56,6 +56,12 @@ io.on("connection", (socket) => {
     io.emit("visitor enters", online);
   });
 
+  socket.on("e-connected", (data) =>
+    socket.broadcast.emit("e-connected", data)
+  );
+  socket.on("e-time-in", (data) => socket.broadcast.emit("e-time-in", data));
+  socket.on("e-time-out", (data) => socket.broadcast.emit("e-time-out", data));
+
   socket.on("add", (data) => socket.broadcast.emit("add", data));
   socket.on("update", (data) => socket.broadcast.emit("update", data));
   socket.on("delete", (data) => socket.broadcast.emit("delete", data));

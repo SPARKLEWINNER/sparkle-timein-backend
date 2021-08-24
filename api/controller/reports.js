@@ -81,17 +81,31 @@ var controllers = {
             });
           console.log(last_record);
           // check if existing break in / break out
-          let tookBreak;
+          let tookBreakIn;
+          let tookBreakOut;
           Object.values(record_last.record).forEach((v) => {
-            if (v.status === "break-in" || v.status === "break-out")
-              tookBreak = true;
+            if (v.status === "break-in") {
+              tookBreakIn = true;
+            }
+
+            if (v.status === "break-out") {
+              tookBreakOut = true;
+            }
           });
 
-          if ((tookBreak && status === "break-in") || status === "break-out")
+          if (tookBreakIn && status === "break-in") {
             return res.status(400).json({
               success: false,
               msg: `Unable to ${status} again`,
             });
+          }
+
+          if (tookBreakOut && status === "break-out") {
+            return res.status(400).json({
+              success: false,
+              msg: `Unable to ${status} again`,
+            });
+          }
 
           let newReports = {
             dateTime: now,

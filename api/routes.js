@@ -4,6 +4,7 @@ var api = require("./controller/default");
 var user = require("./controller/users");
 var auth = require("./controller/auth");
 var reports = require("./controller/reports");
+var stores = require("./controller/stores");
 
 module.exports = function (app) {
   app.route("/").get(api.get_app_info);
@@ -37,4 +38,8 @@ module.exports = function (app) {
   app
     .route("/api/user/records/:id")
     .get(auth.require_sign_in, reports.get_reports);
+
+  app
+    .route("/api/store/users/:id")
+    .get(auth.require_sign_in, auth.is_authenticated, stores.get_users);
 };

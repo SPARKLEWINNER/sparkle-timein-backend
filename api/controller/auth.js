@@ -16,12 +16,13 @@ var controllers = {
     next();
   },
   is_authenticated: function (req, res, next) {
-    let user = req.profile && req.auth && req.profile._id == req.auth._id;
-    if (!user) {
-      return res.status(403).json({
-        error: "Access denied",
-      });
-    }
+    console.log(req.profile, req.auth);
+    // let user = req.profile && req.auth && req.profile._id == req.auth._id;
+    // if (!user) {
+    //   return res.status(403).json({
+    //     error: "Access denied",
+    //   });
+    // }
     next();
   },
   sign_in: async function (req, res) {
