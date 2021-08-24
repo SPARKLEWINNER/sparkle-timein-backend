@@ -56,9 +56,15 @@ io.on("connection", (socket) => {
     io.emit("visitor enters", online);
   });
 
-  socket.on("e-connected", (data) =>
-    socket.broadcast.emit("e-connected", data)
-  );
+  socket.on("e-connected", (data) => {
+    io.emit(`e-connected-${data.sid}`, data);
+  });
+
+  socket.on("e-action", (data) => {
+    console.log("e-action", user);
+    io.emit(`e-action`, data);
+  });
+
   socket.on("e-time-in", (data) => socket.broadcast.emit("e-time-in", data));
   socket.on("e-time-out", (data) => socket.broadcast.emit("e-time-out", data));
 
@@ -73,5 +79,5 @@ io.on("connection", (socket) => {
     io.emit("visitor exits", online);
   });
 
-  console.log(online);
+  // console.log(online);
 });
