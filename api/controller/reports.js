@@ -1,7 +1,11 @@
 const createError = require("http-errors");
 const mongoose = require("mongoose");
+const axios = require("axios");
 const User = require("../models/Users");
 const Reports = require("../models/Reports");
+const { result } = require("lodash");
+const GOOGLE_API_GEOCODE =
+  "https://maps.googleapis.com/maps/api/geocode/json?latlng=";
 
 const without_time = (dateTime) => {
   var date = new Date(dateTime.getTime());
@@ -12,7 +16,7 @@ const without_time = (dateTime) => {
 var controllers = {
   report_time: async function (req, res) {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, location } = req.body;
     const now = new Date();
     let month = now.getUTCMonth() + 1;
     let day = now.getUTCDate();
@@ -20,21 +24,45 @@ var controllers = {
     let time = now.getTime();
     let date = without_time(now);
 
+    // convert coordinates to readable address
+    let coordinates = `${location.latitude},${location.longitude}`;
+    let address = await axios
+      .get(
+        `${GOOGLE_API_GEOCODE}${coordinates}&key=${process.env.GOOGLE_MAP_KEY}`
+      )
+      .then((response) => {
+        if (!response.data) return false;
+        return response.data.results[0].formatted_address;
+      })
+      .catch((err) => {
+        return false;
+      });
+
+    if (!address || !coordinates)
+      return res.status(400).json({
+        success: false,
+        msg: `Something went wrong in locating user.`,
+      });
+
     if (Object.keys(req.body).length === 0) {
       return res.status(400).json({
         success: false,
         msg: `Missing fields`,
       });
     }
+
+    // check user if existing
     let user = await User.findOne({ _id: mongoose.Types.ObjectId(id) })
       .lean()
       .exec();
+
     if (!user) {
       return res.status(400).json({
         success: false,
         msg: "No such users",
       });
     }
+
     try {
       let result;
       const isReportsExist = await Reports.find({
@@ -54,6 +82,8 @@ var controllers = {
           year: year,
           time: time,
           date: date,
+          location: location,
+          address: address,
         },
       });
       let record_last =
@@ -74,12 +104,13 @@ var controllers = {
             record_last.record.length >= 1
               ? record_last.record.slice(-1).pop()
               : record_last.record[0];
+
           if (last_record.status === status)
             return res.status(400).json({
               success: false,
               msg: `Unable to ${status} again`,
             });
-          console.log(last_record);
+
           // check if existing break in / break out
           let tookBreakIn;
           let tookBreakOut;
@@ -115,6 +146,8 @@ var controllers = {
             year: year,
             time: time,
             date: date,
+            location: location,
+            address: address,
           };
 
           let update = {
