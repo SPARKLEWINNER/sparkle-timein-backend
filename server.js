@@ -61,7 +61,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("e-action", (data) => {
-    console.log("e-action", user);
+    console.log("e-action", data);
     io.emit(`e-action`, data);
   });
 
