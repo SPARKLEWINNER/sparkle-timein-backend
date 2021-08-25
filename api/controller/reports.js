@@ -3,7 +3,6 @@ const mongoose = require("mongoose");
 const axios = require("axios");
 const User = require("../models/Users");
 const Reports = require("../models/Reports");
-const { result } = require("lodash");
 const GOOGLE_API_GEOCODE =
   "https://maps.googleapis.com/maps/api/geocode/json?latlng=";
 
