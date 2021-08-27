@@ -1,5 +1,4 @@
 const users = [];
-console.log(users);
 const add_user = (id, name, uuid, _id) => {
   const existingUser = users.find(
     (user) => user.uuid.trim().toLowerCase() === uuid.trim().toLowerCase()

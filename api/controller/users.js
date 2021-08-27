@@ -2,6 +2,7 @@ const createError = require("http-errors");
 const stringCapitalizeName = require("string-capitalize-name");
 const mongoose = require("mongoose");
 const User = require("../models/Users");
+const logError = require("../services/logger");
 
 var controllers = {
   get_user: async function (req, res) {
@@ -16,6 +17,7 @@ var controllers = {
         res.status(201).json({ success: false, msg: `No such user.` });
       res.json(result);
     } catch (err) {
+      await logError(err, "Users", null, id, "GET");
       res.status(400).json({ success: false, msg: err });
       throw new createError.InternalServerError(err);
     }
@@ -32,6 +34,7 @@ var controllers = {
       }
       return res.status(201).json(result);
     } catch (err) {
+      await logError(err, "Users", null, null, "GET");
       res.status(400).json({
         success: false,
         msg: "No such users",
@@ -42,7 +45,6 @@ var controllers = {
     const { firstName, lastName, password, company, position, email, phone } =
       req.body;
     const { id } = req.params;
-
     if (Object.keys(req.body).length === 0) {
       return res.status(400).json({
         success: false,
@@ -79,6 +81,8 @@ var controllers = {
       });
     } catch (err) {
       console.log(err);
+      await logError(err, "Users", req.body, id, "PATCH");
+
       return res.status(400).json({
         success: false,
         msg: "No such users",

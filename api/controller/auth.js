@@ -34,21 +34,26 @@ var controllers = {
       return;
     }
 
-    const user = await User.find({ email: email }).lean().exec();
-    if (!user) {
-      res.status(201).json({ success: false, msg: `Invalid credentials!` });
-      return;
-    }
+    try {
+      const user = await User.find({ email: email }).lean().exec();
+      if (!user) {
+        res.status(201).json({ success: false, msg: `Invalid credentials!` });
+        return;
+      }
 
-    user.hashed_password = user.salt = undefined;
+      user.hashed_password = user.salt = undefined;
 
-    const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET);
-    res.cookie("t", token, { expire: new Date() + 9999 });
+      const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET);
+      res.cookie("t", token, { expire: new Date() + 9999 });
 
-    if (user.role === 0) {
-      return res.json({ token, ...user[0] });
-    } else {
-      return res.json({ token, ...user[0], isAdmin: true });
+      if (user.role === 0) {
+        return res.json({ token, ...user[0] });
+      } else {
+        return res.json({ token, ...user[0], isAdmin: true });
+      }
+    } catch (err) {
+      await logError(err, "Auth", null, id, "POST");
+      res.status(400).json({ success: false, msg: err });
     }
   },
   sign_out: function (req, res) {
@@ -97,7 +102,8 @@ var controllers = {
         };
 
         res.json(response);
-      } catch (error) {
+      } catch (err) {
+        await logError(err, "Auth", null, user._id, "POST");
         res.status(400).json({
           success: false,
           msg: "Unable to sign up",
@@ -123,16 +129,23 @@ var controllers = {
         success: false,
         msg: `Verification code doesn't match ${id}`,
       });
-    const result = await User.findOneAndUpdate(
-      { _id: mongoose.Types.ObjectId(id) },
-      { isVerified: true, verificationCode: null }
-    );
-    if (!result)
-      res.status(400).json({
-        success: false,
-        msg: `Unable to verify account ${id}`,
-      });
-    res.json(result);
+    try {
+      const result = await User.findOneAndUpdate(
+        { _id: mongoose.Types.ObjectId(id) },
+        { isVerified: true, verificationCode: null }
+      );
+      if (!result)
+        res.status(400).json({
+          success: false,
+          msg: `Unable to verify account ${id}`,
+        });
+      res.json(result);
+    } catch (err) {
+      await logError(err, "Auth", null, id, "PATCH");
+      res
+        .status(400)
+        .json({ success: false, msg: `Unable to verify account ${id}` });
+    }
   },
   google_sign_in_callback: function (req, res) {
     const _data = {

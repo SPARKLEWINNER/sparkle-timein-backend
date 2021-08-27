@@ -3,6 +3,8 @@ const mongoose = require("mongoose");
 const axios = require("axios");
 const User = require("../models/Users");
 const Reports = require("../models/Reports");
+const logError = require("../services/logger");
+
 const GOOGLE_API_GEOCODE =
   "https://maps.googleapis.com/maps/api/geocode/json?latlng=";
 
@@ -174,6 +176,7 @@ var controllers = {
       res.json(result);
     } catch (err) {
       console.log(err);
+      await logError(err, "Reports", req.body, id, "POST");
       return res.status(400).json({
         success: false,
         msg: "No such users",
@@ -205,6 +208,7 @@ var controllers = {
         });
       res.json(result);
     } catch (err) {
+      await logError(err, "Reports", null, id, "GET");
       res.status(400).json({ success: false, msg: err });
       throw new createError.InternalServerError(err);
     }
@@ -258,6 +262,7 @@ var controllers = {
 
       res.json(records);
     } catch (err) {
+      await logError(err, "Reports", null, id, "GET");
       res.status(400).json({ success: false, msg: err });
       throw new createError.InternalServerError(err);
     }
