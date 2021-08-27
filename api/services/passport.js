@@ -42,11 +42,30 @@ module.exports = function (passport) {
             const response = { ...user, token };
             done(null, response);
           } else {
-            // if user is not preset in our database save user data to database.
-            user = await User.create(newUser);
-            const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET);
-            const response = { ...user._doc, token };
-            done(null, response);
+            let isEmailExist = await User.findOne({
+              email: profile.emails[0].value,
+            })
+              .lean()
+              .exec();
+            if (isEmailExist) {
+              const result = await User.findOneAndUpdate(
+                { email: profile.emails[0].value },
+                { googleId: profile.id, image: profile.photos[0].value }
+              );
+              const token = jwt.sign(
+                { _id: isEmailExist._id },
+                process.env.JWT_SECRET
+              );
+              const response = { ...result._doc, token };
+
+              done(null, response);
+            } else {
+              // if user is not present in our database save user data to database.
+              user = await User.create(newUser);
+              const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET);
+              const response = { ...user._doc, token };
+              done(null, response);
+            }
           }
         } catch (err) {
           console.error(err);
