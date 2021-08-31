@@ -189,9 +189,9 @@ var controllers = {
         });
       }
     } else {
-      if (user[0].verificationCode !== null) {
-        await send_sms(phone, `Sparkle Time in verification code ${code}`);
-      }
+      // if (user[0].verificationCode !== null) {
+      //   await send_sms(phone, `Sparkle Time in verification code ${code}`);
+      // }
       const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET);
       res.cookie("t", token, { expire: new Date() + 9999 });
       res.json({ ...user[0], token });
@@ -206,11 +206,13 @@ var controllers = {
     })
       .lean()
       .exec();
-    if (!user)
-      res.status(400).json({
+
+    if (user.length === 0)
+      return res.status(400).json({
         success: false,
         msg: `Verification code doesn't match ${id}`,
       });
+
     try {
       const result = await User.findOneAndUpdate(
         { _id: mongoose.Types.ObjectId(id) },
