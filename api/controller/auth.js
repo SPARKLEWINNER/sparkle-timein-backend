@@ -114,11 +114,7 @@ var controllers = {
           });
         }
 
-        const isSent = await send_sms(
-          phone,
-          `Sparkle Time in verification code ${code}`
-        );
-        console.log("isSent", isSent);
+        await send_sms(phone, `Sparkle Time in verification code ${code}`);
         const token = jwt.sign({ _id: result._id }, process.env.JWT_SECRET);
         let response = {
           ...result._doc,
@@ -176,11 +172,7 @@ var controllers = {
             msg: "Unable to sign up",
           });
         }
-        const isSent = await send_sms(
-          phone,
-          `Sparkle Time in verification code ${code}`
-        );
-        console.log("isSent", isSent);
+        await send_sms(phone, `Sparkle Time in verification code ${code}`);
         const token = jwt.sign({ _id: result._id }, process.env.JWT_SECRET);
         let response = {
           ...result._doc,
@@ -197,6 +189,9 @@ var controllers = {
         });
       }
     } else {
+      if (user[0].verificationCode !== null) {
+        await send_sms(phone, `Sparkle Time in verification code ${code}`);
+      }
       const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET);
       res.cookie("t", token, { expire: new Date() + 9999 });
       res.json({ ...user[0], token });

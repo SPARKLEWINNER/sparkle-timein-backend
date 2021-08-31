@@ -9,7 +9,7 @@ const GOOGLE_API_GEOCODE =
   "https://maps.googleapis.com/maps/api/geocode/json?latlng=";
 
 const without_time = (dateTime) => {
-  var date = new Date(dateTime.getTime());
+  var date = new Date(dateTime);
   date.setHours(0, 0, 0, 0);
   return date;
 };
@@ -17,13 +17,13 @@ const without_time = (dateTime) => {
 var controllers = {
   report_time: async function (req, res) {
     const { id } = req.params;
-    const { status, location } = req.body;
-    const now = new Date();
+    const { status, location, logdate } = req.body;
+    const now = new Date(logdate);
     let month = now.getUTCMonth() + 1;
     let day = now.getUTCDate();
     let year = now.getUTCFullYear();
     let time = now.getTime();
-    let date = without_time(now);
+    let date = without_time(logdate);
 
     // convert coordinates to readable address
     let coordinates = `${location.latitude},${location.longitude}`;
