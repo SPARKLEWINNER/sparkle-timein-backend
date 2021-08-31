@@ -31,6 +31,7 @@ module.exports = function (io, socket) {
 
   socket.on("update_status", (status) => {
     const user = get_user(socket.id);
+    if (!user || !user._id) return;
     console.log("update_status", user);
     io.in(user._id).emit("receive_status", {
       user: user.name,
