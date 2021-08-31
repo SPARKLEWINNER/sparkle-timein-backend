@@ -201,7 +201,7 @@ var controllers = {
     const { code } = req.body;
     const { id } = req.params;
     const user = await User.find({
-      id: mongoose.Types.ObjectId(id),
+      _id: mongoose.Types.ObjectId(id),
       verificationCode: code,
     })
       .lean()
