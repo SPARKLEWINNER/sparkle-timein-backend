@@ -114,7 +114,7 @@ var controllers = {
           });
         }
 
-        await send_sms(phone, `Sparkle Time in verification code ${code}`);
+        // await send_sms(phone, `Sparkle Time in verification code ${code}`);/
         const token = jwt.sign({ _id: result._id }, process.env.JWT_SECRET);
         let response = {
           ...result._doc,
