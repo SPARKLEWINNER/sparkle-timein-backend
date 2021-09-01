@@ -16,6 +16,7 @@ let online = 0;
 module.exports = function (io, socket) {
   // account name - account id - room id (store)
   socket.on("connected", ({ name, uuid, _id }, callback) => {
+    console.log(`User connected - ${name}`);
     const { user, error } = add_user(socket.id, name, uuid, _id);
     if (error) return callback(error);
 
