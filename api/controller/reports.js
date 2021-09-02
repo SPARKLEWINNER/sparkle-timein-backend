@@ -4,6 +4,7 @@ const axios = require("axios");
 const User = require("../models/Users");
 const Reports = require("../models/Reports");
 const logError = require("../services/logger");
+const connection = mongoose.connection;
 
 const GOOGLE_API_GEOCODE =
   "https://maps.googleapis.com/maps/api/geocode/json?latlng=";
@@ -216,7 +217,10 @@ var controllers = {
   get_reports: async function (req, res) {
     const { id } = req.params;
     if (!id) res.status(404).json({ success: false, msg: `No such user.` });
-    let user = await User.findOne({ _id: mongoose.Types.ObjectId(id) })
+
+    let user = await User.findOne({
+      _id: mongoose.Types.ObjectId(id),
+    })
       .lean()
       .exec();
     if (!user) {
@@ -237,7 +241,6 @@ var controllers = {
           msg: "No registered employees",
         });
       }
-      let details;
       let records = await Promise.all(
         employees.map(async (v, k) => {
           const reports = await Reports.find({
@@ -261,6 +264,108 @@ var controllers = {
       }
 
       res.json(records);
+    } catch (err) {
+      await logError(err, "Reports", null, id, "GET");
+      res.status(400).json({ success: false, msg: err });
+      throw new createError.InternalServerError(err);
+    }
+  },
+  get_reports_range: async function (req, res) {
+    const { id, start_date, end_date } = req.params;
+    if (!id || !start_date || !end_date)
+      res
+        .status(404)
+        .json({ success: false, msg: `Invalid Request parameters.` });
+
+    let user = await User.findOne({ _id: mongoose.Types.ObjectId(id) })
+      .lean()
+      .exec();
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        msg: "No such users",
+      });
+    }
+
+    try {
+      let employees = await User.find({ company: user.company, role: 0 })
+        .lean()
+        .exec();
+
+      if (!employees) {
+        return res.status(201).json({
+          success: true,
+          msg: "No registered employees",
+        });
+      }
+      let end_dt = new Date(end_date);
+      end_dt = end_dt.setDate(end_dt.getDate() + 1);
+
+      let reports = await Reports.find({
+        createdAt: { $gte: new Date(start_date), $lt: end_dt },
+      })
+        .sort({ createdAt: -1 })
+        .lean()
+        .exec();
+
+      let reports_with_user = [];
+      await Object.values(reports).forEach((item) => {
+        const user = employees.filter(
+          (emp) => emp._id.toString() === item.uid.toString()
+        );
+        if (!user[0]) return;
+        let _u = {
+          _id: user[0]._id,
+          displayName:
+            user[0].firstName || user[0].lastName
+              ? `${user[0].firstName} ${user[0].lastName}`
+              : user[0].displayName,
+          email: user[0].email,
+          phone: user[0].phone,
+        };
+        reports_with_user.push({
+          ..._u,
+          date: item.date,
+          createdAt: item.createdAt,
+          updatedAt: item.updatedAt,
+          reports: [item],
+        });
+      });
+
+      if (reports_with_user.length === 0) {
+        return res.status(201).json({
+          success: true,
+          msg: "No Records",
+        });
+      }
+
+      const newArray = reports_with_user
+        .sort((a, b) => b.createdAt - a.createdAt)
+        .reduce((acc, dt) => {
+          const date = new Date(dt.date);
+          const y = new Intl.DateTimeFormat("en", { year: "numeric" }).format(
+            date
+          );
+          const m = new Intl.DateTimeFormat("en", { month: "numeric" }).format(
+            date
+          );
+          const d = new Intl.DateTimeFormat("en", { day: "2-digit" }).format(
+            date
+          );
+          const formatedDate = `${m}/${d}/${y}`;
+          const dateAcc = acc[formatedDate];
+          if (!dateAcc) {
+            acc[formatedDate] = {
+              date: formatedDate,
+              value: [{ ...dt }],
+            };
+          } else {
+            acc[formatedDate].value.push({ ...dt });
+          }
+          return acc;
+        }, {});
+
+      res.json(newArray);
     } catch (err) {
       await logError(err, "Reports", null, id, "GET");
       res.status(400).json({ success: false, msg: err });
