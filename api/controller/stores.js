@@ -42,7 +42,7 @@ var controllers = {
         });
         return;
       }
-      return res.status(201).json(result);
+      return res.status(200).json(result);
     } catch (err) {
       await logError(err, "Stores", null, id, "GET");
       res.status(400).json({

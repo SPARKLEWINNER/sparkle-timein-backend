@@ -1,30 +1,109 @@
 "use strict";
 const jwt = require("jsonwebtoken"); // to generate signed token
-const expressJwt = require("express-jwt"); // for authorization check
 const User = require("../models/Users");
 const mongoose = require("mongoose");
 const send_sms = require("../services/twilio");
 const querystring = require("querystring");
 const logError = require("../services/logger");
+const logDevice = require("../services/devices");
+
+const maxAge = 3 * 24 * 60 * 60;
+const create_token = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: maxAge });
+};
+let store_end_access = [99, 1];
 
 var controllers = {
   require_sign_in: function (req, res, next) {
-    expressJwt({
-      secret: process.env.JWT_SECRET,
-      userProperty: "auth",
-      algorithms: ["sha1", "RS256", "HS256"],
+    let token = req.headers["authorization"];
+    console.log(token);
+
+    if (!token || typeof token === undefined)
+      return res
+        .status(401)
+        .json({ success: false, is_authorized: false, msg: "Not authorized" });
+
+    token = token.split(" ")[1];
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded_token) => {
+      console.log(decoded_token);
+      if (err)
+        return res.status(401).json({
+          success: false,
+          is_authorized: false,
+          msg: "Not authorized",
+        });
+
+      next();
     });
-    next();
   },
   is_authenticated: function (req, res, next) {
-    console.log(req.profile, req.auth);
-    // let user = req.profile && req.auth && req.profile._id == req.auth._id;
-    // if (!user) {
-    //   return res.status(403).json({
-    //     error: "Access denied",
-    //   });
-    // }
-    next();
+    let token = req.headers["authorization"];
+
+    if (!token || typeof token === undefined)
+      return res
+        .status(401)
+        .json({ success: false, is_authorized: false, msg: "Not authorized" });
+
+    token = token.split(" ")[1];
+
+    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded_token) => {
+      if (err) {
+        return res.status(401).json({
+          error: "Unauthorized",
+        });
+      }
+
+      let user = await User.find({
+        _id: mongoose.Types.ObjectId(decoded_token.id),
+      })
+        .lean()
+        .exec();
+
+      if (!user) {
+        return res.status(401).json({
+          error: "Unable to access",
+        });
+      }
+
+      next();
+    });
+  },
+  is_store_authenticated: async function (req, res, next) {
+    let token = req.headers["authorization"];
+
+    if (!token || typeof token === undefined)
+      return res
+        .status(401)
+        .json({ success: false, is_authorized: false, msg: "Not authorized" });
+
+    token = token.split(" ")[1];
+    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded_token) => {
+      if (err) {
+        return res.status(401).json({
+          error: "Unable to access",
+        });
+      }
+
+      let user = await User.find({
+        _id: mongoose.Types.ObjectId(decoded_token.id),
+      })
+        .lean()
+        .exec();
+
+      if (!user) {
+        return res.status(401).json({
+          error: "Unable to access",
+        });
+      }
+
+      let role = store_end_access.includes(user[0].role);
+      if (!role) {
+        return res.status(403).json({
+          error: "Unauthorized",
+        });
+      }
+      next();
+    });
   },
   sign_in: async function (req, res) {
     const { email, password } = req.body;
@@ -34,31 +113,30 @@ var controllers = {
         .json({ success: false, msg: `Missing email or password field!` });
       return;
     }
-
     try {
-      const user = await User.find({ email: email }).lean().exec();
+      const user = await User.login(email, password);
       if (!user) {
-        res.status(201).json({ success: false, msg: `Invalid credentials!` });
+        res.status(400).json({ success: false, msg: `Invalid credentials!` });
         return;
       }
 
       user.hashed_password = user.salt = undefined;
 
-      const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET);
-      res.cookie("t", token, { expire: new Date() + 9999 });
-
+      const token = create_token(user._id);
+      res.cookie("jwt", token, { expire: new Date() + 9999 });
       if (user.role === 0) {
-        return res.json({ token, ...user[0] });
+        const store = await User.find({ company: user.company }).lean().exec();
+        return res.json({ token, ...user, store_id: store[0]._id });
       } else {
-        return res.json({ token, ...user[0], isAdmin: true });
+        return res.json({ token, ...user, isAdmin: true });
       }
     } catch (err) {
-      await logError(err, "Auth", null, id, "POST");
+      await logError(err, "Auth.sign_in", null, null, "POST");
       res.status(400).json({ success: false, msg: err });
     }
   },
   sign_out: function (req, res) {
-    res.clearCookie("t");
+    res.clearCookie("jwt");
     res.json({ message: "Sign out success" });
   },
   sign_up: async function (req, res) {
@@ -172,8 +250,10 @@ var controllers = {
             msg: "Unable to sign up",
           });
         }
+
         await send_sms(phone, `Sparkle Time in verification code ${code}`);
-        const token = jwt.sign({ _id: result._id }, process.env.JWT_SECRET);
+        const token = create_token(result._id);
+
         let response = {
           ...result._doc,
           isNew: true,
@@ -182,7 +262,7 @@ var controllers = {
 
         res.json(response);
       } catch (err) {
-        await logError(err, "Auth", null, user._id, "POST");
+        await logError(err, "Auth.phone_sign_in", null, user._id, "POST");
         res.status(400).json({
           success: false,
           msg: "Unable to sign up",
@@ -192,9 +272,30 @@ var controllers = {
       // if (user[0].verificationCode !== null) {
       //   await send_sms(phone, `Sparkle Time in verification code ${code}`);
       // }
-      const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET);
-      res.cookie("t", token, { expire: new Date() + 9999 });
-      res.json({ ...user[0], token });
+
+      try {
+        const store = await User.find({ company: user[0].company })
+          .lean()
+          .exec();
+        const token = create_token(user[0]._id);
+        res.cookie("jwt", token, { httpOnly: true, maxAge: maxAge * 1000 });
+
+        const test = await logDevice(
+          req.useragent,
+          "Auth.phone_sign_in",
+          user[0]._id,
+          "POST"
+        );
+
+        console.log(test);
+
+        res.status(201).json({ ...user[0], token, store_id: store[0]._id });
+      } catch (err) {
+        await logError(err, "Auth.phone_sign_in", err, null, "POST");
+        res
+          .status(400)
+          .json({ success: false, msg: `Unable to sign in using phone` });
+      }
     }
   },
   phone_verify: async function (req, res) {
@@ -249,6 +350,8 @@ var controllers = {
     };
 
     const _url = querystring.stringify(_data);
+
+    res.cookie("jwt", req.user.token, { expire: new Date() + 9999 });
     let redirect_url =
       parseInt(req.user.role) === 99
         ? `${process.env.REACT_ADMIN_UI}/login?${_url}`

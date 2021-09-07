@@ -203,7 +203,7 @@ var controllers = {
         .lean()
         .exec();
       if (!result)
-        res.status(400).json({
+        return res.status(400).json({
           success: false,
           msg: `Unable to get current user status`,
         });
@@ -301,8 +301,9 @@ var controllers = {
       let end_dt = new Date(end_date);
       end_dt = end_dt.setDate(end_dt.getDate() + 1);
 
+      let start_dt = new Date(start_date);
       let reports = await Reports.find({
-        createdAt: { $gte: new Date(start_date), $lt: end_dt },
+        createdAt: { $gte: start_dt, $lt: end_dt },
       })
         .sort({ createdAt: -1 })
         .lean()

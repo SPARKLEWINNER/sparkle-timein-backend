@@ -38,10 +38,21 @@ module.exports = function (app) {
 
   app
     .route("/api/user/records/:id")
-    .get(auth.require_sign_in, reports.get_reports);
+    .get(
+      auth.require_sign_in,
+      auth.is_store_authenticated,
+      reports.get_reports
+    );
+
   app
     .route("/api/user/records/:id/:start_date/:end_date")
-    .get(auth.require_sign_in, reports.get_reports_range);
+    .get(
+      auth.require_sign_in,
+      auth.is_store_authenticated,
+      reports.get_reports_range
+    );
 
-  app.route("/api/store/users/:id").get(auth.require_sign_in, stores.get_users);
+  app
+    .route("/api/store/users/:id")
+    .get(auth.require_sign_in, auth.is_store_authenticated, stores.get_users);
 };

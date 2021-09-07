@@ -1,8 +1,8 @@
-const mongoose = require('mongoose')
+const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const collectionName = "users";
 const crypto = require("crypto");
-const uuid = require('uuid').v1;
+const uuid = require("uuid").v1;
 const data = {
   googleId: {
     type: String,
@@ -38,15 +38,15 @@ const data = {
   },
   phone: {
     type: String,
-    default: null
+    default: null,
   },
   verificationCode: {
     type: String,
-    default: null
+    default: null,
   },
   hashed_password: {
     type: String,
-    default: null
+    default: null,
   },
   resetToken: {
     type: String,
@@ -56,7 +56,7 @@ const data = {
   salt: String,
   role: {
     type: Number,
-    default: 0
+    default: 0,
   },
   isVerified: {
     type: Boolean,
@@ -70,7 +70,7 @@ const data = {
     type: Date,
     default: Date.now,
   },
-}
+};
 const userSchema = new Schema(data, { timestamps: true });
 userSchema
   .virtual("password") // Here 'password' is now a property on User documents.
@@ -97,11 +97,23 @@ userSchema.methods = {
     } catch (err) {
       return "";
     }
-  }
+  },
 };
 
+// static method to login user
+userSchema.statics.login = async function (email, password) {
+  const user = await this.findOne({ email }).lean().exec();
+  if (!user) return false;
+  let encryptPassword = crypto
+    .createHmac("sha1", user.salt)
+    .update(password)
+    .digest("hex");
+  if (encryptPassword !== user.hashed_password) return false;
 
-module.exports = mongoose.model('User', userSchema, collectionName);
+  return user;
+};
+
+module.exports = mongoose.model("User", userSchema, collectionName);
 
 // const mongoose = require('mongoose');
 // const unique = require('mongoose-unique-validator');

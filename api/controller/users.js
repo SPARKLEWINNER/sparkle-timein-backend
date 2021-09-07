@@ -1,8 +1,15 @@
+const jwt = require("jsonwebtoken");
 const createError = require("http-errors");
 const stringCapitalizeName = require("string-capitalize-name");
 const mongoose = require("mongoose");
 const User = require("../models/Users");
 const logError = require("../services/logger");
+const logDevice = require("../services/devices");
+
+const maxAge = 3 * 24 * 60 * 60;
+const create_token = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: maxAge });
+};
 
 var controllers = {
   get_user: async function (req, res) {
@@ -76,6 +83,8 @@ var controllers = {
               .status(400)
               .json({ success: false, msg: `Unable to update details ${id}` });
 
+          const token = create_token(result._id);
+          res.cookie("jwt", token, { expire: new Date() + 9999 });
           return res.json(result);
         });
       });

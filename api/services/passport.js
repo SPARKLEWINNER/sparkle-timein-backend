@@ -3,6 +3,11 @@ const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const jwt = require("jsonwebtoken"); // to generate signed token
 const User = require("../models/Users");
 
+const maxAge = 3 * 24 * 60 * 60;
+const create_token = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: maxAge });
+};
+
 module.exports = function (passport) {
   passport.use(
     new GoogleStrategy(
@@ -37,7 +42,7 @@ module.exports = function (passport) {
           //find the user in our database
           let user = await User.findOne({ googleId: profile.id }).lean().exec();
           if (user) {
-            const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET);
+            const token = create_token(user._id);
             //If user present in our database.
             const response = { ...user, token };
             done(null, response);
@@ -52,17 +57,14 @@ module.exports = function (passport) {
                 { email: profile.emails[0].value },
                 { googleId: profile.id, image: profile.photos[0].value }
               );
-              const token = jwt.sign(
-                { _id: isEmailExist._id },
-                process.env.JWT_SECRET
-              );
+              const token = create_token(isEmailExist._id);
               const response = { ...result._doc, token };
 
               done(null, response);
             } else {
               // if user is not present in our database save user data to database.
               user = await User.create(newUser);
-              const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET);
+              const token = create_token(user._id);
               const response = { ...user._doc, token };
               done(null, response);
             }
