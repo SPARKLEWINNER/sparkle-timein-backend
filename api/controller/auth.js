@@ -16,8 +16,6 @@ let store_end_access = [99, 1];
 var controllers = {
   require_sign_in: function (req, res, next) {
     let token = req.headers["authorization"];
-    console.log(token);
-
     if (!token || typeof token === undefined)
       return res
         .status(401)
@@ -25,7 +23,6 @@ var controllers = {
 
     token = token.split(" ")[1];
     jwt.verify(token, process.env.JWT_SECRET, (err, decoded_token) => {
-      console.log(decoded_token);
       if (err)
         return res.status(401).json({
           success: false,
@@ -219,7 +216,7 @@ var controllers = {
     }
   },
   phone_sign_in: async function (req, res) {
-    let { phone } = req.body;
+    let { phone, company } = req.body;
     const now = new Date();
     let code = Math.floor(100000 + Math.random() * 900000);
     const numberFormat =
@@ -232,9 +229,21 @@ var controllers = {
 
     const user = await User.find({ phone: phone }).lean().exec();
     if (user.length === 0) {
+      const store = await User.find({ _id: mongoose.Types.ObjectId(company) })
+        .lean()
+        .exec();
+
+      if (!store) {
+        return res.status(400).json({
+          success: false,
+          msg: "Unable to sign in store not found",
+        });
+      }
+
       let _params = {
         phone: phone,
         verificationCode: code,
+        company: store[0].company,
         createdAt: now.toISOString(),
         hashed_password: undefined,
         salt: undefined,
@@ -258,6 +267,8 @@ var controllers = {
           ...result._doc,
           isNew: true,
           token,
+          store_id: company,
+          sid: company,
         };
 
         res.json(response);
@@ -269,25 +280,25 @@ var controllers = {
         });
       }
     } else {
-      // if (user[0].verificationCode !== null) {
-      //   await send_sms(phone, `Sparkle Time in verification code ${code}`);
-      // }
+      if (!user[0].isVerified || user[0].isVerified === "false") {
+        await send_sms(phone, `Sparkle Time in verification code ${code}`);
+      }
 
       try {
-        const store = await User.find({ company: user[0].company })
+        const store = await User.find({
+          _id: mongoose.Types.ObjectId(company),
+        })
           .lean()
           .exec();
         const token = create_token(user[0]._id);
         res.cookie("jwt", token, { httpOnly: true, maxAge: maxAge * 1000 });
 
-        const test = await logDevice(
+        await logDevice(
           req.useragent,
           "Auth.phone_sign_in",
           user[0]._id,
           "POST"
         );
-
-        console.log(test);
 
         res.status(201).json({ ...user[0], token, store_id: store[0]._id });
       } catch (err) {
@@ -326,7 +337,7 @@ var controllers = {
         });
       res.json(result);
     } catch (err) {
-      await logError(err, "Auth", null, id, "PATCH");
+      await logError(err, "Auth.phone_verify", null, id, "PATCH");
       res
         .status(400)
         .json({ success: false, msg: `Unable to verify account ${id}` });

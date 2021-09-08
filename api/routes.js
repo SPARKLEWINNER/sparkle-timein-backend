@@ -30,6 +30,9 @@ module.exports = function (app) {
 
   app.route("/api/user/:id").patch(auth.require_sign_in, user.update_user);
   app
+    .route("/api/user/store/:id")
+    .patch(auth.require_sign_in, user.update_user_store);
+  app
     .route("/api/user/status/:id")
     .get(auth.require_sign_in, reports.get_status_time);
   app

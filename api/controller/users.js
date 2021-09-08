@@ -60,34 +60,88 @@ var controllers = {
     }
 
     try {
-      await User.findOne({ _id: mongoose.Types.ObjectId(id) }).then((user) => {
-        if (!user)
-          return res
-            .status(400)
-            .json({ success: false, msg: `User not found ${id}` });
-
-        user.password = password;
-        user.firstName = firstName;
-        user.lastName = lastName;
-        user.displayName = firstName + " " + lastName;
-        user.isVerified = true;
-        user.isOnBoarded = true;
-        user.company = company;
-        user.position = position;
-        user.email = email;
-        user.phone = phone;
-
-        user.save().then((result) => {
-          if (!result)
+      await User.findOne({ _id: mongoose.Types.ObjectId(id) })
+        .then((user) => {
+          if (!user)
             return res
               .status(400)
-              .json({ success: false, msg: `Unable to update details ${id}` });
+              .json({ success: false, msg: `User not found ${id}` });
 
-          const token = create_token(result._id);
-          res.cookie("jwt", token, { expire: new Date() + 9999 });
-          return res.json(result);
-        });
+          user.password = password;
+          user.firstName = firstName;
+          user.lastName = lastName;
+          user.displayName = firstName + " " + lastName;
+          user.isVerified = true;
+          user.isOnBoarded = true;
+          user.company = company;
+          user.position = position;
+          user.email = email;
+          user.phone = phone;
+
+          user.save().then((result) => {
+            if (!result)
+              return res.status(400).json({
+                success: false,
+                msg: `Unable to update details ${id}`,
+              });
+
+            const token = create_token(result._id);
+            res.cookie("jwt", token, { expire: new Date() + 9999 });
+            return res.json(result);
+          });
+        })
+        .catch((err) => console.log(err));
+    } catch (err) {
+      console.log(err);
+      await logError(err, "Users", req.body, id, "PATCH");
+
+      return res.status(400).json({
+        success: false,
+        msg: "No such users",
       });
+    }
+  },
+  update_user_store: async function (req, res) {
+    const { firstName, lastName, password, company, email, phone } = req.body;
+    const { id } = req.params;
+    if (Object.keys(req.body).length === 0) {
+      return res.status(400).json({
+        success: false,
+        msg: `Missing fields`,
+      });
+    }
+
+    try {
+      await User.findOne({ _id: mongoose.Types.ObjectId(id) })
+        .then((user) => {
+          if (!user)
+            return res
+              .status(400)
+              .json({ success: false, msg: `User not found ${id}` });
+
+          user.password = password;
+          user.firstName = firstName;
+          user.lastName = lastName;
+          user.displayName = firstName + " " + lastName;
+          user.isVerified = true;
+          user.isOnBoarded = true;
+          user.company = company;
+          user.email = email;
+          user.phone = phone;
+
+          user.save().then((result) => {
+            if (!result)
+              return res.status(400).json({
+                success: false,
+                msg: `Unable to update details ${id}`,
+              });
+
+            const token = create_token(result._id);
+            res.cookie("jwt", token, { expire: new Date() + 9999 });
+            return res.json(result);
+          });
+        })
+        .catch((err) => console.log(err));
     } catch (err) {
       console.log(err);
       await logError(err, "Users", req.body, id, "PATCH");
