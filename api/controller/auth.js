@@ -82,12 +82,12 @@ var controllers = {
       }
 
       let user = await User.find({
-        _id: mongoose.Types.ObjectId(decoded_token.id),
+        _id: mongoose.Types.ObjectId(decoded_token._id),
       })
         .lean()
         .exec();
 
-      if (!user) {
+      if (!user || user.length === 0) {
         return res.status(401).json({
           error: "Unable to access",
         });
