@@ -75,7 +75,7 @@ var controllers = {
 
     token = token.split(" ")[1];
     jwt.verify(token, process.env.JWT_SECRET, async (err, decoded_token) => {
-      console.log("report", error);
+      console.log("report", err);
       if (err) {
         return res.status(401).json({
           error: "Unable to access",
