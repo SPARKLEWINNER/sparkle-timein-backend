@@ -66,42 +66,26 @@ var controllers = {
     });
   },
   is_store_authenticated: async function (req, res, next) {
-    let token = req.headers["authorization"];
+    const { id } = req.params;
+    if (!id) res.status(404).json({ success: false, msg: `No such user.` });
+    let user = await User.find({
+      _id: mongoose.Types.ObjectId(id),
+    })
+      .lean()
+      .exec();
+    if (!user || user.length === 0) {
+      return res.status(401).json({
+        error: "Unable to access",
+      });
+    }
 
-    if (!token || typeof token === undefined)
-      return res
-        .status(401)
-        .json({ success: false, is_authorized: false, msg: "Not authorized" });
-
-    token = token.split(" ")[1];
-    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded_token) => {
-      console.log("report", err, decoded_token);
-      if (err) {
-        return res.status(401).json({
-          error: "Unable to access",
-        });
-      }
-
-      let user = await User.find({
-        _id: mongoose.Types.ObjectId(decoded_token._id),
-      })
-        .lean()
-        .exec();
-
-      if (!user || user.length === 0) {
-        return res.status(401).json({
-          error: "Unable to access",
-        });
-      }
-
-      let role = store_end_access.includes(user[0].role);
-      if (!role) {
-        return res.status(403).json({
-          error: "Unauthorized",
-        });
-      }
-      next();
-    });
+    let role = store_end_access.includes(user[0].role);
+    if (!role) {
+      return res.status(403).json({
+        error: "Unauthorized",
+      });
+    }
+    next();
   },
   sign_in: async function (req, res) {
     const { email, password } = req.body;
