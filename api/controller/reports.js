@@ -11,7 +11,7 @@ const GOOGLE_API_GEOCODE =
 
 const without_time = (dateTime) => {
   var date = new Date(dateTime);
-  date.setHours(0, 0, 0, 0);
+  date.setUTCHours(0, 0, 0, 0);
   return date;
 };
 
@@ -19,12 +19,11 @@ var controllers = {
   report_time: async function (req, res) {
     const { id } = req.params;
     const { status, location, logdate } = req.body;
-    const now = new Date(logdate);
+    const now = new Date();
     let month = now.getUTCMonth() + 1;
     let day = now.getUTCDate();
     let year = now.getUTCFullYear();
     let time = now.getTime();
-    let date = without_time(logdate);
 
     // convert coordinates to readable address
     let coordinates = `${location.latitude},${location.longitude}`;
@@ -67,6 +66,7 @@ var controllers = {
 
     try {
       let result;
+      let date = without_time(now);
       const isReportsExist = await Reports.find({
         uid: mongoose.Types.ObjectId(id),
       })
@@ -101,66 +101,66 @@ var controllers = {
           // if with actual data and should have same day of last record
           result = await Reports.create(reports);
           return res.json(result);
-        } else {
-          let last_record =
-            record_last.record.length >= 1
-              ? record_last.record.slice(-1).pop()
-              : record_last.record[0];
+        }
 
-          if (last_record.status === status)
-            return res.status(400).json({
-              success: false,
-              msg: `Unable to ${status} again`,
-            });
+        let last_record =
+          record_last.record.length >= 1
+            ? record_last.record.slice(-1).pop()
+            : record_last.record[0];
 
-          // check if existing break in / break out
-          let tookBreakIn;
-          let tookBreakOut;
-          Object.values(record_last.record).forEach((v) => {
-            if (v.status === "break-in") {
-              tookBreakIn = true;
-            }
-
-            if (v.status === "break-out") {
-              tookBreakOut = true;
-            }
+        if (last_record.status === status)
+          return res.status(400).json({
+            success: false,
+            msg: `Unable to ${status} again`,
           });
 
-          if (tookBreakIn && status === "break-in") {
-            return res.status(400).json({
-              success: false,
-              msg: `Unable to ${status} again`,
-            });
+        // check if existing break in / break out
+        let tookBreakIn;
+        let tookBreakOut;
+        Object.values(record_last.record).forEach((v) => {
+          if (v.status === "break-in") {
+            tookBreakIn = true;
           }
 
-          if (tookBreakOut && status === "break-out") {
-            return res.status(400).json({
-              success: false,
-              msg: `Unable to ${status} again`,
-            });
+          if (v.status === "break-out") {
+            tookBreakOut = true;
           }
+        });
 
-          let newReports = {
-            dateTime: now,
-            status: status,
-            month: month,
-            day: day,
-            year: year,
-            time: time,
-            date: date,
-            location: location,
-            address: address,
-          };
-
-          let update = {
-            $set: { status: status },
-            $push: { record: newReports },
-          };
-          result = await Reports.findOneAndUpdate(
-            { date: new Date(date), uid: mongoose.Types.ObjectId(id) },
-            update
-          );
+        if (tookBreakIn && status === "break-in") {
+          return res.status(400).json({
+            success: false,
+            msg: `Unable to ${status} again`,
+          });
         }
+
+        if (tookBreakOut && status === "break-out") {
+          return res.status(400).json({
+            success: false,
+            msg: `Unable to ${status} again`,
+          });
+        }
+
+        let newReports = {
+          dateTime: now,
+          status: status,
+          month: month,
+          day: day,
+          year: year,
+          time: time,
+          date: date,
+          location: location,
+          address: address,
+        };
+
+        let update = {
+          $set: { status: status },
+          $push: { record: newReports },
+        };
+        result = await Reports.findOneAndUpdate(
+          { date: new Date(date), uid: mongoose.Types.ObjectId(id) },
+          update
+        );
 
         // check if existing time in / time out
       } else {
@@ -302,8 +302,9 @@ var controllers = {
       end_dt = end_dt.setDate(end_dt.getDate() + 1);
 
       let start_dt = new Date(start_date);
+      start_dt = start_dt.setDate(start_dt.getDate());
       let reports = await Reports.find({
-        createdAt: { $gte: start_dt, $lt: end_dt },
+        date: { $gte: start_dt, $lt: end_dt },
       })
         .sort({ createdAt: -1 })
         .lean()
