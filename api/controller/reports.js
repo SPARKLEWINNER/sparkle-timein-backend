@@ -88,6 +88,23 @@ var controllers = {
           address: address,
         },
       });
+
+      console.log({
+        uid: id,
+        date: date,
+        status: status,
+        record: {
+          dateTime: now,
+          status: status,
+          month: month,
+          day: day,
+          year: year,
+          time: time,
+          date: date,
+          location: location,
+          address: address,
+        },
+      });
       let record_last =
         isReportsExist.length >= 1
           ? isReportsExist.slice(-1).pop()
