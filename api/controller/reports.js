@@ -4,14 +4,17 @@ const axios = require("axios");
 const User = require("../models/Users");
 const Reports = require("../models/Reports");
 const logError = require("../services/logger");
-const connection = mongoose.connection;
-
+const moment = require('moment-timezone');
+moment().tz('Asia/Manila').format();
+const current_date =  `${moment().toISOString(true).substring(0, 23)}Z`;
 const GOOGLE_API_GEOCODE =
   "https://maps.googleapis.com/maps/api/geocode/json?latlng=";
 
 const without_time = (dateTime) => {
   var date = new Date(dateTime);
+
   date.setUTCHours(0, 0, 0, 0);
+
   return date;
 };
 
@@ -19,11 +22,11 @@ var controllers = {
   report_time: async function (req, res) {
     const { id } = req.params;
     const { status, location, logdate } = req.body;
-    const now = new Date();
+    const now = new Date(current_date);
     let month = now.getUTCMonth() + 1;
     let day = now.getUTCDate();
     let year = now.getUTCFullYear();
-    let time = now.getTime();
+    let time = Date.now();
 
     // convert coordinates to readable address
     let coordinates = `${location.latitude},${location.longitude}`;
@@ -89,22 +92,6 @@ var controllers = {
         },
       });
 
-      console.log({
-        uid: id,
-        date: date,
-        status: status,
-        record: {
-          dateTime: now,
-          status: status,
-          month: month,
-          day: day,
-          year: year,
-          time: time,
-          date: date,
-          location: location,
-          address: address,
-        },
-      });
       let record_last =
         isReportsExist.length >= 1
           ? isReportsExist.slice(-1).pop()
