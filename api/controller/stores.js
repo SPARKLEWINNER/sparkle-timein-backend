@@ -34,7 +34,37 @@ var controllers = {
       res.status(404).json({ success: false, msg: `No such store found.` });
 
     try {
-      const result = await User.find({ company: store.company }).lean().exec();
+      const result = await User.find({ company: store.company, isArchived: false}).lean().exec();
+      if (!result) {
+        res.status(400).json({
+          success: false,
+          msg: "No such users",
+        });
+        return;
+      }
+      return res.status(200).json(result);
+    } catch (err) {
+      await logError(err, "Stores", null, id, "GET");
+      res.status(400).json({
+        success: false,
+        msg: "No such users",
+      });
+    }
+  },
+  get_users_archived: async function (req, res) {
+    const { id } = req.params;
+    if (!id) res.status(404).json({ success: false, msg: `No such user.` });
+
+    const store = await User.findOne({ _id: mongoose.Types.ObjectId(id) })
+      .lean()
+      .exec();
+
+    if (!store)
+      res.status(404).json({ success: false, msg: `No such store found.` });
+
+    try {
+      const result = await User.find({ company: store.company, isArchived: true}).lean().exec();
+      console.log(result)
       if (!result) {
         res.status(400).json({
           success: false,
@@ -99,6 +129,108 @@ var controllers = {
       });
     }
   },
+  archive_user: async function (req, res) {
+    const { id, user_id } = req.params;
+
+    if (!id || !user_id) {
+      return res.status(400).json({
+        success: false,
+        msg: `User not found ${id}`,
+      });
+    }
+
+    try {
+      await User.findOne({ _id: mongoose.Types.ObjectId(user_id) }).then((user) => {
+        if (!user)
+          return res
+            .status(400)
+            .json({ success: false, msg: `User not found ${user_id}` });
+
+        user.isArchived = true;
+
+        user.save().then((result) => {
+          if (!result)
+            return res
+              .status(400)
+              .json({ success: false, msg: `Unable to update details ${user_id}` });
+
+          return res.json(result);
+        });
+      });
+    } catch (err) {
+      console.log(err);
+      await logError(err, "Stores.archive_user", req.body, user_id, "PATCH");
+      return res.status(400).json({
+        success: false,
+        msg: "No such users",
+      });
+    }
+  },
+  restore_user: async function (req, res) {
+    const { id, user_id } = req.params;
+
+    if (!id || !user_id) {
+      return res.status(400).json({
+        success: false,
+        msg: `User not found ${id}`,
+      });
+    }
+
+    try {
+      await User.findOne({ _id: mongoose.Types.ObjectId(user_id) }).then((user) => {
+        if (!user)
+          return res
+            .status(400)
+            .json({ success: false, msg: `User not found ${user_id}` });
+
+        user.isArchived = false;
+
+        user.save().then((result) => {
+          if (!result)
+            return res
+              .status(400)
+              .json({ success: false, msg: `Unable to update details ${user_id}` });
+
+          return res.json(result);
+        });
+      });
+    } catch (err) {
+      console.log(err);
+      await logError(err, "Stores.archive_user", req.body, user_id, "PATCH");
+      return res.status(400).json({
+        success: false,
+        msg: "No such users",
+      });
+    }
+  },
+  remove_user: async function(req, res){
+    const { id, user_id } = req.params;
+
+    if (!id || !user_id) {
+      return res.status(400).json({
+        success: false,
+        msg: `User not found ${id}`,
+      });
+    }
+
+    try {
+      await User.deleteOne({ _id: mongoose.Types.ObjectId(user_id) }).then((user) => {
+        if (!user)
+          return res
+            .status(400)
+            .json({ success: false, msg: `Unable to remove user ${user_id}` });
+
+          return res.json(user);
+      });
+    } catch (err) {
+      console.log(err);
+      await logError(err, "Stores.remove_user", req.body, user_id, "DELETE");
+      return res.status(400).json({
+        success: false,
+        msg: "No such users",
+      });
+    }
+  }
 };
 
 module.exports = controllers;

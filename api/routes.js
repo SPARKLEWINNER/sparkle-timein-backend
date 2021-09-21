@@ -38,7 +38,7 @@ module.exports = function (app) {
   app
     .route("/api/user/time/:id")
     .post(auth.require_sign_in, reports.report_time);
-
+      
   app
     .route("/api/user/records/:id")
     .get(
@@ -52,10 +52,20 @@ module.exports = function (app) {
     .get(
       auth.require_sign_in,
       auth.is_store_authenticated,
-      reports.get_reports_range
+      reports.get_reports_range,
     );
 
   app
     .route("/api/store/users/:id")
     .get(auth.require_sign_in, auth.is_store_authenticated, stores.get_users);
+
+  app
+    .route("/api/store/users/archive/:id")
+    .get(auth.require_sign_in, auth.is_store_authenticated, stores.get_users_archived);
+
+  app.route("/api/store/:id/user/:user_id/archive").patch(auth.require_sign_in, auth.is_store_authenticated, stores.archive_user);
+
+  app.route("/api/store/:id/user/:user_id/restore").patch(auth.require_sign_in, auth.is_store_authenticated, stores.restore_user);
+
+  app.route("/api/store/:id/user/:user_id").delete(auth.require_sign_in, auth.is_store_authenticated, stores.remove_user);
 };

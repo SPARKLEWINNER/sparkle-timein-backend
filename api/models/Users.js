@@ -62,6 +62,10 @@ const data = {
     type: Boolean,
     default: false,
   },
+  isArchived: {
+    type: Boolean,
+    default: false,
+  },
   isOnBoarded: {
     type: Boolean,
     default: false,

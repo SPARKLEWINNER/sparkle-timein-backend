@@ -35,7 +35,7 @@ var controllers = {
   },
   is_authenticated: function (req, res, next) {
     let token = req.headers["authorization"];
-
+    
     if (!token || typeof token === undefined)
       return res
         .status(401)
@@ -67,6 +67,7 @@ var controllers = {
   },
   is_store_authenticated: async function (req, res, next) {
     const { id } = req.params;
+    let token = req.headers["authorization"];
     if (!id) res.status(404).json({ success: false, msg: `No such user.` });
     let user = await User.find({
       _id: mongoose.Types.ObjectId(id),
