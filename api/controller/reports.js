@@ -195,6 +195,7 @@ var controllers = {
     let user = await User.findOne({ _id: mongoose.Types.ObjectId(id) })
       .lean()
       .exec();
+
     if (!user) {
       return res.status(400).json({
         success: false,
@@ -203,6 +204,7 @@ var controllers = {
     }
 
     try {
+
       const result = await Reports.find({ uid: mongoose.Types.ObjectId(id) })
         .lean()
         .exec();
@@ -211,7 +213,7 @@ var controllers = {
           success: false,
           msg: `Unable to get current user status`,
         });
-      res.json(result);
+      res.json([result.slice(-1).pop()]);
     } catch (err) {
       await logError(err, "Reports", null, id, "GET");
       res.status(400).json({ success: false, msg: err });
