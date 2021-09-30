@@ -35,7 +35,7 @@ var controllers = {
   },
   is_authenticated: function (req, res, next) {
     let token = req.headers["authorization"];
-    
+
     if (!token || typeof token === undefined)
       return res
         .status(401)
@@ -202,6 +202,52 @@ var controllers = {
     }
   },
   phone_sign_in: async function (req, res) {
+    let { phone } = req.body;
+    let code = Math.floor(100000 + Math.random() * 900000);
+    const numberFormat =
+      String(phone).charAt(0) +
+      String(phone).charAt(1) +
+      String(phone).charAt(2);
+    if (numberFormat !== "+63") {
+      phone = "+63" + phone.substring(1);
+    }
+
+    const user = await User.find({ phone: phone }).lean().exec();
+
+    if (user.length <= 0) return res
+      .status(400)
+      .json({ success: false, msg: `Invalid phone number` });
+
+    if (!user[0].isVerified || user[0].isVerified === "false") {
+      await send_sms(phone, `Sparkle Time in verification code ${code}`);
+    }
+
+    try {
+      const store = await User.find({
+        company: user[0].company,
+      })
+        .lean()
+        .exec();
+      console.log('store', store)
+      const token = create_token(user[0]._id);
+      res.cookie("jwt", token, { httpOnly: true, maxAge: maxAge * 1000 });
+
+      await logDevice(
+        req.useragent,
+        "Auth.phone_sign_in",
+        user[0]._id,
+        "POST"
+      );
+
+      res.status(201).json({ ...user[0], token, store_id: store[0]._id });
+    } catch (err) {
+      await logError(err, "Auth.phone_sign_in", err, null, "POST");
+      res
+        .status(400)
+        .json({ success: false, msg: `Unable to sign in using phone` });
+    }
+  },
+  phone_sign_up: async function (req, res) {
     let { phone, company } = req.body;
     const now = new Date();
     let code = Math.floor(100000 + Math.random() * 900000);
@@ -265,34 +311,6 @@ var controllers = {
           msg: "Unable to sign up",
         });
       }
-    } else {
-      if (!user[0].isVerified || user[0].isVerified === "false") {
-        await send_sms(phone, `Sparkle Time in verification code ${code}`);
-      }
-
-      try {
-        const store = await User.find({
-          _id: mongoose.Types.ObjectId(company),
-        })
-          .lean()
-          .exec();
-        const token = create_token(user[0]._id);
-        res.cookie("jwt", token, { httpOnly: true, maxAge: maxAge * 1000 });
-
-        await logDevice(
-          req.useragent,
-          "Auth.phone_sign_in",
-          user[0]._id,
-          "POST"
-        );
-
-        res.status(201).json({ ...user[0], token, store_id: store[0]._id });
-      } catch (err) {
-        await logError(err, "Auth.phone_sign_in", err, null, "POST");
-        res
-          .status(400)
-          .json({ success: false, msg: `Unable to sign in using phone` });
-      }
     }
   },
   phone_verify: async function (req, res) {
@@ -352,7 +370,7 @@ var controllers = {
     let redirect_url =
       parseInt(req.user.role) === 99
         ? `${process.env.REACT_ADMIN_UI}/login?${_url}`
-        : `${process.env.REACT_UI}/store/login?${_url}`;
+        : `${process.env.REACT_UI}/store?${_url}`;
     res.redirect(redirect_url);
   },
 };

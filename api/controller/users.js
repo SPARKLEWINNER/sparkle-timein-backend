@@ -20,9 +20,10 @@ var controllers = {
       const result = await User.findOne({ _id: mongoose.Types.ObjectId(id) })
         .lean()
         .exec();
+      const store = await User.findOne({ company: result.company }).lean().exec(0);
       if (!result)
         res.status(201).json({ success: false, msg: `No such user.` });
-      res.json(result);
+      res.json({ ...result, store_id: store._id });
     } catch (err) {
       await logError(err, "Users", null, id, "GET");
       res.status(400).json({ success: false, msg: err });

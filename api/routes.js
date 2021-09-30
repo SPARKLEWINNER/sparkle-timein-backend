@@ -14,12 +14,14 @@ module.exports = function (app) {
   app.route("/api/login").post(auth.sign_in);
   app.route("/api/store/register").post(auth.sign_up);
   app.route("/api/phone").post(auth.phone_sign_in);
+  app.route("/api/phone/signup").post(auth.phone_sign_up);
   app
     .route("/api/phone/verify/:id")
     .post(auth.require_sign_in, auth.phone_verify);
   app
     .route("/api/google")
     .get(passport.authenticate("google", { scope: ["profile", "email"] }));
+
   app
     .route("/api/google/callback")
     .get(
@@ -38,7 +40,7 @@ module.exports = function (app) {
   app
     .route("/api/user/time/:id")
     .post(auth.require_sign_in, reports.report_time);
-      
+
   app
     .route("/api/user/records/:id")
     .get(

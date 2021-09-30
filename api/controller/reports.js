@@ -6,7 +6,7 @@ const Reports = require("../models/Reports");
 const logError = require("../services/logger");
 const moment = require('moment-timezone');
 moment().tz('Asia/Manila').format();
-const current_date =  `${moment().toISOString(true).substring(0, 23)}Z`;
+const current_date = `${moment().toISOString(true).substring(0, 23)}Z`;
 const GOOGLE_API_GEOCODE =
   "https://maps.googleapis.com/maps/api/geocode/json?latlng=";
 
@@ -60,12 +60,11 @@ var controllers = {
       .lean()
       .exec();
 
-    if (!user) {
-      return res.status(400).json({
-        success: false,
-        msg: "No such users",
-      });
-    }
+    if (!user) return res.status(400).json({
+      success: false,
+      msg: "No such users",
+    });
+
 
     try {
       let result;
@@ -208,11 +207,18 @@ var controllers = {
       const result = await Reports.find({ uid: mongoose.Types.ObjectId(id) })
         .lean()
         .exec();
+
       if (!result)
         return res.status(400).json({
           success: false,
           msg: `Unable to get current user status`,
         });
+
+      if (result.length === 0) return res.status(200).json([{
+        date: current_date,
+        status: false,
+        msg: `No existing Record`,
+      }]);
       res.json([result.slice(-1).pop()]);
     } catch (err) {
       await logError(err, "Reports", null, id, "GET");
@@ -304,6 +310,7 @@ var controllers = {
           msg: "No registered employees",
         });
       }
+
       let end_dt = new Date(end_date);
       end_dt = end_dt.setDate(end_dt.getDate() + 1);
 
@@ -317,11 +324,15 @@ var controllers = {
         .exec();
 
       let reports_with_user = [];
+
       await Object.values(reports).forEach((item) => {
         const user = employees.filter(
           (emp) => emp._id.toString() === item.uid.toString()
         );
-        if (!user[0]) return;
+        if (!user[0]) {
+          console.log(employees)
+          return
+        };
         let _u = {
           _id: user[0]._id,
           displayName:
