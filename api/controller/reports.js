@@ -23,6 +23,8 @@ var controllers = {
     const { id } = req.params;
     const { status, location, logdate } = req.body;
     const now = new Date(current_date);
+
+    console.log('REPORT_TIME', now);
     let month = now.getUTCMonth() + 1;
     let day = now.getUTCDate();
     let year = now.getUTCFullYear();
@@ -305,7 +307,7 @@ var controllers = {
         .exec();
 
       if (!employees) {
-        return res.status(201).json({
+        return res.status(200).json({
           success: true,
           msg: "No registered employees",
         });

@@ -18,6 +18,7 @@ module.exports = function (app) {
   app
     .route("/api/phone/verify/:id")
     .post(auth.require_sign_in, auth.phone_verify);
+
   app
     .route("/api/google")
     .get(passport.authenticate("google", { scope: ["profile", "email"] }));
@@ -28,12 +29,15 @@ module.exports = function (app) {
       passport.authenticate("google", { failureRedirect: "/api/google" }),
       auth.google_sign_in_callback
     );
+
   app.route("/api/signout").get(auth.require_sign_in, auth.sign_out);
 
   app.route("/api/user/:id").patch(auth.require_sign_in, user.update_user);
+
   app
     .route("/api/user/store/:id")
     .patch(auth.require_sign_in, user.update_user_store);
+
   app
     .route("/api/user/status/:id")
     .get(auth.require_sign_in, reports.get_status_time);
