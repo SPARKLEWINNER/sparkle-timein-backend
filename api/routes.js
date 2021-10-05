@@ -5,6 +5,7 @@ var user = require("./controller/users");
 var auth = require("./controller/auth");
 var reports = require("./controller/reports");
 var stores = require("./controller/stores");
+var settings = require("./controller/settings");
 
 module.exports = function (app) {
   app.route("/").get(api.get_app_info);
@@ -74,4 +75,13 @@ module.exports = function (app) {
   app.route("/api/store/:id/user/:user_id/restore").patch(auth.require_sign_in, auth.is_store_authenticated, stores.restore_user);
 
   app.route("/api/store/:id/user/:user_id").delete(auth.require_sign_in, auth.is_store_authenticated, stores.remove_user);
+
+
+  // SETTINGS
+
+  app.route("/api/settings").get(auth.require_sign_in, settings.get_settings);
+
+  app.route("/api/settings/relog").get(auth.require_sign_in, settings.get_setting_force_relog);
+
+  app.route("/api/settings/create").post(auth.require_sign_in, settings.post_settings);
 };
