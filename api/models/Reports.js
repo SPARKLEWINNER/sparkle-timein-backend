@@ -1,6 +1,9 @@
 const mongoose = require('mongoose')
 const { Schema, Types } = mongoose;
 const collectionName = "reports";
+const moment = require('moment-timezone');
+moment().tz('Asia/Manila').format();
+const current_date = `${moment().toISOString(true).substring(0, 23)}Z`;
 const data = {
     uid: { type: Types.ObjectId, ref: 'Users' },
     date: {
@@ -18,7 +21,7 @@ const data = {
     },
     createdAt: {
         type: Date,
-        default: Date.now,
+        default: current_date,
     },
 }
 
