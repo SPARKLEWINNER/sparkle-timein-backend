@@ -13,7 +13,8 @@ module.exports = function (app) {
   app.route("/api/user/:id").get(auth.require_sign_in, user.get_user);
 
   app.route("/api/login").post(auth.sign_in);
-  app.route("/api/store/register").post(auth.sign_up);
+  app.route("/api/employee/register").post(auth.sign_up);
+  app.route("/api/store/register").post(auth.store_sign_up);
   app.route("/api/phone").post(auth.phone_sign_in);
   app.route("/api/phone/signup").post(auth.phone_sign_up);
   app

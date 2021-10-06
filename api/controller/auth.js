@@ -122,6 +122,85 @@ var controllers = {
     res.clearCookie("jwt");
     res.json({ message: "Sign out success" });
   },
+  store_sign_up: async function (req, res) {
+    let { email, firstName, lastName, phone, company, password } = req.body;
+
+    if (!email || !firstName || !lastName || !phone || !company || !password)
+      return res.status(400).json({
+        success: false,
+        msg: "Please provide fields",
+      });
+
+    const now = new Date();
+    let code = null;
+    const numberFormat =
+      String(phone).charAt(0) +
+      String(phone).charAt(1) +
+      String(phone).charAt(2);
+    if (numberFormat !== "+63") {
+      phone = "+63" + phone.substring(1);
+    }
+
+    const user = await User.find({ email: email }).lean().exec();
+    if (user.length !== 0)
+      return res.status(400).json({
+        success: false,
+        msg: "Email already exists",
+      });
+
+    try {
+      let _params = {
+        firstName: firstName,
+        lastName: lastName,
+        displayName: `${firstName} ${lastName}`,
+        email: email,
+        company: company,
+        phone: phone,
+        verificationCode: code,
+        createdAt: now.toISOString(),
+        password: password,
+        role: 1, // store registration
+        isOnBoarded: true,
+        isVerified: true,
+      };
+
+      let new_user = new User(_params);
+      try {
+        let result = await User.create(new_user);
+        if (!result) {
+          res.status(400).json({
+            success: false,
+            msg: "Unable to sign up",
+          });
+        }
+
+        // await send_sms(phone, `Sparkle Time in verification code ${code}`);/
+        const token = jwt.sign({ _id: result._id }, process.env.JWT_SECRET);
+        let response = {
+          ...result._doc,
+          isVerified: true,
+          isOnBoarded: true,
+          token,
+        };
+
+        res.json(response);
+      } catch (err) {
+        await logError(err, "Auth.store_sign_up", req.body, null, "POST");
+        res.status(400).json({
+          success: false,
+          msg: "Unable to sign up",
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      await logError(err, "Auth.store_sign_up", req.body, null, "POST");
+      res.status(400).json({
+        success: false,
+        msg: "Unable to sign up",
+      });
+    }
+
+  },
   sign_up: async function (req, res) {
     let { email, firstName, lastName, phone, company } = req.body;
 
