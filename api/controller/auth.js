@@ -199,12 +199,11 @@ var controllers = {
         msg: "Unable to sign up",
       });
     }
-
   },
   sign_up: async function (req, res) {
-    let { email, firstName, lastName, phone, company } = req.body;
+    let { email, firstName, lastName, phone, company, password } = req.body;
 
-    if (!email || !firstName || !lastName || !phone || !company)
+    if (!email || !firstName || !lastName || !phone || !company || !password)
       return res.status(400).json({
         success: false,
         msg: "Please provide fields",
@@ -241,8 +240,7 @@ var controllers = {
         phone: phone,
         verificationCode: code,
         createdAt: now.toISOString(),
-        hashed_password: undefined,
-        salt: undefined,
+        password: password,
         role: 0,
         isOnBoarded: true,
         isVerified: true,
@@ -297,9 +295,10 @@ var controllers = {
 
     const user = await User.find({ phone: phone }).lean().exec();
 
-    if (user.length <= 0) return res
-      .status(400)
-      .json({ success: false, msg: `Invalid phone number` });
+    if (user.length <= 0)
+      return res
+        .status(400)
+        .json({ success: false, msg: `Invalid phone number` });
 
     if (!user[0].isVerified || user[0].isVerified === "false") {
       await send_sms(phone, `Sparkle Time in verification code ${code}`);
@@ -311,16 +310,11 @@ var controllers = {
       })
         .lean()
         .exec();
-      console.log('store', store)
+      console.log("store", store);
       const token = create_token(user[0]._id);
       res.cookie("jwt", token, { httpOnly: true, maxAge: maxAge * 1000 });
 
-      await logDevice(
-        req.useragent,
-        "Auth.phone_sign_in",
-        user[0]._id,
-        "POST"
-      );
+      await logDevice(req.useragent, "Auth.phone_sign_in", user[0]._id, "POST");
 
       res.status(201).json({ ...user[0], token, store_id: store[0]._id });
     } catch (err) {
