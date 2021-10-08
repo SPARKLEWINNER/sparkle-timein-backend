@@ -175,7 +175,7 @@ var controllers = {
         }
 
         // await send_sms(phone, `Sparkle Time in verification code ${code}`);/
-        const token = jwt.sign({ _id: result._id }, process.env.JWT_SECRET);
+        const token = jwt.sign({ id: result._id }, process.env.JWT_SECRET);
         let response = {
           ...result._doc,
           isVerified: true,
@@ -257,7 +257,7 @@ var controllers = {
         }
 
         // await send_sms(phone, `Sparkle Time in verification code ${code}`);/
-        const token = jwt.sign({ _id: result._id }, process.env.JWT_SECRET);
+        const token = jwt.sign({ id: result._id }, process.env.JWT_SECRET);
         let response = {
           ...result._doc,
           isVerified: true,

@@ -82,7 +82,7 @@ module.exports = function (app) {
 
   app.route("/api/settings").get(auth.require_sign_in, settings.get_settings);
 
-  app.route("/api/settings/relog").get(auth.require_sign_in, settings.get_setting_force_relog);
+  app.route("/api/settings/relog").get(settings.get_setting_force_relog);
 
   app.route("/api/settings/create").post(auth.require_sign_in, settings.post_settings);
 };
