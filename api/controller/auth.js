@@ -220,6 +220,10 @@ var controllers = {
       phone = "+63" + phone.substring(1);
     }
 
+    const store = await User.find({ _id: mongoose.Types.ObjectId(company) })
+      .lean()
+      .exec();
+
     const user = await User.find({ email: email }).lean().exec();
     if (user.length !== 0)
       return res.status(400).json({
@@ -233,7 +237,7 @@ var controllers = {
         lastName: lastName,
         displayName: `${firstName} ${lastName}`,
         email: email,
-        company: company,
+        company: store[0].company,
         phone: phone,
         verificationCode: code,
         createdAt: now.toISOString(),
