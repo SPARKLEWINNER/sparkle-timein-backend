@@ -294,6 +294,7 @@ var controllers = {
     let user = await User.findOne({ _id: mongoose.Types.ObjectId(id) })
       .lean()
       .exec();
+
     if (!user) {
       return res.status(400).json({
         success: false,
@@ -318,16 +319,25 @@ var controllers = {
 
       let start_dt = new Date(start_date);
       start_dt = start_dt.setDate(start_dt.getDate());
+
       let reports = await Reports.find({
         date: { $gte: start_dt, $lt: end_dt },
       })
+        .populate({
+          path: 'users',
+          select: 'firstName lastName displayName email phone _id',
+          model: User
+        })
         .sort({ createdAt: -1 })
         .lean()
         .exec();
 
+      console.log(reports)
+
       let reports_with_user = [];
 
       await Object.values(reports).forEach((item) => {
+
         const user = employees.filter(
           (emp) => emp._id.toString() === item.uid.toString()
         );
