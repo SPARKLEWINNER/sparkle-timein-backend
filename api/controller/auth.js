@@ -243,7 +243,7 @@ var controllers = {
         createdAt: now.toISOString(),
         hashed_password: undefined,
         salt: undefined,
-        role: 1, // store registration
+        role: 0,
         isOnBoarded: true,
         isVerified: true,
       };
