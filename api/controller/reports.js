@@ -6,7 +6,7 @@ const Reports = require("../models/Reports");
 const logError = require("../services/logger");
 const moment = require('moment-timezone');
 moment().tz('Asia/Manila').format();
-const current_date = `${moment().toISOString(true).substring(0, 23)}Z`;
+const current_date = `${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`;
 const GOOGLE_API_GEOCODE =
   "https://maps.googleapis.com/maps/api/geocode/json?latlng=";
 
@@ -22,7 +22,7 @@ var controllers = {
   report_time: async function (req, res) {
     const { id } = req.params;
     const { status, location, logdate } = req.body;
-    const now = new Date(current_date);
+    const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
 
     console.log('REPORT_TIME', now);
     let month = now.getUTCMonth() + 1;
@@ -66,7 +66,9 @@ var controllers = {
       success: false,
       msg: "No such users",
     });
+    console.log(current_date)
 
+    console.log(without_time(now))
 
     try {
       let result;
@@ -187,7 +189,7 @@ var controllers = {
         success: false,
         msg: "No such users",
       });
-    }
+    } 
   },
   get_status_time: async function (req, res) {
     const { id } = req.params;
