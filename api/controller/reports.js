@@ -286,9 +286,11 @@ var controllers = {
       throw new createError.InternalServerError(err);
     }
   },
+
   get_reports_range: async function (req, res) {
-    const { id, start_date, end_date } = req.params;
-    if (!id || !start_date || !end_date)
+    const { id, date } = req.params;
+    let records = [];
+    if (!id || !date )
       res
         .status(404)
         .json({ success: false, msg: `Invalid Request parameters.` });
@@ -304,10 +306,9 @@ var controllers = {
     }
 
     try {
-      let employees = await User.find({ company: user.company, role: 0 })
+      let employees = await User.find({ company: user.company, role: 0 }, {_id: 1, displayName: 1, company: 1})
         .lean()
         .exec();
-
       if (!employees) {
         return res.status(200).json({
           success: true,
@@ -315,21 +316,28 @@ var controllers = {
         });
       }
 
-      let end_dt = new Date(end_date);
-      end_dt = end_dt.setDate(end_dt.getDate() + 1);
-
-      let start_dt = new Date(start_date);
-      start_dt = start_dt.setDate(start_dt.getDate());
-      let reports = await Reports.find({
-        date: { $gte: start_dt, $lt: end_dt },
-      })
-        .sort({ createdAt: -1 })
+      employees.map(async (data) => {
+        const report = await Reports.find({"$and": [{uid: data._id}, {date: date}]}).sort({ createdAt: -1 })
         .lean()
         .exec();
+        records.push({Employee: data, Records: report})
+      });
 
-      let reports_with_user = [];
+      if (date) {
+        let reports = await Reports.find({
+            date: date,
+          }, {date: 1, status: 1, location: 1, uid: 1}).sort({ createdAt: -1 })
+          .lean()
+          .exec();
+        return res.json(records);  
+      }
+        
+        /*let end_dt = new Date(end_date);
+        end_dt = end_dt.setDate(end_dt.getDate() + 1);
 
-      await Object.values(reports).forEach((item) => {
+        let start_dt = new Date(start_date);
+        start_dt = start_dt.setDate(start_dt.getDate());
+        await Object.values(reports).forEach((item) => {
         const user = employees.filter(
           (emp) => emp._id.toString() === item.uid.toString()
         );
@@ -353,15 +361,15 @@ var controllers = {
           updatedAt: item.updatedAt,
           reports: [item],
         });
-      });
+      });*/
 
-      if (reports_with_user.length === 0) {
+     /* if (records.length === 0) {
         return res.status(201).json({
           success: true,
           msg: "No Records",
         });
-      }
-
+      }*/
+/*
       const newArray = reports_with_user
         .sort((a, b) => b.createdAt - a.createdAt)
         .reduce((acc, dt) => {
@@ -386,9 +394,9 @@ var controllers = {
             acc[formatedDate].value.push({ ...dt });
           }
           return acc;
-        }, {});
+        }, {});*/
 
-      res.json(newArray);
+      
     } catch (err) {
       await logError(err, "Reports", null, id, "GET");
       res.status(400).json({ success: false, msg: err });
