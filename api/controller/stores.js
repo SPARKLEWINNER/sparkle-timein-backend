@@ -34,7 +34,45 @@ var controllers = {
       res.status(404).json({ success: false, msg: `No such store found.` });
 
     try {
-      const result = await User.find({ company: store.company, isArchived: false}).lean().exec();
+      const result = await User.find({ company: store.company, isArchived: false }).lean().exec();
+      if (!result) {
+        res.status(400).json({
+          success: false,
+          msg: "No such users",
+        });
+        return;
+      }
+      return res.status(200).json(result);
+    } catch (err) {
+      await logError(err, "Stores", null, id, "GET");
+      res.status(400).json({
+        success: false,
+        msg: "No such users",
+      });
+    }
+  },
+  get_users_list: async function (req, res) {
+    try {
+      const result = await User.find({ role: 0 }).lean().exec();
+      if (!result) {
+        res.status(400).json({
+          success: false,
+          msg: "No such users",
+        });
+        return;
+      }
+      return res.status(200).json(result);
+    } catch (err) {
+      await logError(err, "Stores", null, id, "GET");
+      res.status(400).json({
+        success: false,
+        msg: "No such users",
+      });
+    }
+  },
+  get_store_lists: async function (req, res) {
+    try {
+      const result = await User.find({ role: 1 }).lean().exec();
       if (!result) {
         res.status(400).json({
           success: false,
@@ -63,7 +101,7 @@ var controllers = {
       res.status(404).json({ success: false, msg: `No such store found.` });
 
     try {
-      const result = await User.find({ company: store.company, isArchived: true}).lean().exec();
+      const result = await User.find({ company: store.company, isArchived: true }).lean().exec();
       console.log(result)
       if (!result) {
         res.status(400).json({
@@ -203,7 +241,7 @@ var controllers = {
       });
     }
   },
-  remove_user: async function(req, res){
+  remove_user: async function (req, res) {
     const { id, user_id } = req.params;
 
     if (!id || !user_id) {
@@ -220,7 +258,7 @@ var controllers = {
             .status(400)
             .json({ success: false, msg: `Unable to remove user ${user_id}` });
 
-          return res.json(user);
+        return res.json(user);
       });
     } catch (err) {
       console.log(err);
@@ -230,7 +268,28 @@ var controllers = {
         msg: "No such users",
       });
     }
-  }
+  },
+  get_users_branch: async function (req, res) {
+    const { id } = req.params
+    try {
+      const result = await User.find({ role: 5, parentCompany: id }).lean().exec();
+      if (!result) {
+        res.status(400).json({
+          success: false,
+          msg: "No such users",
+        });
+        return;
+      }
+
+      return res.status(200).json(result);
+    } catch (err) {
+      await logError(err, "Stores", null, id, "GET");
+      res.status(400).json({
+        success: false,
+        msg: "No such users",
+      });
+    }
+  },
 };
 
 module.exports = controllers;

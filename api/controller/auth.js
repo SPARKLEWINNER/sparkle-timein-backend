@@ -1,5 +1,6 @@
 "use strict";
 const jwt = require("jsonwebtoken"); // to generate signed token
+const jwt_decode = require('jwt-decode')
 const User = require("../models/Users");
 const mongoose = require("mongoose");
 const send_sms = require("../services/twilio");
@@ -7,11 +8,12 @@ const querystring = require("querystring");
 const logError = require("../services/logger");
 const logDevice = require("../services/devices");
 
+
 const maxAge = 3 * 24 * 60 * 60;
 const create_token = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: maxAge });
 };
-let store_end_access = [99, 1];
+let store_end_access = [99, 1, 4];
 
 var controllers = {
   require_sign_in: function (req, res, next) {
@@ -66,8 +68,8 @@ var controllers = {
     });
   },
   is_store_authenticated: async function (req, res, next) {
-    const { id } = req.params;
     let token = req.headers["authorization"];
+    const id = jwt_decode(token).id
     if (!id) res.status(404).json({ success: false, msg: `No such user.` });
     let user = await User.find({
       _id: mongoose.Types.ObjectId(id),
@@ -81,6 +83,29 @@ var controllers = {
     }
 
     let role = store_end_access.includes(user[0].role);
+    if (!role) {
+      return res.status(403).json({
+        error: "Unauthorized",
+      });
+    }
+    next();
+  },
+  is_admin_authenticated: async function (req, res, next) {
+    let token = req.headers["authorization"];
+    const id = jwt_decode(token).id
+    if (!id) res.status(404).json({ success: false, msg: `No such user.` });
+    let user = await User.find({
+      _id: mongoose.Types.ObjectId(id),
+    })
+      .lean()
+      .exec();
+    if (!user || user.length === 0) {
+      return res.status(401).json({
+        error: "Unable to access",
+      });
+    }
+
+    let role = (user[0].role === 99)
     if (!role) {
       return res.status(403).json({
         error: "Unauthorized",
@@ -450,6 +475,92 @@ var controllers = {
         : `${process.env.REACT_UI}/store?${_url}`;
     res.redirect(redirect_url);
   },
+  sign_in_v2: async function (req, res) {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      res
+        .status(400)
+        .json({ success: false, msg: `Missing email or password field!` });
+      return;
+    }
+
+    try {
+      const user = await User.login(email, password);
+      if (!user) {
+        res.status(400).json({ success: false, msg: `Invalid credentials!` });
+        return;
+      }
+
+
+      if (user.role !== 99) return res.status(400).json({ success: false, msg: `Invalid credentials!` });
+
+      user.hashed_password = user.salt = undefined;
+
+      const token = create_token(user._id);
+      res.cookie("jwt", token, { expire: new Date() + 9999 });
+      if (user.role === 0) {
+        const store = await User.find({ company: user.company }).lean().exec();
+        return res.json({ token, ...user, store_id: store[0]._id });
+      } else {
+        return res.json({ token, ...user, isAdmin: true });
+      }
+    } catch (err) {
+      await logError(err, "Auth.sign_in", null, null, "POST");
+      res.status(400).json({ success: false, msg: err });
+    }
+  },
+  sign_up_branch: async function (req, res) {
+    let { name, uid } = req.body;
+
+    if (!name || !uid)
+      return res.status(400).json({
+        success: false,
+        msg: "Please provide required fields",
+      });
+
+    const user = await User.find({ company: name }).lean().exec();
+    if (user.length !== 0)
+      return res.status(400).json({
+        success: false,
+        msg: "Branch already exists",
+      });
+
+    try {
+      let _params = {
+        displayName: name,
+        company: name,
+        role: 5, // branch registration
+        parentCompany: uid
+      };
+
+      let new_user = new User(_params);
+      try {
+        let result = await User.create(new_user);
+        if (!result) {
+          res.status(400).json({
+            success: false,
+            msg: "Unable to sign up",
+          });
+        }
+
+        res.json({ ...result._doc });
+      } catch (err) {
+        await logError(err, "Auth.sign_up_branch", req.body, null, "POST");
+        res.status(400).json({
+          success: false,
+          msg: "Unable to sign up",
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      await logError(err, "Auth.sign_up_branch", req.body, null, "POST");
+      res.status(400).json({
+        success: false,
+        msg: "Unable to sign up",
+      });
+    }
+  }
 };
 
 module.exports = controllers;

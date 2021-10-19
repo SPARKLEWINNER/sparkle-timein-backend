@@ -74,6 +74,10 @@ const data = {
     type: Date,
     default: Date.now,
   },
+  parentCompany: {
+    type: String,
+    default: null,
+  }
 };
 const userSchema = new Schema(data, { timestamps: true });
 userSchema
@@ -112,7 +116,11 @@ userSchema.statics.login = async function (email, password) {
     .createHmac("sha1", user.salt)
     .update(password)
     .digest("hex");
+
+  console.log(encryptPassword, user.hashed_password)
+
   if (encryptPassword !== user.hashed_password) return false;
+
 
   return user;
 };
