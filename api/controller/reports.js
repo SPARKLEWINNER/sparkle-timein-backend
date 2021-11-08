@@ -32,17 +32,21 @@ var controllers = {
 
     // convert coordinates to readable address
     let coordinates = `${location.latitude},${location.longitude}`;
-    let address = await axios
-      .get(
-        `${GOOGLE_API_GEOCODE}${coordinates}&key=${process.env.GOOGLE_MAP_KEY}`
-      )
-      .then((response) => {
-        if (!response.data) return false;
-        return response.data.results[0].formatted_address;
-      })
-      .catch((err) => {
-        return false;
-      });
+    let address = "N/A"
+    
+    // await axios
+    //   .get(
+    //     `${GOOGLE_API_GEOCODE}${coordinates}&key=${process.env.GOOGLE_MAP_KEY}`
+    //   )
+    //   .then((response) => {
+    //     if (!response.data) return false;
+    //     console.log({response})
+    //     return response.data.results[0].formatted_address;
+    //   })
+    //   .catch((err) => {
+    //     console.log({err})
+    //     return false;
+    //   });
 
     if (!address || !coordinates)
       return res.status(400).json({
