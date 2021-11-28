@@ -66,6 +66,14 @@ module.exports = function (app) {
     );
 
   app
+  .route("/api/user/recordsv2/:id/:startDate/:endDate")
+  .get(
+    auth.require_sign_in,
+    auth.is_store_authenticated,
+    reports.get_reports_rangev2,
+  );
+
+  app
     .route("/api/store/users/:id")
     .get(auth.require_sign_in, auth.is_store_authenticated, stores.get_users);
 

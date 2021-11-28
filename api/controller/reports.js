@@ -290,7 +290,6 @@ var controllers = {
       throw new createError.InternalServerError(err);
     }
   },
-
   get_reports_range: async function (req, res) {
     const { id, date } = req.params;
     let records = [];
@@ -373,7 +372,7 @@ var controllers = {
           msg: "No Records",
         });
       }*/
-/*
+
       const newArray = reports_with_user
         .sort((a, b) => b.createdAt - a.createdAt)
         .reduce((acc, dt) => {
@@ -398,9 +397,63 @@ var controllers = {
             acc[formatedDate].value.push({ ...dt });
           }
           return acc;
-        }, {});*/
+        }, {});
 
       
+    } catch (err) {
+      await logError(err, "Reports", null, id, "GET");
+      res.status(400).json({ success: false, msg: err });
+      throw new createError.InternalServerError(err);
+    }
+  },
+  get_reports_rangev2: async function (req, res) {
+
+    const { id, startDate, endDate } = req.params;
+    var dates = []
+    for (var d = new Date(startDate); d <= new Date(endDate); d.setDate(d.getDate() + 1)) {
+      dates.push(moment(d).format('YYYY-MM-DD'))
+    }
+    
+    if (!id || !startDate || !endDate )
+      res
+        .status(404)
+        .json({ success: false, msg: `Invalid Request parameters.` });
+
+    let user = await User.findOne({ _id: mongoose.Types.ObjectId(id) })
+      .lean()
+      .exec();
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        msg: "No such users",
+      });
+    }
+
+    try {
+      let employees = await User.find({ company: user.company, role: 0 }, { displayName: 1})
+        .lean()
+        .exec();
+      let count = employees.length  
+      if (!employees) {
+        return res.status(200).json({
+          success: true,
+          msg: "No registered employees",
+        });
+      }
+      let records = []
+      dates.map(date => {
+        employees.map(async data => {
+          let result = await Reports.findOne({"$and": [{uid: data._id}, {date: date}]})
+          .lean()
+          .exec();
+          records.push({date: date, Employee: data, reports:result, count: count })
+        })  
+      })
+      let reports = await Reports.findOne({}).lean().exec()
+      records.sort(function(a,b){
+        return new Date(a.date) - new Date(b.date);
+      });
+      return res.json(records); 
     } catch (err) {
       await logError(err, "Reports", null, id, "GET");
       res.status(400).json({ success: false, msg: err });
