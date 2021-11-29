@@ -7,6 +7,7 @@ const logError = require("../services/logger");
 const moment = require('moment-timezone');
 moment().tz('Asia/Manila').format();
 const current_date = `${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`;
+const { generateExcelFile } = require('../helpers/rangedData')
 const GOOGLE_API_GEOCODE =
   "https://maps.googleapis.com/maps/api/geocode/json?latlng=";
 
@@ -33,7 +34,7 @@ var controllers = {
     // convert coordinates to readable address
     let coordinates = `${location.latitude},${location.longitude}`;
     let address = "N/A"
-    
+
     // await axios
     //   .get(
     //     `${GOOGLE_API_GEOCODE}${coordinates}&key=${process.env.GOOGLE_MAP_KEY}`
@@ -193,7 +194,7 @@ var controllers = {
         success: false,
         msg: "No such users",
       });
-    } 
+    }
   },
   get_status_time: async function (req, res) {
     const { id } = req.params;
@@ -293,7 +294,7 @@ var controllers = {
   get_reports_range: async function (req, res) {
     const { id, date } = req.params;
     let records = [];
-    if (!id || !date )
+    if (!id || !date)
       res
         .status(404)
         .json({ success: false, msg: `Invalid Request parameters.` });
@@ -309,7 +310,7 @@ var controllers = {
     }
 
     try {
-      let employees = await User.find({ company: user.company, role: 0 }, {_id: 1, displayName: 1, company: 1})
+      let employees = await User.find({ company: user.company, role: 0 }, { _id: 1, displayName: 1, company: 1 })
         .lean()
         .exec();
       if (!employees) {
@@ -320,58 +321,58 @@ var controllers = {
       }
 
       employees.map(async (data) => {
-        const report = await Reports.find({"$and": [{uid: data._id}, {date: date}]}).sort({ createdAt: -1 })
-        .lean()
-        .exec();
-        records.push({Employee: data, Records: report})
+        const report = await Reports.find({ "$and": [{ uid: data._id }, { date: date }] }).sort({ createdAt: -1 })
+          .lean()
+          .exec();
+        records.push({ Employee: data, Records: report })
       });
 
       if (date) {
         let reports = await Reports.find({
-            date: date,
-          }, {date: 1, status: 1, location: 1, uid: 1}).sort({ createdAt: -1 })
+          date: date,
+        }, { date: 1, status: 1, location: 1, uid: 1 }).sort({ createdAt: -1 })
           .lean()
           .exec();
-        return res.json(records);  
+        return res.json(records);
       }
-        
-        /*let end_dt = new Date(end_date);
-        end_dt = end_dt.setDate(end_dt.getDate() + 1);
 
-        let start_dt = new Date(start_date);
-        start_dt = start_dt.setDate(start_dt.getDate());
-        await Object.values(reports).forEach((item) => {
-        const user = employees.filter(
-          (emp) => emp._id.toString() === item.uid.toString()
-        );
-        if (!user[0]) {
-          console.log(employees)
-          return
-        };
-        let _u = {
-          _id: user[0]._id,
-          displayName:
-            user[0].firstName || user[0].lastName
-              ? `${user[0].firstName} ${user[0].lastName}`
-              : user[0].displayName,
-          email: user[0].email,
-          phone: user[0].phone,
-        };
-        reports_with_user.push({
-          ..._u,
-          date: item.date,
-          createdAt: item.createdAt,
-          updatedAt: item.updatedAt,
-          reports: [item],
-        });
-      });*/
+      /*let end_dt = new Date(end_date);
+      end_dt = end_dt.setDate(end_dt.getDate() + 1);
 
-     /* if (records.length === 0) {
-        return res.status(201).json({
-          success: true,
-          msg: "No Records",
-        });
-      }*/
+      let start_dt = new Date(start_date);
+      start_dt = start_dt.setDate(start_dt.getDate());
+      await Object.values(reports).forEach((item) => {
+      const user = employees.filter(
+        (emp) => emp._id.toString() === item.uid.toString()
+      );
+      if (!user[0]) {
+        console.log(employees)
+        return
+      };
+      let _u = {
+        _id: user[0]._id,
+        displayName:
+          user[0].firstName || user[0].lastName
+            ? `${user[0].firstName} ${user[0].lastName}`
+            : user[0].displayName,
+        email: user[0].email,
+        phone: user[0].phone,
+      };
+      reports_with_user.push({
+        ..._u,
+        date: item.date,
+        createdAt: item.createdAt,
+        updatedAt: item.updatedAt,
+        reports: [item],
+      });
+    });*/
+
+      /* if (records.length === 0) {
+         return res.status(201).json({
+           success: true,
+           msg: "No Records",
+         });
+       }*/
 
       const newArray = reports_with_user
         .sort((a, b) => b.createdAt - a.createdAt)
@@ -399,7 +400,7 @@ var controllers = {
           return acc;
         }, {});
 
-      
+
     } catch (err) {
       await logError(err, "Reports", null, id, "GET");
       res.status(400).json({ success: false, msg: err });
@@ -413,8 +414,8 @@ var controllers = {
     for (var d = new Date(startDate); d <= new Date(endDate); d.setDate(d.getDate() + 1)) {
       dates.push(moment(d).format('YYYY-MM-DD'))
     }
-    
-    if (!id || !startDate || !endDate )
+
+    if (!id || !startDate || !endDate)
       res
         .status(404)
         .json({ success: false, msg: `Invalid Request parameters.` });
@@ -430,10 +431,10 @@ var controllers = {
     }
 
     try {
-      let employees = await User.find({ company: user.company, role: 0 }, { displayName: 1})
+      let employees = await User.find({ company: user.company, role: 0, isVerified: true }, { displayName: 1 }).sort({ 'displayName': 1 })
         .lean()
         .exec();
-      let count = employees.length  
+
       if (!employees) {
         return res.status(200).json({
           success: true,
@@ -442,18 +443,28 @@ var controllers = {
       }
       let records = []
       dates.map(date => {
+        let d = {
+          date: date,
+          rows: []
+        };
+
         employees.map(async data => {
-          let result = await Reports.findOne({"$and": [{uid: data._id}, {date: date}]})
-          .lean()
-          .exec();
-          records.push({date: date, Employee: data, reports:result, count: count })
-        })  
-      })
-      let reports = await Reports.findOne({}).lean().exec()
-      records.sort(function(a,b){
+          let result = await Reports.findOne({ "$and": [{ uid: data._id }, { date: date }] })
+            .lean()
+            .exec();
+          d.rows.push({ ...data, reports: !result ? null : result.record })
+        })
+
+        records.push(d)
+      });
+
+      await Reports.findOne({}).lean().exec()
+      records.sort(function (a, b) {
         return new Date(a.date) - new Date(b.date);
       });
-      return res.json(records); 
+
+      const generated_file = await generateExcelFile(`Record-${startDate}-${endDate}`, records)
+      return res.json(generated_file);
     } catch (err) {
       await logError(err, "Reports", null, id, "GET");
       res.status(400).json({ success: false, msg: err });
