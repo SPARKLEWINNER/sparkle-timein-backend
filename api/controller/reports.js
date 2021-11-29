@@ -1,3 +1,4 @@
+const fetch = require('node-fetch');
 const createError = require("http-errors");
 const mongoose = require("mongoose");
 const axios = require("axios");
@@ -410,61 +411,20 @@ var controllers = {
   get_reports_rangev2: async function (req, res) {
 
     const { id, startDate, endDate } = req.params;
-    var dates = []
-    for (var d = new Date(startDate); d <= new Date(endDate); d.setDate(d.getDate() + 1)) {
-      dates.push(moment(d).format('YYYY-MM-DD'))
-    }
-
     if (!id || !startDate || !endDate)
       res
         .status(404)
         .json({ success: false, msg: `Invalid Request parameters.` });
 
-    let user = await User.findOne({ _id: mongoose.Types.ObjectId(id) })
-      .lean()
-      .exec();
-    if (!user) {
-      return res.status(400).json({
-        success: false,
-        msg: "No such users",
-      });
-    }
-
     try {
-      let employees = await User.find({ company: user.company, role: 0, isVerified: true }, { displayName: 1 }).sort({ 'displayName': 1 })
-        .lean()
-        .exec();
-
-      if (!employees) {
-        return res.status(200).json({
-          success: true,
-          msg: "No registered employees",
+      fetch(`${process.env.REPORT_MS}/${id}/${startDate}/${endDate}`).then(response => {
+        return response.json()
+      })
+        .catch(err => {
+          console.error(err)
+          return false;
         });
-      }
-      let records = []
-      dates.map(date => {
-        let d = {
-          date: date,
-          rows: []
-        };
-
-        employees.map(async data => {
-          let result = await Reports.findOne({ "$and": [{ uid: data._id }, { date: date }] })
-            .lean()
-            .exec();
-          d.rows.push({ ...data, reports: !result ? null : result.record })
-        })
-
-        records.push(d)
-      });
-
-      await Reports.findOne({}).lean().exec()
-      records.sort(function (a, b) {
-        return new Date(a.date) - new Date(b.date);
-      });
-
-      const generated_file = await generateExcelFile(`Record-${startDate}-${endDate}`, records)
-      return res.json(generated_file);
+      return res.json({ success: true, msg: 'We will be sending a notification for the complete download link.' });
     } catch (err) {
       await logError(err, "Reports", null, id, "GET");
       res.status(400).json({ success: false, msg: err });
