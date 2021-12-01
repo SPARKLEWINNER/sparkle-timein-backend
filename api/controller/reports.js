@@ -417,14 +417,42 @@ var controllers = {
         .json({ success: false, msg: `Invalid Request parameters.` });
 
     try {
-      fetch(`${process.env.REPORT_MS}/${id}/${startDate}/${endDate}`).then(response => {
-        return response.json()
+      fetch(`${process.env.REPORT_MS}/${id}/${startDate}/${endDate}`).then(res => res.json()).then(async data => {
+        if (data.status == "success") {
+          const email = await User.findOne({ _id: id }, { _id: 0, email: 1 })
+            .lean()
+            .exec();
+          const path = data.path
+          const monthNo = startDate.slice(5,7)
+          function monthName(mon) {
+             return ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][mon - 1];
+          }
+          const month = monthName(monthNo);
+          let items = {
+            "mail": "edrugonzales@gmail.com", //email.email for production. personal email for testing
+            "path": path,
+            "month": month
+          }
+          let options = {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(items)
+          }
+          fetch(`${process.env.MAILER_MS}`, options).then(res => res.json()).then(async mailResponse => {
+            if (mailResponse.success == true) {
+              console.log("email sent success")
+            }
+            console.log(mailResponse)
+          })
+          return res.json({ success: true, msg: 'We will be sending a notification for the complete download link.' });
+        }  
       })
-        .catch(err => {
-          console.error(err)
-          return false;
-        });
-      return res.json({ success: true, msg: 'We will be sending a notification for the complete download link.' });
+      .catch(err => {
+        console.error(err)
+        return false;
+      });
     } catch (err) {
       await logError(err, "Reports", null, id, "GET");
       res.status(400).json({ success: false, msg: err });
