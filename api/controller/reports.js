@@ -5,6 +5,7 @@ const axios = require("axios");
 const User = require("../models/Users");
 const Reports = require("../models/Reports");
 const logError = require("../services/logger");
+const mailer = require("../services/mailer");
 const moment = require('moment-timezone');
 moment().tz('Asia/Manila').format();
 const current_date = `${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`;
@@ -253,31 +254,20 @@ var controllers = {
     }
 
     try {
-      let employees = await User.find({ company: user.company, role: 0 })
-        .lean()
-        .exec();
-
-      if (!employees) {
-        return res.status(201).json({
-          success: true,
-          msg: "No registered employees",
-        });
-      }
-      let records = await Promise.all(
-        employees.map(async (v, k) => {
-          const reports = await Reports.find({
-            uid: mongoose.Types.ObjectId(v._id),
-          })
-            .lean()
-            .exec();
-
-          if (!reports) {
-            return { ...v, reports: [] };
+      let records = await User.aggregate([
+        {
+          $lookup: {
+            from: "reports",
+            localField: "_id",
+            foreignField: "uid",
+            as: "reports",
           }
+        }
+      ]).match({
+        "company": user.company,
+        "role": 0
+      }).exec();
 
-          return { ...v, reports: [...reports] };
-        })
-      );
       if (records.length === 0) {
         return res.status(201).json({
           success: true,
@@ -417,14 +407,22 @@ var controllers = {
         .json({ success: false, msg: `Invalid Request parameters.` });
 
     try {
-      fetch(`${process.env.REPORT_MS}/${id}/${startDate}/${endDate}`).then(response => {
+      const request = await fetch(`${process.env.REPORT_MS}/${id}/${startDate}/${endDate}`).then(response => {
         return response.json()
       })
         .catch(err => {
           console.error(err)
           return false;
         });
-      return res.json({ success: true, msg: 'We will be sending a notification for the complete download link.' });
+
+      const user = await User.find({ _id: mongoose.Types.ObjectId(id) }).lean().exec();
+      if (user) {
+        let email = user[0].email;
+        console.log(email, request);
+        await mailer.send_mail({ email, downloadLink: request.path, type: 'send_record' });
+      }
+
+      return res.json({ success: true, msg: 'You can also check your email address for a copy of report sent to it.', link: request.path });
     } catch (err) {
       await logError(err, "Reports", null, id, "GET");
       res.status(400).json({ success: false, msg: err });
