@@ -5,6 +5,7 @@ const axios = require("axios");
 const User = require("../models/Users");
 const Reports = require("../models/Reports");
 const logError = require("../services/logger");
+const mailer = require("../services/mailer");
 const moment = require('moment-timezone');
 moment().tz('Asia/Manila').format();
 const current_date = `${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`;
@@ -253,31 +254,20 @@ var controllers = {
     }
 
     try {
-      let employees = await User.find({ company: user.company, role: 0 })
-        .lean()
-        .exec();
-
-      if (!employees) {
-        return res.status(201).json({
-          success: true,
-          msg: "No registered employees",
-        });
-      }
-      let records = await Promise.all(
-        employees.map(async (v, k) => {
-          const reports = await Reports.find({
-            uid: mongoose.Types.ObjectId(v._id),
-          })
-            .lean()
-            .exec();
-
-          if (!reports) {
-            return { ...v, reports: [] };
+      let records = await User.aggregate([
+        {
+          $lookup: {
+            from: "reports",
+            localField: "_id",
+            foreignField: "uid",
+            as: "reports",
           }
+        }
+      ]).match({
+        "company": user.company,
+        "role": 0
+      }).exec();
 
-          return { ...v, reports: [...reports] };
-        })
-      );
       if (records.length === 0) {
         return res.status(201).json({
           success: true,
