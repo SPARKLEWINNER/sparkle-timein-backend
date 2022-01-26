@@ -5,6 +5,7 @@ const axios = require("axios");
 const User = require("../models/Users");
 const Reports = require("../models/Reports");
 const logError = require("../services/logger");
+const mailer = require("../services/mailer");
 const moment = require('moment-timezone');
 moment().tz('Asia/Manila').format();
 const current_date = `${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`;
@@ -23,9 +24,9 @@ const without_time = (dateTime) => {
 var controllers = {
   report_time: async function (req, res) {
     const { id } = req.params;
-    const { status, location, logdate } = req.body;
+    const { status, location, logdate, previous } = req.body;
     const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
-
+    console.log('PREVIOUS', previous);
     console.log('REPORT_TIME', now);
     let month = now.getUTCMonth() + 1;
     let day = now.getUTCDate();
@@ -110,8 +111,8 @@ var controllers = {
         // if no actual data
         let record_last_date = new Date(record_last.date);
 
-        if (date.toDateString() !== record_last_date.toDateString()) {
-          // if with actual data and should have same day of last record
+        if (status === 'time-in') {
+          // if time in and should create another session
           result = await Reports.create(reports);
           return res.json(result);
         }
@@ -128,31 +129,31 @@ var controllers = {
           });
 
         // check if existing break in / break out
-        let tookBreakIn;
-        let tookBreakOut;
-        Object.values(record_last.record).forEach((v) => {
-          if (v.status === "break-in") {
-            tookBreakIn = true;
-          }
+        // let tookBreakIn;
+        // let tookBreakOut;
+        // Object.values(record_last.record).forEach((v) => {
+        //   if (v.status === "break-in") {
+        //     tookBreakIn = true;
+        //   }
 
-          if (v.status === "break-out") {
-            tookBreakOut = true;
-          }
-        });
+        //   if (v.status === "break-out") {
+        //     tookBreakOut = true;
+        //   }
+        // });
 
-        if (tookBreakIn && status === "break-in") {
-          return res.status(400).json({
-            success: false,
-            msg: `Unable to ${status} again`,
-          });
-        }
+        // if (tookBreakIn && status === "break-in") {
+        //   return res.status(400).json({
+        //     success: false,
+        //     msg: `Unable to ${status} again`,
+        //   });
+        // }
 
-        if (tookBreakOut && status === "break-out") {
-          return res.status(400).json({
-            success: false,
-            msg: `Unable to ${status} again`,
-          });
-        }
+        // if (tookBreakOut && status === "break-out") {
+        //   return res.status(400).json({
+        //     success: false,
+        //     msg: `Unable to ${status} again`,
+        //   });
+        // }
 
         let newReports = {
           dateTime: now,
@@ -171,8 +172,9 @@ var controllers = {
           $push: { record: newReports },
         };
         result = await Reports.findOneAndUpdate(
-          { date: new Date(date), uid: mongoose.Types.ObjectId(id) },
-          update
+          { date: new Date(previous), uid: mongoose.Types.ObjectId(id) },
+          update,
+          { sort: { 'updatedAt': -1 } }
         );
 
         // check if existing time in / time out
@@ -253,31 +255,20 @@ var controllers = {
     }
 
     try {
-      let employees = await User.find({ company: user.company, role: 0 })
-        .lean()
-        .exec();
-
-      if (!employees) {
-        return res.status(201).json({
-          success: true,
-          msg: "No registered employees",
-        });
-      }
-      let records = await Promise.all(
-        employees.map(async (v, k) => {
-          const reports = await Reports.find({
-            uid: mongoose.Types.ObjectId(v._id),
-          })
-            .lean()
-            .exec();
-
-          if (!reports) {
-            return { ...v, reports: [] };
+      let records = await User.aggregate([
+        {
+          $lookup: {
+            from: "reports",
+            localField: "_id",
+            foreignField: "uid",
+            as: "reports",
           }
+        }
+      ]).match({
+        "company": user.company,
+        "role": 0
+      }).exec();
 
-          return { ...v, reports: [...reports] };
-        })
-      );
       if (records.length === 0) {
         return res.status(201).json({
           success: true,
