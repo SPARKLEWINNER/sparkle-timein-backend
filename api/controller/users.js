@@ -112,46 +112,68 @@ var controllers = {
       });
     }
 
-    try {
-      await User.findOne({ _id: mongoose.Types.ObjectId(id) })
-        .then((user) => {
-          if (!user)
-            return res
-              .status(400)
-              .json({ success: false, msg: `User not found ${id}` });
-
-          user.password = password;
-          user.firstName = firstName;
-          user.lastName = lastName;
-          user.displayName = firstName + " " + lastName;
-          user.isVerified = true;
-          user.isOnBoarded = true;
-          user.company = company;
-          user.email = email;
-          user.phone = phone;
-
-          user.save().then((result) => {
-            if (!result)
-              return res.status(400).json({
-                success: false,
-                msg: `Unable to update details ${id}`,
-              });
-
-            const token = create_token(result._id);
-            res.cookie("jwt", token, { expire: new Date() + 9999 });
-            return res.json(result);
+    if(password) {
+      try {
+        await User.findOne({ _id: mongoose.Types.ObjectId(id) })
+          .then((user) => {
+            if (!user)
+              return res
+                .status(400)
+                .json({ success: false, msg: `User not found ${id}` });
+            
+            user.password = password;
+            user.firstName = firstName;
+            user.lastName = lastName;
+            user.displayName = firstName + " " + lastName;
+            user.isVerified = true;
+            user.isOnBoarded = true;
+            user.company = company;
+            user.email = email;
+            user.phone = phone;
+  
+            user.save().then((result) => {
+              if (!result)
+                return res.status(400).json({
+                  success: false,
+                  msg: `Unable to update details ${id}`,
+                });
+  
+              const token = create_token(result._id);
+              res.cookie("jwt", token, { expire: new Date() + 9999 });
+              return res.json(result);
+            });
+          })
+          .catch((err) => console.log(err));
+      } catch (err) {
+        console.log(err);
+        await logError(err, "Users", req.body, id, "PATCH");
+  
+        return res.status(400).json({
+          success: false,
+          msg: "No such users",
+        });
+      }
+    } else {
+      try {
+        const result = await User.findOneAndUpdate(
+          { _id: mongoose.Types.ObjectId(id) },
+          { company: company }
+        );
+        if (!result)
+          res.status(400).json({
+            success: false,
+            msg: `Unable to update account ${id}`,
           });
-        })
-        .catch((err) => console.log(err));
-    } catch (err) {
-      console.log(err);
-      await logError(err, "Users", req.body, id, "PATCH");
+        res.json(result);
+      } catch (err) {
+        await logError(err, "User.company_update", null, id, "PATCH");
+        res
+          .status(400)
+          .json({ success: false, msg: `Unable to update account ${id}` });
+      }
 
-      return res.status(400).json({
-        success: false,
-        msg: "No such users",
-      });
     }
+    
   },
 };
 
