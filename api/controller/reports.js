@@ -450,6 +450,184 @@ var controllers = {
       throw new createError.InternalServerError(err);
     }
   },
+  report_workmate_time: async function (req, res) {
+    const { id } = req.params;
+    const { status, location, logdate, previous } = req.body;
+    const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
+    console.log('PREVIOUS', previous);
+    console.log('REPORT_TIME', now);
+    let month = now.getUTCMonth() + 1;
+    let day = now.getUTCDate();
+    let year = now.getUTCFullYear();
+    let time = Date.now();
+
+    // convert coordinates to readable address
+    let coordinates = `${location.latitude},${location.longitude}`;
+    let address = "N/A"
+
+    // await axios
+    //   .get(
+    //     `${GOOGLE_API_GEOCODE}${coordinates}&key=${process.env.GOOGLE_MAP_KEY}`
+    //   )
+    //   .then((response) => {
+    //     if (!response.data) return false;
+    //     console.log({response})
+    //     return response.data.results[0].formatted_address;
+    //   })
+    //   .catch((err) => {
+    //     console.log({err})
+    //     return false;
+    //   });
+
+    if (!address || !coordinates)
+      return res.status(400).json({
+        success: false,
+        msg: `Something went wrong in locating user.`,
+      });
+
+    if (Object.keys(req.body).length === 0) {
+      return res.status(400).json({
+        success: false,
+        msg: `Missing fields`,
+      });
+    }
+
+    // check user if existing
+    let user = await User.findOne({ _id: mongoose.Types.ObjectId(id) })
+      .lean()
+      .exec();
+
+    if (!user) return res.status(400).json({
+      success: false,
+      msg: "No such users",
+    });
+    console.log(current_date)
+
+    console.log(without_time(now))
+
+    try {
+      let result;
+      let date = without_time(now);
+      const isReportsExist = await Reports.find({
+        uid: mongoose.Types.ObjectId(id),
+      })
+        .lean()
+        .exec();
+      const reports = new Reports({
+        uid: id,
+        date: date,
+        status: status,
+        record: {
+          dateTime: now,
+          status: status,
+          month: month,
+          day: day,
+          year: year,
+          time: time,
+          date: date,
+          location: location,
+          address: address,
+          workmate: workmate
+        },
+      });
+
+      let record_last =
+        isReportsExist.length >= 1
+          ? isReportsExist.slice(-1).pop()
+          : isReportsExist[0];
+
+      if (isReportsExist.length > 0) {
+        // if no actual data
+        let record_last_date = new Date(record_last.date);
+
+        if (status === 'time-in') {
+          // if time in and should create another session
+          result = await Reports.create(reports);
+          return res.json(result);
+        }
+
+        let last_record =
+          record_last.record.length >= 1
+            ? record_last.record.slice(-1).pop()
+            : record_last.record[0];
+
+        if (last_record.status === status)
+          return res.status(400).json({
+            success: false,
+            msg: `Unable to ${status} again`,
+          });
+
+        // check if existing break in / break out
+        // let tookBreakIn;
+        // let tookBreakOut;
+        // Object.values(record_last.record).forEach((v) => {
+        //   if (v.status === "break-in") {
+        //     tookBreakIn = true;
+        //   }
+
+        //   if (v.status === "break-out") {
+        //     tookBreakOut = true;
+        //   }
+        // });
+
+        // if (tookBreakIn && status === "break-in") {
+        //   return res.status(400).json({
+        //     success: false,
+        //     msg: `Unable to ${status} again`,
+        //   });
+        // }
+
+        // if (tookBreakOut && status === "break-out") {
+        //   return res.status(400).json({
+        //     success: false,
+        //     msg: `Unable to ${status} again`,
+        //   });
+        // }
+
+        let newReports = {
+          dateTime: now,
+          status: status,
+          month: month,
+          day: day,
+          year: year,
+          time: time,
+          date: date,
+          location: location,
+          address: address,
+        };
+
+        let update = {
+          $set: { status: status },
+          $push: { record: newReports },
+        };
+        result = await Reports.findOneAndUpdate(
+          { date: new Date(previous), uid: mongoose.Types.ObjectId(id) },
+          update,
+          { sort: { 'updatedAt': -1 } }
+        );
+
+        // check if existing time in / time out
+      } else {
+        result = await Reports.create(reports);
+      }
+
+      if (!result) {
+        return res.status(400).json({
+          success: false,
+          msg: `Unable to process request ${status}`,
+        });
+      }
+
+      res.json(result);
+    } catch (err) {
+      console.log(err);
+      await logError(err, "Reports", req.body, id, "POST");
+      return res.status(400).json({
+        success: false,
+        msg: "No such users",
+      });
+    }
+  }
 };
 
 module.exports = controllers;
