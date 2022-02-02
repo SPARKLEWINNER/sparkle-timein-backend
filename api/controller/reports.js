@@ -452,7 +452,7 @@ var controllers = {
   },
   report_workmate_time: async function (req, res) {
     const { id } = req.params;
-    const { status, location, logdate, previous } = req.body;
+    const { status, location, logdate, previous, workmate } = req.body;
     const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
     console.log('PREVIOUS', previous);
     console.log('REPORT_TIME', now);
@@ -530,7 +530,6 @@ var controllers = {
           workmate: workmate
         },
       });
-
       let record_last =
         isReportsExist.length >= 1
           ? isReportsExist.slice(-1).pop()
@@ -620,7 +619,6 @@ var controllers = {
 
       res.json(result);
     } catch (err) {
-      console.log(err);
       await logError(err, "Reports", req.body, id, "POST");
       return res.status(400).json({
         success: false,
