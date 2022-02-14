@@ -138,6 +138,4 @@ module.exports = function (app) {
 
   app.route("/api/settings/relog").get(settings.get_setting_force_relog); // get settings (no auth required)
 
-
-
 };
