@@ -171,11 +171,16 @@ var controllers = {
           $set: { status: status },
           $push: { record: newReports },
         };
-        result = await Reports.findOneAndUpdate(
-          { date: new Date(previous), uid: mongoose.Types.ObjectId(id) },
-          update,
-          { sort: { 'updatedAt': -1 } }
+        result = 
+        await Reports.findOneAndUpdate(
+          { _id: mongoose.Types.ObjectId(previous) },
+           update
         );
+        // await Reports.findOneAndUpdate(
+        //   { date: new Date(previous), uid: mongoose.Types.ObjectId(id) },
+        //   update,
+        //   { sort: { 'updatedAt': -1 } }
+        // );
 
         // check if existing time in / time out
       } else {
