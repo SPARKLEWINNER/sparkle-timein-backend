@@ -166,7 +166,7 @@ var controllers = {
       phone = "+63" + phone.substring(1);
     }
 
-    const user = await User.find({ email: email }).lean().exec();
+    const user = await User.find({ email: email, isArchived: false}).lean().exec();
     if (user.length !== 0)
       return res.status(400).json({
         success: false,
@@ -248,7 +248,7 @@ var controllers = {
       .lean()
       .exec();
 
-    const user = await User.find({ email: email }).lean().exec();
+    const user = await User.find({ email: email, isArchived: false }).lean().exec();
     if (user.length !== 0)
       return res.status(400).json({
         success: false,
