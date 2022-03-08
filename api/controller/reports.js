@@ -430,7 +430,6 @@ var controllers = {
         .lean()
         .exec();
       let count = employees.length 
-      console.log(employees) 
       if (!employees) {
         return res.status(200).json({
           success: true,
