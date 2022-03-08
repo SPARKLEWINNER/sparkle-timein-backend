@@ -439,7 +439,7 @@ var controllers = {
       let records = []
       dates.map(date => {
         employees.map(async data => {
-          let result = await Reports.findOne({"$and": [{uid: data._id}, {date: date}]})
+          let result = await Reports.findOne({"$and": [{uid: data._id}, {date: date}]}, {record:1,  "record.status":1, "record.time":1})
           .lean()
           .exec();
           records.push({date: date, Employee: data, reports:result, count: count })
@@ -744,7 +744,6 @@ var controllers = {
                 return new Date(a.date) - new Date(b.date);
             });
       result = await generateExcelFile(`Record-${startDate}-${endDate}-${Math.floor(100000 + Math.random() * 900000)}`, records);
-      return res.json("test"); 
     } catch (err) {
       await logError(err, "Reports", null, id, "GET");
       res.status(400).json({ success: false, msg: err });
