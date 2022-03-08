@@ -23,6 +23,9 @@ const data = {
         type: Date,
         default: current_date,
     },
+    workmate: {
+        type: String,
+    }
 }
 
 const reportsSchema = new Schema(data, { timestamps: true });
