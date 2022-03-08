@@ -449,7 +449,7 @@ var controllers = {
       records.sort(function(a,b){
         return new Date(a.date) - new Date(b.date);
       });
-      return res.json(records); 
+      return res.json("test"); 
     } catch (err) {
       await logError(err, "Reports", null, id, "GET");
       res.status(400).json({ success: false, msg: err });
