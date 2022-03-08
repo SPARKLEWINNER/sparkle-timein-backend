@@ -439,7 +439,7 @@ var controllers = {
       let records = []
       dates.map(date => {
         employees.map(async data => {
-          let result = await Reports.findOne({"$and": [{uid: data._id}, {date: date}]}, {record:1,  "record.status":1, "record.time":1})
+          let result = await Reports.findOne({"$and": [{uid: data._id}, {date: date}]})
           .lean()
           .exec();
           records.push({date: date, Employee: data, reports:result, count: count })
