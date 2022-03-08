@@ -407,12 +407,10 @@ var controllers = {
   get_reports_rangev2: async function (req, res) {
 
     const { id, startDate, endDate } = req.params;
-    console.log(id, startDate, endDate);
     var dates = []
     for (var d = new Date(startDate); d <= new Date(endDate); d.setDate(d.getDate() + 1)) {
       dates.push(moment(d).format('YYYY-MM-DD'))
     }
-    
     if (!id || !startDate || !endDate )
       res
         .status(404)
@@ -427,7 +425,6 @@ var controllers = {
         msg: "No such users",
       });
     }
-    console.log(user);
     try {
       let employees = await User.find({ company: user.company, role: 0 }, { displayName: 1})
         .lean()
@@ -453,7 +450,6 @@ var controllers = {
       records.sort(function(a,b){
         return new Date(a.date) - new Date(b.date);
       });
-      console.log(records);
       return res.json(records); 
     } catch (err) {
       await logError(err, "Reports", null, id, "GET");
