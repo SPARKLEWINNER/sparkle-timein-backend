@@ -650,6 +650,7 @@ var controllers = {
           date: date,
           location: location,
           address: address,
+          workmate: workmate
         };
 
         let update = {
