@@ -426,7 +426,7 @@ var controllers = {
       });
     }
     try {
-      let employees = await User.find({ company: user.company, role: 0, isArchived: false }, { displayName: 1})
+      let employees = await User.find({ company: user.company, role: 0}, { displayName: 1})
         .lean()
         .exec();
       let count = employees.length 
