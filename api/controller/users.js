@@ -175,7 +175,52 @@ var controllers = {
     }
     
   },
+
+  update_store_location: async function (req, res) {
+   const { long, lat } = req.body;
+    const { id } = req.params;
+    if (Object.keys(req.body).length === 0) {
+      return res.status(400).json({
+        success: false,
+        msg: `Missing fields`,
+      });
+    } else {
+      try {
+
+        const location = {
+          type: "Point",
+          coordinates: [
+            long,
+            lat
+          ]
+        }
+        const result = await User.findOneAndUpdate(
+          { _id: mongoose.Types.ObjectId(id) },
+          { location: location },
+          { 
+            new: true,
+            upsert: true
+          }
+        ).exec();
+        console.log(result);
+        if (!result)
+          res.status(400).json({
+            success: false,
+            msg: `Unable to update account ${id}`,
+          });
+        res.json(result);
+      } catch (err) {
+        console.log(err)
+        await logError(err, "User.location_update", null, id, "PATCH");
+        res
+          .status(400)
+          .json({ success: false, msg: `Unable to update account ${id}` });
+      }
+    }
+  },
 };
+
+
 
 module.exports = controllers;
 
