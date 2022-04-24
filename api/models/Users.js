@@ -77,7 +77,11 @@ const data = {
   parentCompany: {
     type: String,
     default: null,
-  }
+  },
+  location: {
+    type: Object,
+    default: null,
+  },
 };
 const userSchema = new Schema(data, { timestamps: true });
 userSchema
