@@ -24,7 +24,7 @@ const without_time = (dateTime) => {
 var controllers = {
   report_time: async function (req, res) {
     const { id } = req.params;
-    const { status, location, logdate, previous } = req.body;
+    const { status, location, logdate, previous, ip } = req.body;
     const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
     console.log('PREVIOUS', previous);
     console.log('REPORT_TIME', now);
@@ -99,6 +99,7 @@ var controllers = {
           date: date,
           location: location,
           address: address,
+          ip: "Test"
         },
       });
 
@@ -165,6 +166,7 @@ var controllers = {
           date: date,
           location: location,
           address: address,
+          ip: "Test"
         };
 
         let update = {
@@ -509,7 +511,7 @@ var controllers = {
   },
   report_workmate_time: async function (req, res) {
     const { id } = req.params;
-    const { status, location, logdate, previous, workmate } = req.body;
+    const { status, location, logdate, previous, workmate, ip } = req.body;
     const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
     console.log('PREVIOUS', previous);
     console.log('REPORT_TIME', now);
@@ -584,7 +586,8 @@ var controllers = {
           date: date,
           location: location,
           address: address,
-          workmate: workmate
+          workmate: workmate,
+          ip: ip
         },
       });
       let record_last =
@@ -650,7 +653,8 @@ var controllers = {
           date: date,
           location: location,
           address: address,
-          workmate: workmate
+          workmate: workmate,
+          ip: ip
         };
 
         let update = {
