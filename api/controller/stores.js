@@ -212,9 +212,23 @@ var controllers = {
         msg: `User not found ${id}`,
       });
     }
-
+    console.log(user_id)
     try {
-      await User.findOne({ _id: mongoose.Types.ObjectId(user_id) }).then((user) => {
+      const result = await User.findOneAndUpdate(
+        { _id: mongoose.Types.ObjectId(user_id) },
+        { isArchived: false },
+        { 
+          new: true,
+          upsert: true
+        }
+      ).exec();
+      if (!result)
+        return res
+          .status(400)
+          .json({ success: false, msg: `Unable to update details ${user_id}` });
+
+      return res.json(result);
+/*      await User.findOne({ _id: mongoose.Types.ObjectId(user_id) }).then((user) => {
         if (!user)
           return res
             .status(400)
@@ -230,7 +244,7 @@ var controllers = {
 
           return res.json(result);
         });
-      });
+      });*/
     } catch (err) {
       console.log(err);
       await logError(err, "Stores.archive_user", req.body, user_id, "PATCH");
