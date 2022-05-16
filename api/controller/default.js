@@ -8,7 +8,7 @@ var controllers = {
             name: properties.name,
             version: properties.version
         }
-        res.json(appInfo);
+        res.json({...appInfo, "msg": "hello world"});
     },
 };
 
