@@ -10,7 +10,7 @@
     "dev": "concurrently --kill-others \"npm run server\""
   },
   "engines": {
-    "node": "12.x"
+    "node": "16.x"
   },
   "dependencies": {
     "@sendgrid/mail": "^7.6.0",
