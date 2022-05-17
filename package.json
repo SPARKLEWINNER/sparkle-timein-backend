@@ -9,17 +9,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "concurrently --kill-others \"npm run server\""
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/SPARKLEWINNER/sparkle-timein-backend.git"
+  "engines": {
+    "node": "12.x"
   },
-  "keywords": [],
-  "author": "Sparkle Team",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/SPARKLEWINNER/sparkle-timein-backendissues"
-  },
-  "homepage": "hhttps://github.com/SPARKLEWINNER/sparkle-timein-backend#readme",
   "dependencies": {
     "@sendgrid/mail": "^7.6.0",
     "axios": "^0.21.1",
