@@ -4,8 +4,8 @@
   "description": "Sparkle Time in",
   "main": "server.js",
   "scripts": {
-    "start": "npx nodemon src/server.js",
-    "server": "nodemon src/server.js",
+    "start": "npx nodemon src/index.js",
+    "server": "nodemon src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "concurrently --kill-others \"npm run server\""
   },
