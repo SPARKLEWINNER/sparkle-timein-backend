@@ -688,6 +688,78 @@ var controllers = {
       });
     }
   },
+  get_limited_reports: async function (req, res) {
+    const { id } = req.params;
+    if (!id) res.status(404).json({ success: false, msg: `No such user.` });
+
+    let user = await User.findOne({
+      _id: mongoose.Types.ObjectId(id),
+    })
+      .lean()
+      .exec();
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        msg: "No such users",
+      });
+    }
+
+    try {
+      let records = await Reports.find({uid: mongoose.Types.ObjectId(id)})
+      .sort([['date', -1]])
+      .limit(10)
+      .exec();
+
+      if (records.length === 0) {
+        return res.status(201).json({
+          success: true,
+          msg: "No Records",
+        });
+      }
+
+      res.json(records);
+    } catch (err) {
+      await logError(err, "Reports", null, id, "GET");
+      res.status(400).json({ success: false, msg: err });
+      throw new createError.InternalServerError(err);
+    }
+  },
+  get_reports_bydate: async function (req, res) {
+    const { id, date } = req.params;
+    if (!id) res.status(404).json({ success: false, msg: `No such user.` });
+
+    let user = await User.findOne({
+      _id: mongoose.Types.ObjectId(id),
+    })
+      .lean()
+      .exec();
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        msg: "No such users",
+      });
+    }
+
+    try {
+      let records = await Reports.find({uid: mongoose.Types.ObjectId(id), date: date})
+      .sort([['date', -1]])
+      .limit(1)
+      .exec();
+
+      if (records.length === 0) {
+        return res.status(201).json({
+          success: true,
+          msg: "No Records",
+        });
+      }
+
+      res.json(records);
+    } catch (err) {
+      await logError(err, "Reports", null, id, "GET");
+      res.status(400).json({ success: false, msg: err });
+      throw new createError.InternalServerError(err);
+    }
+  },
 };
 
 module.exports = controllers;

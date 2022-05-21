@@ -65,6 +65,22 @@ module.exports = function (app) {
     );
 
   app
+    .route("/api/user/limited/records/:id")
+    .get(
+      /*auth.require_sign_in,
+      auth.is_store_authenticated,*/
+      reports.get_limited_reports
+    ); 
+
+  app
+    .route("/api/user/records/bydate/:id/:date")
+    .get(
+/*      auth.require_sign_in,
+      auth.is_store_authenticated,*/
+      reports.get_reports_bydate
+    );  
+
+  app
     .route("/api/user/records/:id/:date")
     .get(
       auth.require_sign_in,
