@@ -70,6 +70,30 @@ module.exports = function (app) {
       /*auth.require_sign_in,
       auth.is_store_authenticated,*/
       reports.get_limited_reports
+    );
+
+  app
+    .route("/api/user/limited/recordsV2")
+    .get(
+      /*auth.require_sign_in,
+      auth.is_store_authenticated,*/
+      reports.get_limited_reportsV2
+    );
+
+  app
+    .route("/api/user/generate/password")
+    .get(
+      /*auth.require_sign_in,
+      auth.is_store_authenticated,*/
+      reports.generate_password
+    ); 
+
+  app
+    .route("/api/user/validate/password/:token")
+    .get(
+      /*auth.require_sign_in,
+      auth.is_store_authenticated,*/
+      reports.validate_password
     ); 
 
   app
@@ -87,6 +111,15 @@ module.exports = function (app) {
       auth.is_store_authenticated,
       reports.get_reports_range,
     );
+
+
+  app.route("/api/record/:id").get(/*auth.require_sign_in, */reports.get_reports_by_id);
+
+  app.route("/api/record/update/:id").patch(/*auth.require_sign_in, */reports.update_user_record);
+
+  app.route("/api/record/delete/:id").get(/*auth.require_sign_in, */reports.remove_record);
+
+  app.route("/api/record/delete/last/:id").get(/*auth.require_sign_in, */reports.remove_last_record);
 
   app
   .route("/api/user/recordsv2/:id/:startDate/:endDate")
