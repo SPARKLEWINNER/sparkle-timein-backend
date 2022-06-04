@@ -1,17 +1,17 @@
 "use strict";
 const passport = require("passport");
-var api = require("./controller/default");
-var user = require("./controller/users");
-var auth = require("./controller/auth");
-var reports = require("./controller/reports");
-var stores = require("./controller/stores");
+var api = require("../controller/default");
+var user = require("../controller/users");
+var auth = require("../controller/auth");
+var reports = require("../controller/reports");
+var stores = require("../controller/stores");
 
 const {
   add_user,
   get_user,
   get_users,
   delete_users,
-} = require("./sockets/stores");
+} = require("./stores");
 let online = 0;
 module.exports = function (io, socket) {
   // account name - account id - room id (store)

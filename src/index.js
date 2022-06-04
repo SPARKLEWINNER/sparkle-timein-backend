@@ -3,14 +3,14 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const mongoose = require("mongoose");
 const morgan = require("morgan");
-const routes = require("./api/routes");
-const sockets = require("./api/socket");
+const routes = require("./routes");
+const sockets = require("./sockets/request");
 const passport = require("passport");
 const port = process.env.PORT || 7000;
 const app = express();
 const useragent = require("express-useragent");
 require("dotenv").config();
-require("./api/services/passport")(passport);
+require("./services/passport")(passport);
 
 // Connect to the database
 mongoose

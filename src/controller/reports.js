@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const axios = require("axios");
 const User = require("../models/Users");
 const Reports = require("../models/Reports");
+const Tokens = require("../models/Tokens");
 const logError = require("../services/logger");
 const mailer = require("../services/mailer");
 const moment = require('moment-timezone');
@@ -688,6 +689,289 @@ var controllers = {
       });
     }
   },
+  get_limited_reports: async function (req, res) {
+    const { id } = req.params;
+    if (!id) res.status(404).json({ success: false, msg: `No such user.` });
+
+    let user = await User.findOne({
+      _id: mongoose.Types.ObjectId(id),
+    })
+      .lean()
+      .exec();
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        msg: "No such users",
+      });
+    }
+
+    try {
+      let records = await Reports.find({uid: mongoose.Types.ObjectId(id)})
+      .sort([['date', -1]])
+      .limit(10)
+      .exec();
+
+      if (records.length === 0) {
+        return res.status(201).json({
+          success: true,
+          msg: "No Records",
+        });
+      }
+
+      res.json(records);
+    } catch (err) {
+      await logError(err, "Reports", null, id, "GET");
+      res.status(400).json({ success: false, msg: err });
+      throw new createError.InternalServerError(err);
+    }
+  },
+  get_reports_bydate: async function (req, res) {
+    const { id, date } = req.params;
+    if (!id) res.status(404).json({ success: false, msg: `No such user.` });
+
+    let user = await User.findOne({
+      _id: mongoose.Types.ObjectId(id),
+    })
+      .lean()
+      .exec();
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        msg: "No such users",
+      });
+    }
+
+    try {
+      let records = await Reports.find({uid: mongoose.Types.ObjectId(id), date: date})
+      .sort([['date', -1]])
+      .limit(1)
+      .exec();
+
+      if (records.length === 0) {
+        return res.status(201).json({
+          success: true,
+          msg: "No Records",
+        });
+      }
+
+      res.json(records);
+    } catch (err) {
+      await logError(err, "Reports", null, id, "GET");
+      res.status(400).json({ success: false, msg: err });
+      throw new createError.InternalServerError(err);
+    }
+  },
+
+  update_user_record: async function (req, res) {
+    const { timein, timeout, breakin, oldBreakin, breakout } =
+      req.body;
+    const { id } = req.params;
+    if (Object.keys(req.body).length === 0) {
+      return res.status(400).json({
+        success: false,
+        msg: `Missing fields`,
+      });
+    }
+    try {
+      await Reports.updateOne(
+        { _id: id, "record.status": "time-in" },
+        { $set: { "record.$.time" : timein } },
+      )
+      await Reports.updateOne(
+        { _id: id, "record.status": "break-in" },
+        { $setOnInsert: { "record.$.time" : breakin } },
+      )
+      await Reports.updateOne(
+        { _id: id, "record.status": "break-out" },
+        { $set: { "record.$.time" : breakout } },
+      )
+      await Reports.updateOne(
+        { _id: id, "record.status": "time-out" },
+        { $set: { "record.$.time" : timeout } },
+      )
+      return res.status(200).json({
+        success: true,
+        msg: "Record updated",
+      });
+    } catch (err) {
+      console.log(err);
+      await logError(err, "Reports", req.body, id, "PATCH");
+
+      return res.status(400).json({
+        success: false,
+        msg: "No records found",
+      });
+    }
+  },
+
+  get_reports_by_id: async function (req, res) {
+    
+    const { id } = req.params;
+    if (!id) res.status(404).json({ success: false, msg: `No such user.` });
+
+    let report = await Reports.findOne({
+      _id: mongoose.Types.ObjectId(id),
+    })
+      .lean()
+      .exec();
+    if (!report) {
+      return res.status(400).json({
+        success: false,
+        msg: "No such users",
+      });
+    }
+    if (report.length === 0) {
+      return res.status(201).json({
+        success: true,
+        msg: "No Records",
+      });
+    }
+    else {
+      res.json([report]);
+    }
+
+    
+  },
+  remove_record: async function (req, res) {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        msg: `Record not found ${id}`,
+      });
+    }
+
+    try {
+      await Reports.deleteOne({ _id: mongoose.Types.ObjectId(id) }).then((record) => {
+        if (!record)
+          return res
+            .status(400)
+            .json({ success: false, msg: `Unable to remove record ${id}` });
+        if (record.deletedCount === 0) {
+          return res.status(400).json({
+            success: true,
+            msg: "No record found",
+          }); 
+        }
+        else {
+          return res.status(200).json({
+            success: true,
+            msg: "Record updated",
+          });  
+        }
+        
+      });
+    } catch (err) {
+      console.log(err);
+      await logError(err, "Reports.remove_record", req.body, id, "DELETE");
+      return res.status(400).json({
+        success: false,
+        msg: "No such users",
+      });
+    }
+  },
+  remove_last_record: async function (req, res) {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        msg: `Record not found ${id}`,
+      });
+    }
+
+    try {
+      await Reports.updateOne({ _id: mongoose.Types.ObjectId(id) }, { $pop: { record: 1 } }).then((record) => {
+        if (!record)
+          return res
+            .status(400)
+            .json({ success: false, msg: `Unable to remove record ${id}` });
+
+        return res.status(200).json({
+          success: true,
+          msg: "Record updated",
+        });
+      });
+    } catch (err) {
+      console.log(err);
+      await logError(err, "Reports.remove_record", req.body, id, "DELETE");
+      return res.status(400).json({
+        success: false,
+        msg: "No such users",
+      });
+    }
+  },
+  generate_password: async function (req, res) {
+    const password = Math.floor(100000 + Math.random() * 900000)
+    try {
+      const result = await Tokens.replaceOne(
+        {},
+        { token: password }
+      )
+      return res.status(200).json({
+        success: true,
+        msg: "Record created",
+        password: password
+      });
+    } catch (err) {
+      console.log(err);
+      await logError(err, "Reports.generate_password", req.body, id, "GET");
+      return res.status(400).json({
+        success: false,
+        msg: "Something went wrong",
+      });
+    }
+  },
+  validate_password: async function (req, res) {
+    const { token } = req.params;
+    try {
+      const result = await Tokens.find({token: token})
+      .lean()
+      .exec();
+      if (result.length > 0) {
+        return res.status(200).json({
+          success: true,
+          msg: "Password validated",
+        });  
+      }
+      else {
+        return res.status(400).json({
+          success: false,
+          msg: "Invalid password",
+        }); 
+      }
+      
+    } catch (err) {
+      console.log(err);
+      await logError(err, "Reports.generate_password", req.body, id, "GET");
+      return res.status(400).json({
+        success: false,
+        msg: "Something went wrong",
+      });
+    }
+  },
+  get_limited_reportsV2: async function (req, res) {
+    try {
+      let records = await Reports.find({})
+      .sort([['date', -1]])
+      .limit(10)
+      .exec();
+
+      if (records.length === 0) {
+        return res.status(201).json({
+          success: true,
+          msg: "No Records",
+        });
+      }
+
+      res.json(records);
+    } catch (err) {
+      await logError(err, "Reports", null, id, "GET");
+      res.status(400).json({ success: false, msg: err });
+      throw new createError.InternalServerError(err);
+    }
+  }
 };
 
 module.exports = controllers;

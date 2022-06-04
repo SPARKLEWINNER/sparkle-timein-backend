@@ -2,7 +2,7 @@ const dayjs = require('dayjs')
 const excelJS = require('exceljs');
 const { capitalCase } = require('change-case');
 const mongoose = require('mongoose');
-const User = require('./../models/Users')
+const User = require('../models/Users')
 
 const renderTime = (_time) => {
     let _date = new Date(_time)

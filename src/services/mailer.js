@@ -1,5 +1,5 @@
 require('dotenv').config();
-const logError = require('./../services/logger');
+const logError = require('./logger');
 const sgMail = require('@sendgrid/mail')
 
 const { SG_EMAIL, SG_KEY } = process.env;
