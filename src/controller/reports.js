@@ -514,8 +514,6 @@ var controllers = {
     const { id } = req.params;
     const { status, location, logdate, previous, workmate, ip } = req.body;
     const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
-    console.log('PREVIOUS', previous);
-    console.log('REPORT_TIME', now);
     let month = now.getUTCMonth() + 1;
     let day = now.getUTCDate();
     let year = now.getUTCFullYear();
