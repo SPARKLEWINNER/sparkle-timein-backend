@@ -134,6 +134,10 @@ module.exports = function (app) {
     .get(auth.require_sign_in, auth.is_store_authenticated, stores.get_users);
 
   app
+    .route("/api/users/company")
+    .get(/*auth.require_sign_in, auth.is_store_authenticated, */reports.get_company);
+
+  app
     .route("/api/store/users/archive/:id")
     .get(auth.require_sign_in, auth.is_store_authenticated, stores.get_users_archived);
 
