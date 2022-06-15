@@ -408,7 +408,6 @@ var controllers = {
     }
   },
   get_reports_rangev2: async function (req, res) {
-
     const { id, startDate, endDate } = req.params;
     var dates = []
     for (var d = new Date(startDate); d <= new Date(endDate); d.setDate(d.getDate() + 1)) {
@@ -442,11 +441,6 @@ var controllers = {
       let records = []
       let finalReports = []
       let reports = []
-/*      employees.map(async data => {
-        console.log(data)
-        let result = await Reports.find({uid: data._id}).lean().exec()
-        records.push({Employee: data, reports: result, count: count })
-      })*/
       employees.map(async data => {
         dates.map(async date => {
           let result = await Reports.find({"$and": [{uid: data._id}, {date: date}]})
@@ -456,23 +450,6 @@ var controllers = {
         })
       })
       let reportsv2 = await Reports.findOne({}).lean().exec()
-/*      dates.map(date => {
-        console.log(date)
-        const filterResult = records.filter((data, key) => {
-          console.log(data.reports[0])
-          if (data.reports !== null) {
-            if (moment(data.reports.date).format('YYYY-MM-DD') === moment(date).format('YYYY-MM-DD')) {
-              finalReports.push(filterResult)   
-            }  
-          }
-        })
-      })*/
-
-/*      records.sort(function(a,b){
-        return new Date(a.date) - new Date(b.date);
-      });  */
-
-
       records.sort(function(a, b){
           if(a.Employee.displayName < b.Employee.displayName) { return -1; }
           if(a.Employee.displayName > b.Employee.displayName) { return 1; }
