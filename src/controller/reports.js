@@ -440,18 +440,44 @@ var controllers = {
         });
       }
       let records = []
-      dates.map(date => {
-        employees.map(async data => {
-          let result = await Reports.findOne({"$and": [{uid: data._id}, {date: date}]})
+      let finalReports = []
+      let reports = []
+/*      employees.map(async data => {
+        console.log(data)
+        let result = await Reports.find({uid: data._id}).lean().exec()
+        records.push({Employee: data, reports: result, count: count })
+      })*/
+      employees.map(async data => {
+        dates.map(async date => {
+          let result = await Reports.find({"$and": [{uid: data._id}, {date: date}]})
           .lean()
           .exec();
-          records.push({date: date, Employee: data, reports:result, count: count })
-        })  
+          records.push({Employee: data, date: date, reports:result, count: count }) 
+        })
       })
-      let reports = await Reports.findOne({}).lean().exec()
-      records.sort(function(a,b){
+      let reportsv2 = await Reports.findOne({}).lean().exec()
+/*      dates.map(date => {
+        console.log(date)
+        const filterResult = records.filter((data, key) => {
+          console.log(data.reports[0])
+          if (data.reports !== null) {
+            if (moment(data.reports.date).format('YYYY-MM-DD') === moment(date).format('YYYY-MM-DD')) {
+              finalReports.push(filterResult)   
+            }  
+          }
+        })
+      })*/
+
+/*      records.sort(function(a,b){
         return new Date(a.date) - new Date(b.date);
-      });
+      });  */
+
+
+      records.sort(function(a, b){
+          if(a.Employee.displayName < b.Employee.displayName) { return -1; }
+          if(a.Employee.displayName > b.Employee.displayName) { return 1; }
+          return 0;
+      })
       return res.json(records); 
     } catch (err) {
       await logError(err, "Reports", null, id, "GET");
@@ -761,7 +787,7 @@ var controllers = {
   },
 
   update_user_record: async function (req, res) {
-    const { timein, timeout, breakin, oldBreakin, breakout } =
+    const { timein, timeout, breakin, breakout } =
       req.body;
     const { id } = req.params;
     if (Object.keys(req.body).length === 0) {
@@ -777,7 +803,7 @@ var controllers = {
       )
       await Reports.updateOne(
         { _id: id, "record.status": "break-in" },
-        { $setOnInsert: { "record.$.time" : breakin } },
+        { $set: { "record.$.time" : breakin } },
       )
       await Reports.updateOne(
         { _id: id, "record.status": "break-out" },
@@ -965,11 +991,61 @@ var controllers = {
 
       res.json(records);
     } catch (err) {
-      await logError(err, "Reports", null, id, "GET");
+      await logError(err, "Reports.get_limited_reportsV2", null, id, "GET");
       res.status(400).json({ success: false, msg: err });
       throw new createError.InternalServerError(err);
     }
-  }
+  },
+  get_company: async function (req, res) {
+    try {
+      let records = await User.find({role: 1, isArchived: false}, {company: 1})
+      .distinct("company")
+      .exec();
+      if (records.length === 0) {
+        return res.status(201).json({
+          success: true,
+          msg: "No Records",
+        });
+      }
+
+      res.json(records);
+    } catch (err) {
+      await logError(err, "Reports.get_company", null, "", "GET");
+      res.status(400).json({ success: false, msg: err });
+      throw new createError.InternalServerError(err);
+    }
+  },
+  get_reports_store: async function (req, res) {
+    const { store, date } = req.params;
+    let records = [];
+    if (!store || !date)
+      res
+        .status(404)
+        .json({ success: false, msg: `Invalid Request parameters.` });
+    try {
+      let employees = await User.find({ company: store, role: 0, isArchived: false}, { _id: 1, displayName: 1 })
+        .lean()
+        .exec();
+      if (!employees) {
+        return res.status(200).json({
+          success: true,
+          msg: "No registered employees",
+        });
+      }
+      employees.map(async (data) => {
+        const report = await Reports.find({ "$and": [{ uid: data._id }, { date: date }] }).sort({ date: -1 })
+          .lean()
+          .exec();
+        records.push({ Employee: data, Records: report })
+      });
+      let reportsv2 = await Reports.findOne({}).lean().exec()
+      return res.json(records);
+    } catch (err) {
+      await logError(err, "Reports.get_reports_store", null, store, "GET");
+      res.status(400).json({ success: false, msg: err });
+      throw new createError.InternalServerError(err);
+    }
+  },
 };
 
 module.exports = controllers;
