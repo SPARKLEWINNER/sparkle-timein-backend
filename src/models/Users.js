@@ -114,7 +114,7 @@ userSchema.methods = {
 
 // static method to login user
 userSchema.statics.login = async function (email, password) {
-  const user = await this.findOne({ email }).lean().exec();
+  const user = await this.findOne({ email , isArchived: false }).lean().exec();
   if (!user) return false;
   let encryptPassword = crypto
     .createHmac("sha1", user.salt)
