@@ -141,9 +141,9 @@ module.exports = function (app) {
     .route("/api/store/users/archive/:id")
     .get(auth.require_sign_in, auth.is_store_authenticated, stores.get_users_archived);
 
-  app.route("/api/store/:id/user/:user_id/archive").patch(auth.require_sign_in, auth.is_store_authenticated, stores.archive_user);
+  app.route("/api/store/:id/user/:user_id/archive").get(auth.require_sign_in, auth.is_store_authenticated, stores.archive_user);
 
-  app.route("/api/store/:id/user/:user_id/restore").patch(auth.require_sign_in, auth.is_store_authenticated, stores.restore_user);
+  app.route("/api/store/:id/user/:user_id/restore").get(auth.require_sign_in, auth.is_store_authenticated, stores.restore_user);
 
   app.route("/api/store/:id/user/:user_id").delete(auth.require_sign_in, auth.is_store_authenticated, stores.remove_user);
 
