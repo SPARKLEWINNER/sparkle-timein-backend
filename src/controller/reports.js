@@ -906,17 +906,30 @@ var controllers = {
     }
 
     try {
-      await Reports.updateOne({ _id: mongoose.Types.ObjectId(id) }, { $pop: { record: 1 } }).then((record) => {
-        if (!record)
-          return res
-            .status(400)
-            .json({ success: false, msg: `Unable to remove record ${id}` });
+      const reportStatus = await Reports.findOne({_id: mongoose.Types.ObjectId(id)})
+      const newStatus = reportStatus.record[reportStatus.record.length - 2].status
 
-        return res.status(200).json({
-          success: true,
-          msg: "Record updated",
-        });
-      });
+      const record = await Reports.updateOne({ _id: mongoose.Types.ObjectId(id) }, { $pop: { record: 1 } }).then(async (record) => {
+        if (!record) {
+          return res
+              .status(400)
+              .json({ success: false, msg: `Unable to remove record ${id}` });
+        }
+        else {
+          const updateStatus = await Reports.updateOne({ _id: mongoose.Types.ObjectId(id) }, {"status": newStatus}) 
+          .then((status) => {
+            if (!status)
+              return res
+                .status(400)
+                .json({ success: false, msg: `Unable to remove record ${id}` });
+            return res.status(200).json({
+              success: true,
+              msg: "Success",
+            });
+          })
+        }
+      })
+
     } catch (err) {
       console.log(err);
       await logError(err, "Reports.remove_record", req.body, id, "DELETE");
@@ -925,6 +938,8 @@ var controllers = {
         msg: "No such users",
       });
     }
+
+
   },
   generate_password: async function (req, res) {
     const password = Math.floor(100000 + Math.random() * 900000)
