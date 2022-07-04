@@ -429,7 +429,7 @@ var controllers = {
       });
     }
     try {
-      let employees = await User.find({ company: user.company, role: 0, isArchived: false}, { displayName: 1})
+      let employees = await User.find({ company: user.company, role: 0, isArchived: false}, { displayName: 1, lastName: 1, firstName: 1})
         .lean()
         .exec();
       let count = employees.length 
@@ -474,8 +474,8 @@ var controllers = {
 
 
       records.sort(function(a, b){
-          if(a.Employee.displayName < b.Employee.displayName) { return -1; }
-          if(a.Employee.displayName > b.Employee.displayName) { return 1; }
+          if(a.Employee.lastName < b.Employee.lastName) { return -1; }
+          if(a.Employee.lastName > b.Employee.lastName) { return 1; }
           return 0;
       })
       return res.json(records); 
