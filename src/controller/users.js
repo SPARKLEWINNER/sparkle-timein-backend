@@ -218,7 +218,46 @@ var controllers = {
       }
     }
   },
-};
+   update_user_password: async function (req, res) {
+      const { id, password } = req.params;
+      if (!id || !password)
+        res
+          .status(404)
+          .json({ success: false, msg: `Invalid Request parameters.` });
+
+      try {
+        await User.findOne({ _id: mongoose.Types.ObjectId(id) })
+          .then((user) => {
+            if (!user)
+              return res
+                .status(400)
+                .json({ success: false, msg: `User not found ${id}` });
+            user.password = password;
+            user.save().then((result) => {
+              if (!result)
+                return res.status(400).json({
+                  success: false,
+                  msg: `Unable to update details ${id}`,
+                });
+
+              const token = create_token(result._id);
+              res.cookie("jwt", token, { expire: new Date() + 9999 });
+              return res.json(result._id);
+            });
+          })
+          .catch((err) => console.log(err));
+      } catch (err) {
+        console.log(err);
+        await logError(err, "Users.update_user_password", id, "GET");
+
+        return res.status(400).json({
+          success: false,
+          msg: "No such users",
+        });
+      }
+    }
+  };
+
 
 
 

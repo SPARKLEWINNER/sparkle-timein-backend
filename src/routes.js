@@ -47,6 +47,10 @@ module.exports = function (app) {
     .patch(user.update_store_location);
 
   app
+    .route("/api/user/updatePass/:id/:password")
+    .get(user.update_user_password);
+
+  app
     .route("/api/user/status/:id")
     .get(auth.require_sign_in, reports.get_status_time);
   app
@@ -102,7 +106,15 @@ module.exports = function (app) {
 /*      auth.require_sign_in,
       auth.is_store_authenticated,*/
       reports.get_reports_bydate
-    );  
+    ); 
+
+  app
+    .route("/api/store/records/:store/:date")
+    .get(
+/*      auth.require_sign_in,
+      auth.is_store_authenticated,*/
+      reports.get_reports_store
+    ); 
 
   app
     .route("/api/user/records/:id/:date")
@@ -141,9 +153,9 @@ module.exports = function (app) {
     .route("/api/store/users/archive/:id")
     .get(auth.require_sign_in, auth.is_store_authenticated, stores.get_users_archived);
 
-  app.route("/api/store/:id/user/:user_id/archive").patch(auth.require_sign_in, auth.is_store_authenticated, stores.archive_user);
+  app.route("/api/store/:id/user/:user_id/archive").get(auth.require_sign_in, auth.is_store_authenticated, stores.archive_user);
 
-  app.route("/api/store/:id/user/:user_id/restore").patch(auth.require_sign_in, auth.is_store_authenticated, stores.restore_user);
+  app.route("/api/store/:id/user/:user_id/restore").get(auth.require_sign_in, auth.is_store_authenticated, stores.restore_user);
 
   app.route("/api/store/:id/user/:user_id").delete(auth.require_sign_in, auth.is_store_authenticated, stores.remove_user);
 

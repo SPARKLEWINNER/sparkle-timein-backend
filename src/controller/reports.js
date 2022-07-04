@@ -428,7 +428,7 @@ var controllers = {
       });
     }
     try {
-      let employees = await User.find({ company: user.company, role: 0, isArchived: false}, { displayName: 1})
+      let employees = await User.find({ company: user.company, role: 0, isArchived: false}, { displayName: 1, lastName: 1, firstName: 1})
         .lean()
         .exec();
       let count = employees.length 
@@ -451,8 +451,8 @@ var controllers = {
       })
       let reportsv2 = await Reports.findOne({}).lean().exec()
       records.sort(function(a, b){
-          if(a.Employee.displayName < b.Employee.displayName) { return -1; }
-          if(a.Employee.displayName > b.Employee.displayName) { return 1; }
+          if(a.Employee.lastName < b.Employee.lastName) { return -1; }
+          if(a.Employee.lastName > b.Employee.lastName) { return 1; }
           return 0;
       })
       return res.json(records); 
@@ -764,7 +764,7 @@ var controllers = {
   },
 
   update_user_record: async function (req, res) {
-    const { timein, timeout, breakin, oldBreakin, breakout } =
+    const { timein, timeout, breakin, breakout } =
       req.body;
     const { id } = req.params;
     if (Object.keys(req.body).length === 0) {
@@ -780,7 +780,7 @@ var controllers = {
       )
       await Reports.updateOne(
         { _id: id, "record.status": "break-in" },
-        { $setOnInsert: { "record.$.time" : breakin } },
+        { $set: { "record.$.time" : breakin } },
       )
       await Reports.updateOne(
         { _id: id, "record.status": "break-out" },
@@ -883,17 +883,30 @@ var controllers = {
     }
 
     try {
-      await Reports.updateOne({ _id: mongoose.Types.ObjectId(id) }, { $pop: { record: 1 } }).then((record) => {
-        if (!record)
-          return res
-            .status(400)
-            .json({ success: false, msg: `Unable to remove record ${id}` });
+      const reportStatus = await Reports.findOne({_id: mongoose.Types.ObjectId(id)})
+      const newStatus = reportStatus.record[reportStatus.record.length - 2].status
 
-        return res.status(200).json({
-          success: true,
-          msg: "Record updated",
-        });
-      });
+      const record = await Reports.updateOne({ _id: mongoose.Types.ObjectId(id) }, { $pop: { record: 1 } }).then(async (record) => {
+        if (!record) {
+          return res
+              .status(400)
+              .json({ success: false, msg: `Unable to remove record ${id}` });
+        }
+        else {
+          const updateStatus = await Reports.updateOne({ _id: mongoose.Types.ObjectId(id) }, {"status": newStatus}) 
+          .then((status) => {
+            if (!status)
+              return res
+                .status(400)
+                .json({ success: false, msg: `Unable to remove record ${id}` });
+            return res.status(200).json({
+              success: true,
+              msg: "Success",
+            });
+          })
+        }
+      })
+
     } catch (err) {
       console.log(err);
       await logError(err, "Reports.remove_record", req.body, id, "DELETE");
@@ -902,6 +915,8 @@ var controllers = {
         msg: "No such users",
       });
     }
+
+
   },
   generate_password: async function (req, res) {
     const password = Math.floor(100000 + Math.random() * 900000)
@@ -968,16 +983,16 @@ var controllers = {
 
       res.json(records);
     } catch (err) {
-      await logError(err, "Reports", null, id, "GET");
+      await logError(err, "Reports.get_limited_reportsV2", null, id, "GET");
       res.status(400).json({ success: false, msg: err });
       throw new createError.InternalServerError(err);
     }
   },
   get_company: async function (req, res) {
     try {
-      let records = await User.distinct("company")
+      let records = await User.find({role: 1, isArchived: false}, {company: 1})
+      .distinct("company")
       .exec();
-
       if (records.length === 0) {
         return res.status(201).json({
           success: true,
@@ -987,11 +1002,42 @@ var controllers = {
 
       res.json(records);
     } catch (err) {
-      await logError(err, "Reports", null, "", "GET");
+      await logError(err, "Reports.get_company", null, "", "GET");
       res.status(400).json({ success: false, msg: err });
       throw new createError.InternalServerError(err);
     }
-  }
+  },
+  get_reports_store: async function (req, res) {
+    const { store, date } = req.params;
+    let records = [];
+    if (!store || !date)
+      res
+        .status(404)
+        .json({ success: false, msg: `Invalid Request parameters.` });
+    try {
+      let employees = await User.find({ company: store, role: 0, isArchived: false}, { _id: 1, displayName: 1 })
+        .lean()
+        .exec();
+      if (!employees) {
+        return res.status(200).json({
+          success: true,
+          msg: "No registered employees",
+        });
+      }
+      employees.map(async (data) => {
+        const report = await Reports.find({ "$and": [{ uid: data._id }, { date: date }] }).sort({ date: -1 })
+          .lean()
+          .exec();
+        records.push({ Employee: data, Records: report })
+      });
+      let reportsv2 = await Reports.findOne({}).lean().exec()
+      return res.json(records);
+    } catch (err) {
+      await logError(err, "Reports.get_reports_store", null, store, "GET");
+      res.status(400).json({ success: false, msg: err });
+      throw new createError.InternalServerError(err);
+    }
+  },
 };
 
 module.exports = controllers;
