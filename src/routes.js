@@ -52,7 +52,11 @@ module.exports = function (app) {
 
   app
     .route("/api/user/status/:id")
-    .get(auth.require_sign_in, reports.get_status_time);
+    .get(/*auth.require_sign_in,*/ reports.get_status_time);
+
+  app
+    .route("/api/user/storedistance")
+    .post(reports.get_reports_store_distance);
   app
     .route("/api/user/time/:id")
     .post(auth.require_sign_in, reports.report_time);

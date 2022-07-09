@@ -210,7 +210,7 @@ var controllers = {
   get_status_time: async function (req, res) {
     const { id } = req.params;
     if (!id) res.status(404).json({ success: false, msg: `No such user.` });
-    let now = new Date();
+    let now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
     let user = await User.findOne({ _id: mongoose.Types.ObjectId(id) })
       .lean()
       .exec();
@@ -239,6 +239,36 @@ var controllers = {
         status: false,
         msg: `No existing Record`,
       }]);
+      let OneDay = result.slice(-1).pop().createdAt.getTime() + (1 * 24 * 60 * 60 * 1000)
+      let DateToday = now.getTime()
+      if (result.slice(-1).pop().status !== "time-out" && DateToday >= OneDay) {
+        let month = now.getUTCMonth() + 1;
+        let day = now.getUTCDate();
+        let year = now.getUTCFullYear();
+        let time = Date.now();
+        let newReports = {
+          dateTime: now,
+          status: "time-out",
+          month: month,
+          day: day,
+          year: year,
+          time: time,
+          date: new Date(),
+          location: "N/A",
+          address: "N/A",
+          ip: "Test"
+        };
+
+        let update = {
+          $set: { status: "time-out" },
+          $push: { record: newReports },
+        };
+        /*result = */
+        await Reports.findOneAndUpdate(
+          { _id: mongoose.Types.ObjectId(result.slice(-1).pop()._id) },
+          update
+        );
+      }
       res.json([result.slice(-1).pop()]);
     } catch (err) {
       await logError(err, "Reports", null, id, "GET");
@@ -1057,6 +1087,29 @@ var controllers = {
       return res.json(records);
     } catch (err) {
       await logError(err, "Reports.get_reports_store", null, store, "GET");
+      res.status(400).json({ success: false, msg: err });
+      throw new createError.InternalServerError(err);
+    }
+  },
+  get_reports_store_distance: async function (req, res) {
+    const { lat, long } = req.body;
+    if (!lat || !long)
+      res
+        .status(404)
+        .json({ success: false, msg: `Invalid Request parameters.` });
+    try {
+      let store = await User.find({ location: { $geoWithin: { $center: [ [long, lat], .0002 ] } } })
+        .lean()
+        .exec();
+      if (!store) {
+        return res.status(200).json({
+          success: true,
+          msg: "No store in the area found",
+        });
+      }
+      return res.json(store);
+    } catch (err) {
+      await logError(err, "Reports.get_reports_store_distance", null, "", "POST");
       res.status(400).json({ success: false, msg: err });
       throw new createError.InternalServerError(err);
     }
