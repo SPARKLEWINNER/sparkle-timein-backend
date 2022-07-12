@@ -21,7 +21,6 @@ const data = {
     },
     createdAt: {
         type: Date,
-        default: current_date,
     },
     workmate: {
         type: String,

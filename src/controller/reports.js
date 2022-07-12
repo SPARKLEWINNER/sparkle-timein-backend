@@ -90,6 +90,7 @@ var controllers = {
         uid: id,
         date: date,
         status: status,
+        createdAt: now,
         record: {
           dateTime: now,
           status: status,
