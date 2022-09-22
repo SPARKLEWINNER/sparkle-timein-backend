@@ -303,6 +303,28 @@ var controllers = {
       });
     }
   },
+
+  get_users_store: async function (req, res) {
+    const { company } = req.body
+    try {
+      const result = await User.find({ role: 1, company: company }).lean().exec();
+      if (!result) {
+        res.status(400).json({
+          success: false,
+          msg: "No such users",
+        });
+        return;
+      }
+
+      return res.status(200).json(result);
+    } catch (err) {
+      await logError(err, "Stores", null, id, "GET");
+      res.status(400).json({
+        success: false,
+        msg: "No such users",
+      });
+    }
+  },
 };
 
 module.exports = controllers;

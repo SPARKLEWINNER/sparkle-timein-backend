@@ -1099,7 +1099,7 @@ var controllers = {
         .status(404)
         .json({ success: false, msg: `Invalid Request parameters.` });
     try {
-      let store = await User.find({ location: { $geoWithin: { $center: [ [long, lat], .0002 ] } } })
+      let store = await User.find({ location: { $geoWithin: { $center: [ [long, lat], .0003 ] } } })
         .lean()
         .exec();
       if (!store) {
@@ -1115,6 +1115,43 @@ var controllers = {
       throw new createError.InternalServerError(err);
     }
   },
+  get_active_users: async function (req, res) {
+    let records = await Reports.aggregate([
+      {
+        $lookup: {
+            from: 'users',
+            localField: 'uid',
+            foreignField: '_id',
+            as: 'user'
+        }
+      }
+    ]).match({
+      "user.company": new RegExp("star", 'i'),
+      "createdAt": {
+          $gte: new Date('2022-08-01'),
+          $lte: new Date('2022-08-31')
+      }
+    }).project({
+      "user.company": 1,
+      "_id": 0,
+      "user.displayName": 1,
+    }).sort({
+      "user.company": 1
+    })
+
+    if (records.length === 0) {
+      return res.status(201).json({
+        success: true,
+        msg: "No Records",
+      });
+    }
+    let finalRec = []
+    records.map(data => {
+      finalRec.push({store: data.user[0].company, name: data.user[0].displayName})
+    })
+    res.json(finalRec);
+  }
+  
 };
 
 module.exports = controllers;

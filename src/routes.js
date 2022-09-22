@@ -167,6 +167,8 @@ module.exports = function (app) {
 
   app.route('/api/store/branch/:id').get(auth.require_sign_in, auth.is_store_authenticated, stores.get_users_branch)
 
+  app.route('/api/store/user').post(/*auth.require_sign_in, auth.is_store_authenticated,*/ stores.get_users_store)
+
   // ========================== Admin ================================ // 
 
   // Authentication
@@ -210,5 +212,7 @@ module.exports = function (app) {
   app.route("/api/settings/create").post(auth.require_sign_in, settings.post_settings); // post database drive settings
 
   app.route("/api/settings/relog").get(settings.get_setting_force_relog); // get settings (no auth required)
+
+  app.route("/api/active").get(reports.get_active_users); // get settings (no auth required)
 
 };
