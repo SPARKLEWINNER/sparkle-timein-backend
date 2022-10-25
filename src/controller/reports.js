@@ -1128,8 +1128,8 @@ var controllers = {
     ]).match({
       "user.company": new RegExp("star", 'i'),
       "createdAt": {
-          $gte: new Date('2022-08-01'),
-          $lte: new Date('2022-08-31')
+          $gte: new Date('2022-09-01'),
+          $lte: new Date('2022-09-31')
       }
     }).project({
       "user.company": 1,

@@ -9,6 +9,8 @@ const passport = require("passport");
 const port = process.env.PORT || 7000;
 const app = express();
 const useragent = require("express-useragent");
+const cron = require('node-cron');
+const fetch = require('node-fetch');
 require("dotenv").config();
 require("./services/passport")(passport);
 
@@ -54,4 +56,24 @@ const io = require("socket.io")(server, {
 
 io.on("connection", (_socket) => {
   sockets(io, _socket);
+});
+
+// Run cronjob
+cron.schedule('*/10 * * * *', () => {
+  fetch("https://api.heroku.com/apps/sparkle-time-keep/dynos", {
+    method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
+    mode: 'cors', // no-cors, *cors, same-origin
+    cache: 'no-cache',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/vnd.heroku+json; version=3',
+      'Authorization': 'Bearer 1a7ca021-0b51-4d98-b188-c7240a9b3504'
+    },
+  })
+    .then((response) => {
+      console.log("Restart Dyno Success")
+    })
+    .catch(function (err) {
+      console.log("Unable to fetch -", err);
+    });
 });
