@@ -318,7 +318,7 @@ var controllers = {
       phone = "+63" + phone.substring(1);
     }
 
-    const user = await User.find({ phone: phone }).lean().exec();
+    const user = await User.find({ phone: phone, isArchived: false }).lean().exec();
 
     if (user.length <= 0)
       return res
@@ -361,7 +361,7 @@ var controllers = {
       phone = "+63" + phone.substring(1);
     }
 
-    const user = await User.find({ phone: phone }).lean().exec();
+    const user = await User.find({ phone: phone, isArchived: false }).lean().exec();
     if (user.length === 0) {
       const store = await User.find({ _id: mongoose.Types.ObjectId(company) })
         .lean()
