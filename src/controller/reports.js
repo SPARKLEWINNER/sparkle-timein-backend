@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const axios = require("axios");
 const User = require("../models/Users");
 const Reports = require("../models/Reports");
+const Coc = require("../models/Coc");
 const Tokens = require("../models/Tokens");
 const logError = require("../services/logger");
 const mailer = require("../services/mailer");
@@ -1116,6 +1117,8 @@ var controllers = {
     }
   },
   get_active_users: async function (req, res) {
+    /*let records = await User.find({"createdAt": {$gte: new Date('2022-10-17'), $lte: new Date('2022-10-24')}, 
+"company": new RegExp("syzygy", 'i')})*/
     let records = await Reports.aggregate([
       {
         $lookup: {
@@ -1128,8 +1131,8 @@ var controllers = {
     ]).match({
       "user.company": new RegExp("star", 'i'),
       "createdAt": {
-          $gte: new Date('2022-09-01'),
-          $lte: new Date('2022-09-31')
+          $gte: new Date('2022-10-01'),
+          $lte: new Date('2022-10-28')
       }
     }).project({
       "user.company": 1,
@@ -1149,7 +1152,43 @@ var controllers = {
     records.map(data => {
       finalRec.push({store: data.user[0].company, name: data.user[0].displayName})
     })
+/*    let finalRec = []
+    records.map(data => {
+      finalRec.push({name: data.displayName})
+    })*/
     res.json(finalRec);
+  },
+
+  set_company_coc: async function(req, res) {
+    const { company, link } = req.body;
+    if (!company || !link) {
+      return res.status(400).json({
+        success: false,
+        msg: `Missing fields`,
+      });
+    }
+    const coc = new Coc({
+      company: company,
+      link: link
+    }); 
+    result = await Coc.updateOne({company: company}, {link: link}, {upsert: true}, function(err, doc) {
+      if (err) return res.send(400, {error: err})
+      return res.send({success: true, msg: 'Succesfully updated'})
+    })
+  },
+
+  get_company_coc: async function(req, res) {
+    const { company } = req.body;
+    if (!company) {
+      return res.status(400).json({
+        success: false,
+        msg: `Missing fields`,
+      });
+    }
+    const record = await Coc.findOne({company: company})
+      .lean()
+      .exec();
+    res.json(record)
   }
   
 };

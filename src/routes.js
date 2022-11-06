@@ -215,4 +215,8 @@ module.exports = function (app) {
 
   app.route("/api/active").get(reports.get_active_users); // get settings (no auth required)
 
+  app.route("/api/coc").post(reports.set_company_coc); // get settings (no auth required)
+
+  app.route("/api/get/coc").post(reports.get_company_coc); // get settings (no auth required)
+
 };
