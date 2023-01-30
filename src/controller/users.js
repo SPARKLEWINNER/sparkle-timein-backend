@@ -202,7 +202,6 @@ var controllers = {
             upsert: true
           }
         ).exec();
-        console.log(result);
         if (!result)
           res.status(400).json({
             success: false,

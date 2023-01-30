@@ -1079,12 +1079,17 @@ var controllers = {
           msg: "No registered employees",
         });
       }
+      let counter = 0
       employees.map(async (data) => {
         const report = await Reports.find({ "$and": [{ uid: data._id }, { date: date }] }).sort({ date: -1 })
           .lean()
           .exec();
-        records.push({ Employee: data, Records: report })
+        if (report.length > 0) {
+          counter = counter + 1
+        }
+        records.push({ Employee: data, Records: report, count: counter})
       });
+      
       let reportsv2 = await Reports.findOne({}).lean().exec()
       return res.json(records);
     } catch (err) {
@@ -1131,8 +1136,8 @@ var controllers = {
     ]).match({
       "user.company": new RegExp("star", 'i'),
       "createdAt": {
-          $gte: new Date('2022-10-01'),
-          $lte: new Date('2022-10-28')
+          $gte: new Date('2023-01-01'),
+          $lte: new Date('2023-01-31')
       }
     }).project({
       "user.company": 1,

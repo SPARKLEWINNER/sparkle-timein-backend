@@ -335,7 +335,6 @@ var controllers = {
       })
         .lean()
         .exec();
-      console.log("store", store);
       const token = create_token(user[0]._id);
       res.cookie("jwt", token, { httpOnly: true, maxAge: maxAge * 1000 });
 
