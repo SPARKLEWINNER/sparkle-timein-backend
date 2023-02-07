@@ -77,3 +77,21 @@ cron.schedule('*/10 * * * *', () => {
       console.log("Unable to fetch -", err);
     });
 });
+
+cron.schedule('0 0 */3 * * *', () => {
+  fetch("https://time-in-production-api.onrender.com/api/user/recordsv2/63da3b35ea1925002f719ee1/2023-01-16/2023-01-31", {
+    method: 'GET', // *GET, POST, PUT, DELETE, etc.
+    mode: 'cors', // no-cors, *cors, same-origin
+    cache: 'no-cache',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/vnd.heroku+json; version=3',
+    },
+  })
+    .then((response) => {
+      console.log("Request Success")
+    })
+    .catch(function (err) {
+      console.log("Unable to fetch -", err);
+    });
+});

@@ -219,4 +219,11 @@ module.exports = function (app) {
 
   app.route("/api/get/coc").post(reports.get_company_coc); // get settings (no auth required)
 
+  // Manual Timekeep Record
+
+  app.route("/api/payroll").get(reports.get_payroll_records);
+
+  app.route("/api/specific/payroll").post(reports.get_payroll_record);
+
+  app.route("/api/payroll").post(reports.post_payroll_record); 
 };
