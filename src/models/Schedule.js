@@ -12,16 +12,8 @@ const data = {
         default: []
     },
     date: {
-        type: Date,
-        required: true,
-    },
-    name: {
-        type: String,
-        required: true,
-    },
-    company: {
-        type: String,
-        required: true,
+    	type: Date,
+    	required: true,
     },
     from: {
         type: String,
@@ -37,4 +29,4 @@ const data = {
 }
 
 const reportsSchema = new Schema(data, { timestamps: true });
-module.exports = mongoose.model('Payroll', reportsSchema, collectionName);
+module.exports = mongoose.model('Schedule', reportsSchema, collectionName);

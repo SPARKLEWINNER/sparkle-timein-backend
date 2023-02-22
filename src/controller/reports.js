@@ -10,6 +10,8 @@ const Tokens = require("../models/Tokens");
 const logError = require("../services/logger");
 const mailer = require("../services/mailer");
 const moment = require('moment-timezone');
+const uuid = require("uuid").v1;
+const Schedule = require("../models/Schedule");
 moment().tz('Asia/Manila').format();
 const current_date = `${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`;
 const { generateExcelFile } = require('../helpers/rangedData')
@@ -1239,6 +1241,46 @@ var controllers = {
       });
     }
     const record = await Payroll.findOne({uid: uid, month: month})
+      .lean()
+      .exec();
+    res.json(record)
+  },
+  post_schedule: async function(req, res) {
+    const { uid, from, to, date, name, company } = req.body;
+    if (!uid || !from || !to || !date || !name || !company) {
+      return res.status(400).json({
+        success: false,
+        msg: `Missing fields`,
+      });
+    }
+    let update = {
+      $set: { from: from, to: to, name: name, company: company},
+    };
+    result = await Payroll.updateOne( { uid: uid, date: new Date(date) }, update, {upsert: true} ).lean().exec()
+    res.json(result)
+  },
+  get_schedule: async function(req, res) {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        msg: `Missing fields`,
+      });
+    }
+    const record = await Payroll.find({uid: mongoose.Types.ObjectId(id)}).sort({date: 1})
+      .lean()
+      .exec();
+    res.json(record)
+  },
+  get_all_schedule: async function(req, res) {
+    const { company } = req.body;
+    if (!company) {
+      return res.status(400).json({
+        success: false,
+        msg: `Missing fields`,
+      });
+    }
+    const record = await Payroll.findOne({company: company})
       .lean()
       .exec();
     res.json(record)

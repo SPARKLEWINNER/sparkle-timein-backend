@@ -226,4 +226,13 @@ module.exports = function (app) {
   app.route("/api/specific/payroll").post(reports.get_payroll_record);
 
   app.route("/api/payroll").post(reports.post_payroll_record); 
+
+  // Scheduling
+
+  app.route("/api/schedule").post(reports.post_schedule);
+
+  app.route("/api/schedule/:id").get(reports.get_schedule); 
+  
+  app.route("/api/all/schedule/").post(reports.get_all_schedule); 
+
 };
