@@ -152,6 +152,9 @@ module.exports = function (app) {
   app
     .route("/api/users/company")
     .get(/*auth.require_sign_in, auth.is_store_authenticated, */reports.get_company);
+app
+    .route("/api/store/personnel")
+    .post(/*auth.require_sign_in, auth.is_store_authenticated, */reports.get_store_personnel);
 
   app
     .route("/api/store/users/archive/:id")

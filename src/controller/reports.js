@@ -1101,6 +1101,31 @@ var controllers = {
       throw new createError.InternalServerError(err);
     }
   },
+  get_store_personnel: async function (req, res) {
+    const { store } = req.body;
+    let records = [];
+    if (!store)
+      res
+        .status(404)
+        .json({ success: false, msg: `Invalid Request parameters.` });
+    try {
+      let stores = await User.find({ company: store, role: 0, isArchived: false}, { displayName: 1, _id: 1 })
+        .lean()
+        .exec();
+      if (!stores) {
+        return res.status(200).json({
+          success: true,
+          msg: "No registered employees",
+        });
+      }  
+      let reportsv2 = await Reports.findOne({}).lean().exec()
+      return res.json(stores);
+    } catch (err) {
+      await logError(err, "Reports.get_reports_store", null, store, "GET");
+      res.status(400).json({ success: false, msg: err });
+      throw new createError.InternalServerError(err);
+    }
+  },
   get_reports_store_distance: async function (req, res) {
     const { lat, long } = req.body;
     if (!lat || !long)
