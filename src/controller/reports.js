@@ -1297,6 +1297,21 @@ var controllers = {
       .exec();
     res.json(record)
   },
+  get_schedule_range: async function(req, res) {
+    const { id, from, to } = req.body;
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        msg: `Missing fields`,
+      });
+    }
+    let formattedDate = new Date(to);
+    formattedDate.setDate(formattedDate.getDate() + 1);
+    const record = await Payroll.find({uid: mongoose.Types.ObjectId(id), date: {$gte: new Date(from), $lte: new Date(formattedDate) }}).sort({date: 1})
+      .lean()
+      .exec();
+    res.json(record)
+  },
   get_all_schedule: async function(req, res) {
     const { company } = req.body;
     if (!company) {

@@ -237,5 +237,7 @@ app
   app.route("/api/schedule/:id").get(reports.get_schedule); 
   
   app.route("/api/all/schedule/").post(reports.get_all_schedule); 
+  
+  app.route("/api/range/schedule/").post(reports.get_schedule_range); 
 
 };
