@@ -5,7 +5,8 @@ const mongoose = require("mongoose");
 const User = require("../models/Users");
 const logError = require("../services/logger");
 const logDevice = require("../services/devices");
-
+const nodemailer = require("nodemailer");
+const {emailVerificationHTML} = require("../helpers/mailFormat");
 const maxAge = 3 * 24 * 60 * 60;
 const create_token = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: maxAge });
@@ -254,7 +255,124 @@ var controllers = {
           msg: "No such users",
         });
       }
-    }
+    },
+    set_reset_token: async function (req, res) {
+      const { email } = req.body;
+      try {
+        const chkUser = await User.findOne({email: email}).lean().exec();
+        if (!chkUser) {
+          res.status(400).json({
+            success: false,
+            msg: "No such users",
+          });
+          return;
+        }
+        else {
+          const token = Math.trunc(Math.random() * 999999)
+          const result = await User.findOneAndUpdate({email: email}, {$set: {resetToken: token}})
+          if (result) {
+            let transporter = nodemailer.createTransport({
+               host: "email-smtp.ap-northeast-1.amazonaws.com",
+               port: 587,
+               secure: false, // true for 465, false for other ports
+               auth: {
+                 user: "AKIA3GMN5RL2M2MCS746", // generated ethereal user
+                 pass: "BC8ypIS2juSVQwPXfPY88F+oe6xGaaxaema2TLW6C+uX", // generated ethereal password
+               },
+             });
+            let mailOptions = {
+              from: 'no-reply@sparkles.com.ph',
+              to: email,
+              subject: 'Forgot Password',
+              html: emailVerificationHTML({
+                verificationToken: token,
+              })
+            };
+            transporter.sendMail(mailOptions, function(error, info){
+              if (error) {
+                return res.status(400).json({
+                  success: false,
+                  msg: error,
+                });
+              } else {
+                return res.status(200).json({
+                  success: true,
+                  msg: "Success",
+                });
+              }
+            });
+          }
+        }
+      } catch (err) {
+        await logError(err, "Users", null, null, "GET");
+        res.status(400).json({
+          success: false,
+          msg: "No such users",
+        });
+      }
+    },
+    verify_reset_token: async function (req, res) {
+      const { email, token } = req.body;
+      try {
+        const chkUser = await User.findOne({email: email, resetToken: token}).lean().exec();
+        if (!chkUser) {
+          return res.status(400).json({
+            success: false,
+            msg: "Verification token is not valid",
+          });
+        }
+        else {
+            return res.status(200).json({
+              success: true,
+              msg: "Verified",
+            });
+        }
+      } catch (err) {
+        await logError(err, "Users", null, null, "GET");
+        res.status(400).json({
+          success: false,
+          msg: "Verification token is not valid",
+        });
+      }
+    },
+    update_user_new_password: async function (req, res) {
+      const { email, password } = req.body;
+      if (!email || !password)
+        res
+          .status(404)
+          .json({ success: false, msg: `Invalid Request parameters.` });
+
+      try {
+        await User.findOne({ email: email })
+          .then((user) => {
+            if (!user)
+              return res
+                .status(400)
+                .json({ success: false, msg: `User not found ${email}` });
+            user.password = password;
+            user.save().then((result) => {
+              if (!result)
+                return res.status(400).json({
+                  success: false,
+                  msg: `Unable to update details ${id}`,
+                });
+
+              const token = create_token(result._id);
+              res.cookie("jwt", token, { expire: new Date() + 9999 });
+              return res.json(result._id);
+            });
+          })
+          .catch((err) => console.log(err));
+      } catch (err) {
+        console.log(err);
+        await logError(err, "Users.update_user_password", id, "GET");
+
+        return res.status(400).json({
+          success: false,
+          msg: "No such users",
+        });
+      }
+    },
   };
 
 

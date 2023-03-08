@@ -13,6 +13,8 @@ module.exports = function (app) {
   app.route("/").get(api.get_app_info);
   app.route("/api/users").get(auth.require_sign_in, user.get_users);
   app.route("/api/user/:id").get(auth.require_sign_in, user.get_user);
+  app.route("/api/user/reset").post(user.set_reset_token);
+  app.route("/api/user/verify").post(user.verify_reset_token);
 
   app.route("/api/login").post(auth.sign_in);
   app.route("/api/employee/register").post(auth.sign_up);
@@ -49,6 +51,10 @@ module.exports = function (app) {
   app
     .route("/api/user/updatePass/:id/:password")
     .get(user.update_user_password);
+
+  app
+    .route("/api/user/newPass")
+    .post(user.update_user_new_password);
 
   app
     .route("/api/user/status/:id")
