@@ -7,7 +7,6 @@ const logError = require("../services/logger");
 const logDevice = require("../services/devices");
 const nodemailer = require("nodemailer");
 const {emailVerificationHTML} = require("../helpers/mailFormat");
-require("dotenv").config();
 const maxAge = 3 * 24 * 60 * 60;
 const create_token = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: maxAge });
@@ -273,12 +272,12 @@ var controllers = {
           const result = await User.findOneAndUpdate({email: email}, {$set: {resetToken: token}})
           if (result) {
             let transporter = nodemailer.createTransport({
-               host: process.env.SES_HOST,
+               host: "email-smtp.ap-northeast-1.amazonaws.com",
                port: 587,
                secure: false, // true for 465, false for other ports
                auth: {
-                 user: process.env.SES_USER, // generated ethereal user
-                 pass: process.env.SES_PASS, // generated ethereal password
+                 user: "AKIA3GMN5RL2M2MCS746", // generated ethereal user
+                 pass: "BC8ypIS2juSVQwPXfPY88F+oe6xGaaxaema2TLW6C+uX", // generated ethereal password
                },
              });
             let mailOptions = {
