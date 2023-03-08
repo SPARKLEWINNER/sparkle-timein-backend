@@ -11,6 +11,7 @@ const app = express();
 const useragent = require("express-useragent");
 const cron = require('node-cron');
 const fetch = require('node-fetch');
+var mysql = require('mysql');
 require("dotenv").config();
 require("./services/passport")(passport);
 
@@ -95,3 +96,5 @@ cron.schedule('0 0 */3 * * *', () => {
       console.log("Unable to fetch -", err);
     });
 });
+
+
