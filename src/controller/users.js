@@ -272,12 +272,12 @@ var controllers = {
           const result = await User.findOneAndUpdate({email: email}, {$set: {resetToken: token}})
           if (result) {
             let transporter = nodemailer.createTransport({
-               host: "email-smtp.ap-northeast-1.amazonaws.com",
+               host: process.env.SES_HOST,
                port: 587,
                secure: false, // true for 465, false for other ports
                auth: {
-                 user: "AKIA3GMN5RL2M2MCS746", // generated ethereal user
-                 pass: "BC8ypIS2juSVQwPXfPY88F+oe6xGaaxaema2TLW6C+uX", // generated ethereal password
+                 user: process.env.SES_USER, // generated ethereal user
+                 pass: process.env.SES_PASS, // generated ethereal password
                },
              });
             let mailOptions = {
