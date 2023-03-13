@@ -8,6 +8,7 @@ var stores = require("./controller/stores");
 var settings = require("./controller/settings");
 var subscription = require("./controller/subscription");
 var billing = require("./controller/billing");
+var UploadController = require('./services/upload')
 
 module.exports = function (app) {
   app.route("/").get(api.get_app_info);
@@ -246,4 +247,6 @@ app
   
   app.route("/api/range/schedule/").post(reports.get_schedule_range); 
 
+  // Uploading S3
+  app.route("/api/upload").get(UploadController.create_url);
 };

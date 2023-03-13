@@ -17,7 +17,7 @@ const current_date = `${moment().tz('Asia/Manila').toISOString(true).substring(0
 const { generateExcelFile } = require('../helpers/rangedData')
 const GOOGLE_API_GEOCODE =
   "https://maps.googleapis.com/maps/api/geocode/json?latlng=";
-
+  
 const without_time = (dateTime) => {
   var date = new Date(dateTime);
 
@@ -1162,10 +1162,10 @@ var controllers = {
           }
         }
       ]).match({
-        "user.company": new RegExp("star", 'i'),
+        "user.company": new RegExp("syzygy", 'i'),
         "createdAt": {
             $gte: new Date('2023-02-01'),
-            $lte: new Date('2023-02-15')
+            $lte: new Date('2023-02-30')
         }
       }).project({
         "user.company": 1,
@@ -1324,8 +1324,7 @@ var controllers = {
       .lean()
       .exec();
     res.json(record)
-  }
-  
-};
+  },
+}
 
 module.exports = controllers;
