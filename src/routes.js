@@ -248,5 +248,5 @@ app
   app.route("/api/range/schedule/").post(reports.get_schedule_range); 
 
   // Uploading S3
-  app.route("/api/upload").get(UploadController.create_url);
+  app.route("/api/upload").post(UploadController.create_url);
 };
