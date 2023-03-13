@@ -53,8 +53,7 @@ var controllers = {
     const _type = pre_types[body.file_type]
     const result = await getUploadURL(body.file_type, _type)
     if (result.statusCode !== 200) return res.status(502).json({success: false, msg: 'User not found'})
-
-    return res.status(200).json(JSON.parse(result.body))
+    return result;
   }
 }
 
