@@ -17,7 +17,6 @@ const current_date = `${moment().tz('Asia/Manila').toISOString(true).substring(0
 const { generateExcelFile } = require('../helpers/rangedData')
 const GOOGLE_API_GEOCODE =
   "https://maps.googleapis.com/maps/api/geocode/json?latlng=";
-var mysql = require('mysql');  
 const without_time = (dateTime) => {
   var date = new Date(dateTime);
 
@@ -31,6 +30,7 @@ var controllers = {
     const { id } = req.params;
     const { status, location, logdate, previous, ip } = req.body;
     const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
+    const emp_name = await User.findOne({_id: mongoose.Types.ObjectId(id)}, { _id: 0, displayName: 1, company: 1 }).lean().exec()
     console.log('PREVIOUS', previous);
     console.log('REPORT_TIME', now);
     let month = now.getUTCMonth() + 1;
@@ -41,7 +41,9 @@ var controllers = {
     // convert coordinates to readable address
     let coordinates = `${location.latitude},${location.longitude}`;
     let address = "N/A"
-
+    let formattedTime = moment().format('LT')
+    let formattedDate = moment().format('L')
+    let formattedNow = moment().format('MMMM Do YYYY, h:mm:ss a');
     // await axios
     //   .get(
     //     `${GOOGLE_API_GEOCODE}${coordinates}&key=${process.env.GOOGLE_MAP_KEY}`
@@ -85,12 +87,14 @@ var controllers = {
     try {
       let result;
       let date = without_time(now);
-      let con = mysql.createConnection({
-        host: "162.214.148.112",
-        user: "webmail_payroll",
-        password: "payroll_2023!",
-        database: "webmail_payroll",
-      });
+      const body = {
+        "emp_id": id,
+        "emp_name": emp_name.displayName,
+        "status": status,
+        "time": formattedTime,
+        "store": emp_name.company,
+        "date": formattedDate,
+      }
       const isReportsExist = await Reports.find({
         uid: mongoose.Types.ObjectId(id),
       })
@@ -127,19 +131,22 @@ var controllers = {
         if (status === 'time-in') {
           // if time in and should create another session
           result = await Reports.create(reports);
-          con.connect(async function(err) {
-          if (err) throw err;
-          const emp_name = await User.findOne({_id: mongoose.Types.ObjectId(id)}, { _id: 0, displayName: 1, company: 1 }).lean().exec()
-          const formattedNow = moment().format('MMMM Do YYYY, h:mm:ss a');
-          const formattedTime = moment().format('LT'); 
-          const formattedDate = moment().format('L'); 
-          con.query(`INSERT INTO attendances (record_id, emp_id, emp_name, status, time, created_at, store, date) values ('${previous}', '${id}', '${emp_name.displayName}', '${status}', '${formattedTime}', '${formattedNow}', '${emp_name.company}', '${formattedDate}')`, function (error, results, fields) {
-            if (error) throw error;
-            // connected!
+          const response = await fetch('https://payroll.sparkles.com.ph/api/attendance', {
+            method: 'post',
+            body: JSON.stringify(body),
+            headers: {'Content-Type': 'application/json'}
           });
-          con.end()
-        });
-          return res.json(result);
+          if (response.status !== 200) {
+            await logError(err, "Reports", req.body, id, "POST");
+            return res.status(400).json({
+              success: false,
+              msg: "Connection to payroll error",
+            });  
+          }
+          else {
+            return res.json(result);  
+          }
+          
         }
 
         let last_record =
@@ -219,18 +226,21 @@ var controllers = {
           msg: `Unable to process request ${status}`,
         });
       }
-      else {
-        con.connect(async function(err) {
-          if (err) throw err;
-          const emp_name = await User.findOne({_id: mongoose.Types.ObjectId(id)}, { _id: 0, displayName: 1, company: 1 }).lean().exec()
-          con.query(`INSERT INTO attendances (id, emp_id, emp_name, status, time, created_at, store) values ('${previous}', '${id}', '${emp_name.displayName}', '${result.status}', '${now}', '${now}', '${emp_name.company}')`, function (error, results, fields) {
-            if (error) throw error;
-            // connected!
-          });
-          con.end()
-        });
+      const response = await fetch('https://payroll.sparkles.com.ph/api/attendance', {
+        method: 'post',
+        body: JSON.stringify(body),
+        headers: {'Content-Type': 'application/json'}
+      });
+      if (response.status !== 200) {
+        await logError(err, "Reports", req.body, id, "POST");
+        return res.status(400).json({
+          success: false,
+          msg: "Connection to payroll error",
+        });  
       }
-      res.json(result);
+      else {
+        res.json(result);  
+      } 
     } catch (err) {
       console.log(err);
       await logError(err, "Reports", req.body, id, "POST");
