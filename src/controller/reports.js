@@ -17,7 +17,7 @@ const current_date = `${moment().tz('Asia/Manila').toISOString(true).substring(0
 const { generateExcelFile } = require('../helpers/rangedData')
 const GOOGLE_API_GEOCODE =
   "https://maps.googleapis.com/maps/api/geocode/json?latlng=";
-  
+var mysql = require('mysql');  
 const without_time = (dateTime) => {
   var date = new Date(dateTime);
 
@@ -85,6 +85,12 @@ var controllers = {
     try {
       let result;
       let date = without_time(now);
+      let con = mysql.createConnection({
+        host: "162.214.148.112",
+        user: "webmail_payroll",
+        password: "payroll_2023!",
+        database: "webmail_payroll",
+      });
       const isReportsExist = await Reports.find({
         uid: mongoose.Types.ObjectId(id),
       })
@@ -121,6 +127,18 @@ var controllers = {
         if (status === 'time-in') {
           // if time in and should create another session
           result = await Reports.create(reports);
+          con.connect(async function(err) {
+          if (err) throw err;
+          const emp_name = await User.findOne({_id: mongoose.Types.ObjectId(id)}, { _id: 0, displayName: 1, company: 1 }).lean().exec()
+          const formattedNow = moment().format('MMMM Do YYYY, h:mm:ss a');
+          const formattedTime = moment().format('LT'); 
+          const formattedDate = moment().format('L'); 
+          con.query(`INSERT INTO attendances (record_id, emp_id, emp_name, status, time, created_at, store, date) values ('${previous}', '${id}', '${emp_name.displayName}', '${status}', '${formattedTime}', '${formattedNow}', '${emp_name.company}', '${formattedDate}')`, function (error, results, fields) {
+            if (error) throw error;
+            // connected!
+          });
+          con.end()
+        });
           return res.json(result);
         }
 
@@ -201,7 +219,17 @@ var controllers = {
           msg: `Unable to process request ${status}`,
         });
       }
-
+      else {
+        con.connect(async function(err) {
+          if (err) throw err;
+          const emp_name = await User.findOne({_id: mongoose.Types.ObjectId(id)}, { _id: 0, displayName: 1, company: 1 }).lean().exec()
+          con.query(`INSERT INTO attendances (id, emp_id, emp_name, status, time, created_at, store) values ('${previous}', '${id}', '${emp_name.displayName}', '${result.status}', '${now}', '${now}', '${emp_name.company}')`, function (error, results, fields) {
+            if (error) throw error;
+            // connected!
+          });
+          con.end()
+        });
+      }
       res.json(result);
     } catch (err) {
       console.log(err);
