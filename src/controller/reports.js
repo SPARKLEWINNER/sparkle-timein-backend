@@ -1309,18 +1309,39 @@ var controllers = {
     res.json(record)
   },
   post_schedule: async function(req, res) {
-    const { uid, from, to, date, name, company } = req.body;
-    if (!uid || !from || !to || !date || !name || !company) {
+    const { uid, from, to, date, name, company, totalHours } = req.body;
+    if (!uid || !from || !to || !date || !name || !company || !totalHours) {
       return res.status(400).json({
         success: false,
         msg: `Missing fields`,
       });
     }
     let update = {
-      $set: { from: from, to: to, name: name, company: company},
+      $set: { from: from, to: to, name: name, company: company, totalHours: totalHours},
     };
     result = await Payroll.updateOne( { uid: uid, date: new Date(date) }, update, {upsert: true} ).lean().exec()
-    res.json(result)
+    const body = {
+        "emp_id": uid,
+        "time_in": from,
+        "total_hours" : totalHours,
+        "time_out": to,
+        "date": moment().format('MMMM Do YYYY, h:mm:ss a'),
+    }
+    const response = await fetch('https://payroll.sparkles.com.ph/api/schedule', {
+      method: 'post',
+      body: JSON.stringify(body),
+      headers: {'Content-Type': 'application/json'}
+    });
+    if(response.status === 200) {
+      res.json(result)  
+    }
+    else {
+      return res.status(400).json({
+        success: false,
+        msg: `Something went wrong please contact your IT administrator`,
+      });
+    }
+    
   },
   get_schedule: async function(req, res) {
     const { id } = req.params;

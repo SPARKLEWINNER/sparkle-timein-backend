@@ -31,6 +31,10 @@ const data = {
         type: String,
         required: true,
     },
+    totalHours: {
+        type: String,
+        required: true,
+    },
     createdAt: {
         type: Date,
     },
