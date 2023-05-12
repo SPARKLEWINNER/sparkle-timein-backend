@@ -30,7 +30,7 @@ var controllers = {
     const { id } = req.params;
     const { status, location, logdate, previous, ip } = req.body;
     const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
-    const emp_name = await User.findOne({_id: mongoose.Types.ObjectId(id)}, { _id: 0, displayName: 1, company: 1 }).lean().exec()
+    const emp_name = await User.findOne({_id: mongoose.Types.ObjectId(id)}, { _id: 0, firstName: 1, lastName: 1, displayName: 1, company: 1 }).lean().exec()
     console.log('PREVIOUS', previous);
     console.log('REPORT_TIME', now);
     let month = now.getUTCMonth() + 1;
@@ -122,7 +122,7 @@ var controllers = {
 
         const body = {
           "emp_id": id,
-          "emp_name": emp_name.displayName,
+          "emp_name": emp_name.lastName + " " + emp_name.firstName,
           "status": status,
           "time": formattedTime,
           "store": emp_name.company,
@@ -228,7 +228,7 @@ var controllers = {
       }
       const body = {
         "emp_id": id,
-        "emp_name": emp_name.displayName,
+        "emp_name": emp_name.lastName + " " + emp_name.firstName,
         "status": status,
         "time": formattedTime,
         "store": emp_name.company,
