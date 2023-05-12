@@ -87,14 +87,7 @@ var controllers = {
     try {
       let result;
       let date = without_time(now);
-      const body = {
-        "emp_id": id,
-        "emp_name": emp_name.displayName,
-        "status": status,
-        "time": formattedTime,
-        "store": emp_name.company,
-        "date": formattedDate,
-      }
+
       const isReportsExist = await Reports.find({
         uid: mongoose.Types.ObjectId(id),
       })
@@ -123,11 +116,18 @@ var controllers = {
         isReportsExist.length >= 1
           ? isReportsExist.slice(-1).pop()
           : isReportsExist[0];
-
+      let record_last_date = new Date(record_last.date);
       if (isReportsExist.length > 0) {
         // if no actual data
-        let record_last_date = new Date(record_last.date);
 
+        const body = {
+          "emp_id": id,
+          "emp_name": emp_name.displayName,
+          "status": status,
+          "time": formattedTime,
+          "store": emp_name.company,
+          "date": formattedDate,
+        }
         if (status === 'time-in') {
           // if time in and should create another session
           result = await Reports.create(reports);
@@ -225,6 +225,14 @@ var controllers = {
           success: false,
           msg: `Unable to process request ${status}`,
         });
+      }
+      const body = {
+        "emp_id": id,
+        "emp_name": emp_name.displayName,
+        "status": status,
+        "time": formattedTime,
+        "store": emp_name.company,
+        "date": record_last_date,
       }
       const response = await fetch('https://payroll.sparkles.com.ph/api/attendance', {
         method: 'post',
@@ -1202,8 +1210,8 @@ var controllers = {
       ]).match({
         "user.company": new RegExp("syzygy", 'i'),
         "createdAt": {
-            $gte: new Date('2023-02-01'),
-            $lte: new Date('2023-02-30')
+            $gte: new Date('2023-04-01'),
+            $lte: new Date('2023-04-31')
         }
       }).project({
         "user.company": 1,
