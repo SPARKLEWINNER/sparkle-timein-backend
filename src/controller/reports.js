@@ -1333,7 +1333,7 @@ var controllers = {
         "time_in": from,
         "total_hours" : totalHours,
         "time_out": to,
-        "date": moment().format('MMMM Do YYYY, h:mm:ss a'),
+        "date": date,
     }
     const response = await fetch('https://payroll.sparkles.com.ph/api/schedule', {
       method: 'post',
