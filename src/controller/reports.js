@@ -116,10 +116,10 @@ var controllers = {
         isReportsExist.length >= 1
           ? isReportsExist.slice(-1).pop()
           : isReportsExist[0];
-      let record_last_date = new Date(record_last.date);
-      if (isReportsExist.length > 0) {
+      let record_last_date = new Date();
+      if (record_last !== undefined) {
         // if no actual data
-
+        record_last_date = new Date(record_last.date);
         const body = {
           "emp_id": id,
           "emp_name": emp_name.lastName + " " + emp_name.firstName,
@@ -284,7 +284,6 @@ var controllers = {
           success: false,
           msg: `Unable to get current user status`,
         });
-
       if (result.length === 0) return res.status(200).json([{
         date: current_date,
         status: false,
