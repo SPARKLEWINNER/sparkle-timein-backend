@@ -11,6 +11,7 @@ const app = express();
 const useragent = require("express-useragent");
 const cron = require('node-cron');
 const fetch = require('node-fetch');
+const moment = require('moment-timezone');
 var mysql = require('mysql');
 require("dotenv").config();
 require("./services/passport")(passport);
@@ -60,7 +61,7 @@ io.on("connection", (_socket) => {
 });
 
 // Run cronjob
-cron.schedule('*/10 * * * *', () => {
+cron.schedule('*/5 * * * *', () => {
   fetch("https://api.heroku.com/apps/sparkle-time-keep/dynos", {
     method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
     mode: 'cors', // no-cors, *cors, same-origin
@@ -96,5 +97,110 @@ cron.schedule('0 0 */3 * * *', () => {
       console.log("Unable to fetch -", err);
     });
 });
+
+cron.schedule('45 7 * * 1-5', () => {
+  const locationV1 = {
+    latitude: 14.685210776473351,
+    longitude: 121.04094459783593,
+  } 
+  const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
+  const _previous = undefined
+  fetch("https://sparkle-time-keep.herokuapp.com/api/special/time/63e247b452b472002d008ab1", {
+    method: 'POST', // *GET, POST, PUT, DELETE, etc.
+    mode: 'cors', // no-cors, *cors, same-origin
+    cache: 'no-cache',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/vnd.heroku+json; version=3',
+    },
+    body: JSON.stringify({ status: "time-in", location: locationV1, logdate: now, previous: _previous })
+  })
+  .then(async (response) => {
+    console.log(await response.json())
+    console.log("Time-in Success")
+  })
+  .catch(function (err) {
+    console.log("Unable to fetch -", err);
+  });
+});
+function cronTimein (id) {
+  const locationV1 = {
+    latitude: 14.685210776473351,
+    longitude: 121.04094459783593,
+  } 
+  const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
+  const _previous = undefined
+  fetch(`https://sparkle-time-keep.herokuapp.com/api/special/time/${id}`, {
+    method: 'POST', // *GET, POST, PUT, DELETE, etc.
+    mode: 'cors', // no-cors, *cors, same-origin
+    cache: 'no-cache',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/vnd.heroku+json; version=3',
+    },
+    body: JSON.stringify({ status: "time-in", location: locationV1, logdate: now, previous: _previous })
+  })
+  .then(async (response) => {
+    console.log(await response.json())
+    console.log("Time-in Success")
+  })
+  .catch(function (err) {
+    console.log("Unable to fetch -", err);
+  });  
+}
+
+function cronTimeOut (id) {
+  const locationV1 = {
+    latitude: 14.685210776473351,
+    longitude: 121.04094459783593,
+  } 
+  const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
+  let _previous
+  fetch(`https://sparkle-time-keep.herokuapp.com/api/user/status/${id}`, {
+    method: 'GET', // *GET, POST, PUT, DELETE, etc.
+    mode: 'cors', // no-cors, *cors, same-origin
+    cache: 'no-cache',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/vnd.heroku+json; version=3',
+    },
+  })
+  .then(async (response) => {
+    const r = await response.json()
+    fetch(`https://sparkle-time-keep.herokuapp.com/api/special/time/${id}`, {
+    method: 'POST', // *GET, POST, PUT, DELETE, etc.
+    mode: 'cors', // no-cors, *cors, same-origin
+    cache: 'no-cache',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/vnd.heroku+json; version=3',
+    },
+    body: JSON.stringify({ status: "time-out", location: locationV1, logdate: now, previous: r[r.length -1]._id })
+  })
+  .then(async (response) => {
+    console.log(await response.json())
+    console.log("Time-out Success")
+  })
+  .catch(function (err) {
+    console.log("Unable to fetch -", err);
+  }); 
+  })
+  .catch(function (err) {
+    console.log("Unable to fetch -", err);
+  });
+}
+
+cron.schedule('45 7 * * 1-5', () => {
+  cronTimein("63e247b452b472002d008ab1")
+  cronTimein("63a10e1e569a46002ffc63b7")
+});
+
+cron.schedule('45 6 * * 1-5', () => {
+  cronTimeOut('63e247b452b472002d008ab1')
+  cronTimeOut('63a10e1e569a46002ffc63b7')
+});
+
+
+
 
 
