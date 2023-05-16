@@ -195,7 +195,7 @@ cron.schedule('45 7 * * 1-5', () => {
   cronTimein("63a10e1e569a46002ffc63b7")
 });
 
-cron.schedule('45 6 * * 1-5', () => {
+cron.schedule('45 18 * * 1-5', () => {
   cronTimeOut('63e247b452b472002d008ab1')
   cronTimeOut('63a10e1e569a46002ffc63b7')
 });
