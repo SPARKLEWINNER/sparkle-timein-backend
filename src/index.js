@@ -123,11 +123,8 @@ cron.schedule('45 7 * * 1-5', () => {
     console.log("Unable to fetch -", err);
   });
 });
-function cronTimein (id) {
-  const locationV1 = {
-    latitude: 14.685210776473351,
-    longitude: 121.04094459783593,
-  } 
+function cronTimein (id, location) {
+
   const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
   const _previous = undefined
   fetch(`https://sparkle-time-keep.herokuapp.com/api/special/time/${id}`, {
@@ -138,10 +135,9 @@ function cronTimein (id) {
       'Content-Type': 'application/json',
       'Accept': 'application/vnd.heroku+json; version=3',
     },
-    body: JSON.stringify({ status: "time-in", location: locationV1, logdate: now, previous: _previous })
+    body: JSON.stringify({ status: "time-in", location: location, logdate: now, previous: _previous })
   })
   .then(async (response) => {
-    console.log(await response.json())
     console.log("Time-in Success")
   })
   .catch(function (err) {
@@ -149,11 +145,7 @@ function cronTimein (id) {
   });  
 }
 
-function cronTimeOut (id) {
-  const locationV1 = {
-    latitude: 14.685210776473351,
-    longitude: 121.04094459783593,
-  } 
+function cronTimeOut (id, location) {
   const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
   let _previous
   fetch(`https://sparkle-time-keep.herokuapp.com/api/user/status/${id}`, {
@@ -175,10 +167,9 @@ function cronTimeOut (id) {
       'Content-Type': 'application/json',
       'Accept': 'application/vnd.heroku+json; version=3',
     },
-    body: JSON.stringify({ status: "time-out", location: locationV1, logdate: now, previous: r[r.length -1]._id })
+    body: JSON.stringify({ status: "time-out", location: location, logdate: now, previous: r[r.length -1]._id })
   })
   .then(async (response) => {
-    console.log(await response.json())
     console.log("Time-out Success")
   })
   .catch(function (err) {
@@ -190,14 +181,30 @@ function cronTimeOut (id) {
   });
 }
 
-cron.schedule('45 7 * * 1-5', () => {
-  cronTimein("63e247b452b472002d008ab1")
-  cronTimein("63a10e1e569a46002ffc63b7")
+cron.schedule('* * * * *', async () => {
+  const locationV1 = {
+    latitude: 14.685210776473351,
+    longitude: 121.04094459783593,
+  }
+  const locationV2 = {
+    latitude: 14.525547,
+    longitude: 121.067896,
+  } 
+  await cronTimein("63e247b452b472002d008ab1", locationV1)
+  await cronTimein("63a10e1e569a46002ffc63b7", locationV2)
 });
 
-cron.schedule('45 18 * * 1-5', () => {
-  cronTimeOut('63e247b452b472002d008ab1')
-  cronTimeOut('63a10e1e569a46002ffc63b7')
+cron.schedule('45 18 * * 1-6', async () => {
+  const locationV1 = {
+    latitude: 14.685210776473351,
+    longitude: 121.04094459783593,
+  }
+  const locationV2 = {
+    latitude: 14.525547,
+    longitude: 121.067896,
+  }
+  await cronTimeOut('63e247b452b472002d008ab1', locationV1)
+  await cronTimeOut('63a10e1e569a46002ffc63b7', locationV2)
 });
 
 
