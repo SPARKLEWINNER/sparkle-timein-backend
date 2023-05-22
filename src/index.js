@@ -186,13 +186,20 @@ cron.schedule('45 7 * * 1-6', async () => {
     latitude: 14.685210776473351,
     longitude: 121.04094459783593,
   }
+
+  await cronTimein("63e247b452b472002d008ab1", locationV1)
+
+});
+
+cron.schedule('35 7 * * 1-6', async () => {
   const locationV2 = {
     latitude: 14.525547,
     longitude: 121.067896,
   } 
-  await cronTimein("63e247b452b472002d008ab1", locationV1)
   await cronTimein("63a10e1e569a46002ffc63b7", locationV2)
+
 });
+
 
 cron.schedule('07 19 * * 1-6', async () => {
   const locationV1 = {
