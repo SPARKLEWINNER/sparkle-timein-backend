@@ -181,13 +181,13 @@ function cronTimeOut (id, location) {
   });
 }
 
-cron.schedule('45 7 * * 1-6', async () => {
+cron.schedule('45 7 * * 1-6', () => {
   const locationV1 = {
     latitude: 14.685210776473351,
     longitude: 121.04094459783593,
   }
 
-  await cronTimein("63e247b452b472002d008ab1", locationV1)
+  cronTimein("63e247b452b472002d008ab1", locationV1)
 
 });
 
