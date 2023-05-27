@@ -1365,22 +1365,24 @@ var controllers = {
     res.json(record)
   },
   post_announcement: async function(req, res) {
-    const { store, title, link, createdAt, createdBy} = req.body;
-    if (!store || !title || !link || !createdAt || !createdBy) {
+    const { store, title, link, createdBy, uid, img} = req.body;
+    if (!store || !title || !createdBy || !uid || !img) {
       return res.status(400).json({
         success: false,
         msg: `Missing fields`,
       });
     }
     const announcement = new Announcement({
+      uid: uid,
       store: store,
       title: title,
       link: link,
-      createdAt: now,
-      createdBy: createdBy
+      createdAt: new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`),
+      createdBy: createdBy,
+      img: img
     });
     result = await Announcement.create(announcement)
-    if(response.status === 200) {
+    if(result) {
       return res.status(200).json({
         success: true,
         msg: `Announcement save`,
