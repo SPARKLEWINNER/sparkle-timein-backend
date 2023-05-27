@@ -12,7 +12,7 @@ const mailer = require("../services/mailer");
 const moment = require('moment-timezone');
 const uuid = require("uuid").v1;
 const Schedule = require("../models/Schedule");
-const Announcement = require("../models/Announcements");
+const Announcement = require("../models/announcements");
 moment().tz('Asia/Manila').format();
 const current_date = `${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`;
 const { generateExcelFile } = require('../helpers/rangedData')
