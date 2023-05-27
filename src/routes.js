@@ -259,7 +259,13 @@ app
 
   app.route("/api/announcement/upload").post(reports.post_announcement);
 
-  // Get Announcements
+  // Announcements
 
   app.route("/api/announcements").post(reports.get_announcement);
+
+  app.route("/api/edit/announcements").post(reports.edit_announcement);
+
+  app.route("/api/announcements/:id").get(reports.get_announcement_by_id);
+
+  app.route("/api/delete/announcements/:id").get(reports.delete_announcement);
 };

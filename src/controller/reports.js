@@ -1408,8 +1408,66 @@ var controllers = {
     if(result) {
       return res.status(200).json({
         success: true,
-        msg: `Announcement save`,
         data: result
+      });
+    }
+    else {
+      return res.status(400).json({
+        success: false,
+        msg: `Something went wrong please contact your IT administrator`,
+      });
+    }
+  },
+  get_announcement_by_id: async function(req, res) {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        msg: `Missing fields`,
+      });
+    }
+    result = await Announcement.find({_id: id}).lean().exec()
+    if(result) {
+      return res.status(200).json({
+        success: true,
+        data: result
+      });
+    }
+    else {
+      return res.status(400).json({
+        success: false,
+        msg: `Something went wrong please contact your IT administrator`,
+      });
+    }
+  },
+  edit_announcement: async function(req, res) {
+    const { id, title, link, description} = req.body;
+    const data = {
+      title: title,
+      link: link,
+      description: description
+    }
+    result = await Announcement.updateOne( { _id: id }, data, {upsert: true} ).lean().exec()
+    if(result) {
+      return res.status(200).json({
+        success: true,
+        msg: `Announcement updated`,
+      });
+    }
+    else {
+      return res.status(400).json({
+        success: false,
+        msg: `Something went wrong please contact your IT administrator`,
+      });
+    }
+  },
+  delete_announcement: async function(req, res) {
+    const { id } = req.params;
+    result = await Announcement.deleteOne( { _id: id }).lean().exec()
+    if(result) {
+      return res.status(200).json({
+        success: true,
+        msg: `Announcement deleted`,
       });
     }
     else {
