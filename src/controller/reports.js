@@ -1365,7 +1365,7 @@ var controllers = {
     res.json(record)
   },
   post_announcement: async function(req, res) {
-    const { store, title, link, createdBy, uid, img} = req.body;
+    const { store, title, link, createdBy, uid, img, description} = req.body;
     if (!store || !title || !createdBy || !uid || !img) {
       return res.status(400).json({
         success: false,
@@ -1377,6 +1377,7 @@ var controllers = {
       store: store,
       title: title,
       link: link,
+      decription: description,
       createdAt: new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`),
       createdBy: createdBy,
       img: img
@@ -1404,7 +1405,7 @@ var controllers = {
       });
     }
     result = await Announcement.find({store: store}).lean().exec()
-    if(response.status === 200) {
+    if(result) {
       return res.status(200).json({
         success: true,
         msg: `Announcement save`,
