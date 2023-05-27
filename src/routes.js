@@ -9,6 +9,7 @@ var settings = require("./controller/settings");
 var subscription = require("./controller/subscription");
 var billing = require("./controller/billing");
 var UploadController = require('./services/upload')
+var AnnouncementUploadController = require('./services/timein-upload')
 
 module.exports = function (app) {
   app.route("/").get(api.get_app_info);
@@ -252,4 +253,6 @@ app
 
   // Uploading S3
   app.route("/api/upload").post(UploadController.create_url);
+  app.route("/api/aws/upload").post(AnnouncementUploadController.create_url);
+  app.route("/api/announcement/upload").post(reports.post_announcement);
 };

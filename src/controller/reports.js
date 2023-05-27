@@ -12,6 +12,7 @@ const mailer = require("../services/mailer");
 const moment = require('moment-timezone');
 const uuid = require("uuid").v1;
 const Schedule = require("../models/Schedule");
+const Announcement = require("../models/Announcements");
 moment().tz('Asia/Manila').format();
 const current_date = `${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`;
 const { generateExcelFile } = require('../helpers/rangedData')
@@ -1362,6 +1363,58 @@ var controllers = {
       .lean()
       .exec();
     res.json(record)
+  },
+  post_announcement: async function(req, res) {
+    const { store, title, link, createdAt, createdBy} = req.body;
+    if (!store || !title || !link || !createdAt || !createdBy) {
+      return res.status(400).json({
+        success: false,
+        msg: `Missing fields`,
+      });
+    }
+    const announcement = new Announcement({
+      store: store,
+      title: title,
+      link: link,
+      createdAt: now,
+      createdBy: createdBy
+    });
+    result = await Announcement.create(announcement)
+    if(response.status === 200) {
+      return res.status(200).json({
+        success: true,
+        msg: `Announcement save`,
+      });
+    }
+    else {
+      return res.status(400).json({
+        success: false,
+        msg: `Something went wrong please contact your IT administrator`,
+      });
+    }
+  },
+  get_announcement: async function(req, res) {
+    const { store } = req.body;
+    if (!store) {
+      return res.status(400).json({
+        success: false,
+        msg: `Missing fields`,
+      });
+    }
+    result = await Announcement.find({store: store}).lean().exec()
+    if(response.status === 200) {
+      return res.status(200).json({
+        success: true,
+        msg: `Announcement save`,
+        data: result
+      });
+    }
+    else {
+      return res.status(400).json({
+        success: false,
+        msg: `Something went wrong please contact your IT administrator`,
+      });
+    }
   },
 }
 
