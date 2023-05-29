@@ -137,8 +137,8 @@ function cronTimein (id, location) {
     },
     body: JSON.stringify({ status: "time-in", location: location, logdate: now, previous: _previous })
   })
-  .then(async (response) => {
-    console.log("Time-in Success")
+  .then((response) => {
+    console.log(response)
   })
   .catch(function (err) {
     console.log("Unable to fetch -", err);
