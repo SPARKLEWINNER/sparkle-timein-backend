@@ -98,31 +98,6 @@ cron.schedule('0 0 */3 * * *', () => {
     });
 });
 
-cron.schedule('45 7 * * 1-5', () => {
-  const locationV1 = {
-    latitude: 14.685210776473351,
-    longitude: 121.04094459783593,
-  } 
-  const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
-  const _previous = undefined
-  fetch("https://sparkle-time-keep.herokuapp.com/api/special/time/63e247b452b472002d008ab1", {
-    method: 'POST', // *GET, POST, PUT, DELETE, etc.
-    mode: 'cors', // no-cors, *cors, same-origin
-    cache: 'no-cache',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/vnd.heroku+json; version=3',
-    },
-    body: JSON.stringify({ status: "time-in", location: locationV1, logdate: now, previous: _previous })
-  })
-  .then(async (response) => {
-    console.log(await response.json())
-    console.log("Time-in Success")
-  })
-  .catch(function (err) {
-    console.log("Unable to fetch -", err);
-  });
-});
 function cronTimein (id, location) {
 
   const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
