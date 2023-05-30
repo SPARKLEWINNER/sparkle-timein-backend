@@ -118,6 +118,7 @@ var controllers = {
           ? isReportsExist.slice(-1).pop()
           : isReportsExist[0];
       let record_last_date = new Date();
+
       if (record_last !== undefined) {
         // if no actual data
         record_last_date = new Date(record_last.date);
@@ -191,6 +192,18 @@ var controllers = {
         // check if existing time in / time out
       } else {
         result = await Reports.create(reports);
+        const response = await fetch('https://payroll.sparkles.com.ph/api/attendance', {
+          method: 'post',
+          body: JSON.stringify(body),
+          headers: {'Content-Type': 'application/json'}
+        });
+        if (response.status !== 200) {
+          await logError(err, "Reports", req.body, id, "POST");
+          return res.status(400).json({
+            success: false,
+            msg: "Connection to payroll error",
+          });  
+        }
       }
 
       if (!result) {
