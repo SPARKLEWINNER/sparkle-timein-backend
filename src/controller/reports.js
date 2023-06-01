@@ -545,7 +545,7 @@ var controllers = {
           if(a.Employee.lastName > b.Employee.lastName) { return 1; }
           return 0;
       })
-      return res.json(records); 
+      return res.json({data: records, v: records.length}); 
     } catch (err) {
       await logError(err, "Reports", null, id, "GET");
       res.status(400).json({ success: false, msg: err });
