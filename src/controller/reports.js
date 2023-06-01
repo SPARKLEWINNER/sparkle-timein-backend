@@ -495,7 +495,7 @@ var controllers = {
       });
     }
     try {
-      let employees = await User.find({ company: user.company, role: 0, isArchived: false}, { displayName: 1, lastName: 1, firstName: 1})
+      let employees = await User.find({$and: [{company: user.company, role: 0, isArchived: false}]}, { displayName: 1, lastName: 1, firstName: 1})
         .lean()
         .exec();
       let count = employees.length 
@@ -506,6 +506,7 @@ var controllers = {
         });
       }
       let records = []
+      let d = []
       let finalReports = []
       let reports = []
 /*      employees.map(async data => {
@@ -513,16 +514,23 @@ var controllers = {
         let result = await Reports.find({uid: data._id}).lean().exec()
         records.push({Employee: data, reports: result, count: count })
       })*/
-      employees.map(data => {
-        dates.map(date => {
-          let result = Reports.find({"$and": [{uid: data._id}, {date: date}]})
-          .lean()
-          .exec();
 
-          records.push({Employee: data, date: date, reports:result, count: count }) 
+      employees.map(data => {
+       dates.map(date => {
+          const result = Reports.find({$and: [{uid: data._id}, {date: date}]}).lean().exec()
+          d.push({date: date})  
         })
       })
-      let reportsv2 = Reports.findOne({}).lean().exec()
+
+      employees.map(async data => {
+       dates.map(async date => {
+          const result = await Reports.find({$and: [{uid: data._id}, {date: date}]}).lean().exec()
+          records.push({Employee: data, date: date, reports:result, count: count})  
+        })
+      })
+
+
+      let reportsv2 = await Reports.findOne({}).lean().exec()
 /*      dates.map(date => {
         console.log(date)
         const filterResult = records.filter((data, key) => {
@@ -545,7 +553,7 @@ var controllers = {
           if(a.Employee.lastName > b.Employee.lastName) { return 1; }
           return 0;
       })
-      return res.json({data: records, v: records.length}); 
+      return res.json({data: records, l: d.length}); 
     } catch (err) {
       await logError(err, "Reports", null, id, "GET");
       res.status(400).json({ success: false, msg: err });
