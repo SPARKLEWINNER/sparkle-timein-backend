@@ -816,8 +816,9 @@ var controllers = {
     }
   },
   get_reports_bydate: async function (req, res) {
-    const { id, date } = req.params;
-    if (!id) res.status(404).json({ success: false, msg: `No such user.` });
+    const { id, date } = req.params
+    const myDate = new Date(date)
+    if (!id) res.status(404).json({ success: false, msg: `No such user.` })
 
     let user = await User.findOne({
       _id: mongoose.Types.ObjectId(id),
@@ -832,7 +833,7 @@ var controllers = {
     }
 
     try {
-      let records = await Reports.find({uid: mongoose.Types.ObjectId(id), date: date})
+      let records = await Reports.find({uid: mongoose.Types.ObjectId(id), date: myDate})
       .sort([['date', -1]])
       .limit(1)
       .exec();
