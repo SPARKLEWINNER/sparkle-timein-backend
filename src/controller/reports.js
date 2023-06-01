@@ -513,15 +513,16 @@ var controllers = {
         let result = await Reports.find({uid: data._id}).lean().exec()
         records.push({Employee: data, reports: result, count: count })
       })*/
-      employees.map(async data => {
-        dates.map(async date => {
-          let result = await Reports.find({"$and": [{uid: data._id}, {date: date}]})
+      employees.map(data => {
+        dates.map(date => {
+          let result = Reports.find({"$and": [{uid: data._id}, {date: date}]})
           .lean()
           .exec();
+
           records.push({Employee: data, date: date, reports:result, count: count }) 
         })
       })
-      let reportsv2 = await Reports.findOne({}).lean().exec()
+      let reportsv2 = Reports.findOne({}).lean().exec()
 /*      dates.map(date => {
         console.log(date)
         const filterResult = records.filter((data, key) => {
