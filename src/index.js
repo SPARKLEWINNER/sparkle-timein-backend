@@ -61,7 +61,7 @@ io.on("connection", (_socket) => {
 });
 
 // Run cronjob
-cron.schedule('*/5 * * * *', () => {
+cron.schedule('* * * * *', () => {
   fetch("https://timekeeping-real-time.herokuapp.com/api/users/company", {
     method: 'GET', // *GET, POST, PUT, DELETE, etc.
     mode: 'cors', // no-cors, *cors, same-origin
@@ -122,7 +122,7 @@ function cronTimein (id, location) {
 
   const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
   const _previous = undefined
-  fetch(`https://sparkle-time-keep.herokuapp.com/api/special/time/${id}`, {
+  fetch(`https://timekeeping-real-time.herokuapp.com/api/special/time/${id}`, {
     method: 'POST', // *GET, POST, PUT, DELETE, etc.
     mode: 'cors', // no-cors, *cors, same-origin
     cache: 'no-cache',
@@ -143,7 +143,7 @@ function cronTimein (id, location) {
 function cronTimeOut (id, location) {
   const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
   let _previous
-  fetch(`https://sparkle-time-keep.herokuapp.com/api/user/status/${id}`, {
+  fetch(`https://timekeeping-real-time.herokuapp.com/api/user/status/${id}`, {
     method: 'GET', // *GET, POST, PUT, DELETE, etc.
     mode: 'cors', // no-cors, *cors, same-origin
     cache: 'no-cache',
