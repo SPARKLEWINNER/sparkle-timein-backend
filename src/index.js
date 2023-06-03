@@ -192,7 +192,7 @@ cron.schedule('48 7 * * 1-6', () => {
 });
 
 
-cron.schedule('39 6 * * 1-6', async () => {
+cron.schedule('07 19 * * 1-6', async () => {
   const locationV1 = {
     latitude: 14.685210776473351,
     longitude: 121.04094459783593,
