@@ -61,38 +61,19 @@ io.on("connection", (_socket) => {
 });
 
 // Run cronjob
-cron.schedule('* * * * *', () => {
-  fetch("https://timekeeping-real-time.herokuapp.com/api/users/company", {
-    method: 'GET', // *GET, POST, PUT, DELETE, etc.
+cron.schedule('*/5 * * * *', () => {
+  fetch("https://api.heroku.com/apps/sparkle-time-keep/dynos", {
+    method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
     mode: 'cors', // no-cors, *cors, same-origin
     cache: 'no-cache',
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/vnd.heroku+json; version=3',
+      'Authorization': 'Bearer 1a7ca021-0b51-4d98-b188-c7240a9b3504'
     },
   })
     .then((response) => {
-      if (response.status !== 200) {
-        fetch("https://api.heroku.com/apps/sparkle-time-keep/dynos", {
-          method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
-          mode: 'cors', // no-cors, *cors, same-origin
-          cache: 'no-cache',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/vnd.heroku+json; version=3',
-            'Authorization': 'Bearer 1a7ca021-0b51-4d98-b188-c7240a9b3504'
-          },
-        })
-        .then((response) => {
-          console.log("Restart Dyno Success")
-        })
-        .catch(function (err) {
-          console.log("Unable to fetch -", err);
-        });
-      }
-      else {
-        console.log("server is up")
-      }
+      console.log("Restart Dyno Success")
     })
     .catch(function (err) {
       console.log("Unable to fetch -", err);
@@ -121,8 +102,19 @@ cron.schedule('0 0 */3 * * *', () => {
 function cronTimein (id, location) {
 
   const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
-  const _previous = undefined
-  fetch(`https://timekeeping-real-time.herokuapp.com/api/special/time/${id}`, {
+  const _previous = {}
+  fetch(`https://timekeeping-real-time.herokuapp.com/api/user/status/${id}`, {
+    method: 'GET', // *GET, POST, PUT, DELETE, etc.
+    mode: 'cors', // no-cors, *cors, same-origin
+    cache: 'no-cache',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/vnd.heroku+json; version=3',
+    },
+  })
+  .then(async (response) => {
+    const r = await response.json()
+    fetch(`https://timekeeping-real-time.herokuapp.com/api/special/time/${id}`, {
     method: 'POST', // *GET, POST, PUT, DELETE, etc.
     mode: 'cors', // no-cors, *cors, same-origin
     cache: 'no-cache',
@@ -130,14 +122,18 @@ function cronTimein (id, location) {
       'Content-Type': 'application/json',
       'Accept': 'application/vnd.heroku+json; version=3',
     },
-    body: JSON.stringify({ status: "time-in", location: location, logdate: now, previous: _previous })
-  })
-  .then((response) => {
-    console.log("Time in success")
+    body: JSON.stringify({ status: "time-in", location: location, logdate: now, previous: r[r.length -1]._id })
+    })
+    .then(async (response) => {
+      console.log("Time-in Success")
+    })
+    .catch(function (err) {
+      console.log("Unable to fetch -", err);
+    }); 
   })
   .catch(function (err) {
     console.log("Unable to fetch -", err);
-  });  
+  });
 }
 
 function cronTimeOut (id, location) {
@@ -154,7 +150,7 @@ function cronTimeOut (id, location) {
   })
   .then(async (response) => {
     const r = await response.json()
-    fetch(`https://sparkle-time-keep.herokuapp.com/api/special/time/${id}`, {
+    fetch(`https://timekeeping-real-time.herokuapp.com/api/special/time/${id}`, {
     method: 'POST', // *GET, POST, PUT, DELETE, etc.
     mode: 'cors', // no-cors, *cors, same-origin
     cache: 'no-cache',
@@ -196,7 +192,7 @@ cron.schedule('48 7 * * 1-6', () => {
 });
 
 
-cron.schedule('07 19 * * 1-6', async () => {
+cron.schedule('39 6 * * 1-6', async () => {
   const locationV1 = {
     latitude: 14.685210776473351,
     longitude: 121.04094459783593,
