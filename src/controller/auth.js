@@ -7,8 +7,8 @@ const send_sms = require("../services/twilio");
 const querystring = require("querystring");
 const logError = require("../services/logger");
 const logDevice = require("../services/devices");
-
-
+const moment = require('moment-timezone');
+const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
 const maxAge = 3 * 24 * 60 * 60;
 const create_token = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: maxAge });
@@ -129,7 +129,7 @@ var controllers = {
       }
 
       user.hashed_password = user.salt = undefined;
-
+      await User.findOneAndUpdate({ email: email, isArchived: false }, { updatedAt: now }, {upsert: true}).lean().exec();
       const token = create_token(user._id);
       res.cookie("jwt", token, { expire: new Date() + 9999 });
       if (user.role === 0) {
@@ -330,6 +330,7 @@ var controllers = {
     }
 
     try {
+      await User.findOneAndUpdate({ phone: phone, isArchived: false }, { lastLogin: now }, {upsert: true}).lean().exec();
       const store = await User.find({
         company: user[0].company,
       })
