@@ -2,27 +2,32 @@ const mongoose = require("mongoose");
 const { Schema } = mongoose;
 const collectionName = "subscription";
 const data = {
-    name: {
+    store: {
         type: String,
         required: true,
     },
-    userLimit: {
-        type: Number,
-        required: true,
-    },
-    branchLimit: {
-        type: Number,
-        required: true,
-    },
-    details: {
+    feature: {
         type: String,
-        required: true
+        required: true,
     },
-    sortBy: {
-        type: Number,
-        required: true
+    price: {
+        type: String,
+        required: true,
+    },
+    length: {
+        type: String,
+        required: true,
+    },
+    expiry: {
+        type: Date,
+        required: true,
+        default: new Date()
     },
     createdAt: {
+        type: Date,
+        default: new Date()
+    },
+    updatedAt: {
         type: Date,
         default: new Date()
     }

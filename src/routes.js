@@ -268,4 +268,10 @@ app
   app.route("/api/announcements/:id").get(reports.get_announcement_by_id);
 
   app.route("/api/delete/announcements/:id").get(reports.delete_announcement);
+
+  // Subscription
+
+  app.route("/api/subscription").post(subscription.post_subscription);
+  
+  app.route("/api/get/subscription").post(subscription.get_subscription);
 };

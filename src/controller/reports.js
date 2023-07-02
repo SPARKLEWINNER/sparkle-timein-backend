@@ -1203,10 +1203,10 @@ var controllers = {
           }
         }
       ]).match({
-        "user.company": new RegExp("syzygy", 'i'),
+        "user.company": new RegExp("star", 'i'),
         "createdAt": {
-            $gte: new Date('2023-04-01'),
-            $lte: new Date('2023-04-31')
+            $gte: new Date('2023-05-01'),
+            $lte: new Date('2023-05-31')
         }
       }).project({
         "user.company": 1,

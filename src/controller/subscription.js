@@ -1,5 +1,3 @@
-
-
 'use strict';
 const createError = require("http-errors");
 const mongoose = require('mongoose')
@@ -23,44 +21,74 @@ var controllers = {
         }
     },
     get_subscription: async function (req, res) {
-        const { id } = req.params;
+        const { store } = req.body;
+        const today = new Date();
         try {
-            const result = await Subscription.find({ _id: mongoose.Types.ObjectId(id) })
+            const isSubscriptionExist = await Subscription.find({ store: store, expiry: { $gte: today } })
                 .lean()
                 .exec();
-            if (!result)
+
+            if (!isSubscriptionExist)
                 res.status(200).json({ success: false, msg: `No such subscription.` });
-            res.json(result[0]);
+
+            res.json(isSubscriptionExist);
         } catch (err) {
-            await logError(err, "Subscription.get_subscription", null, id, "GET");
+            await logError(err, "Subscription.get_subscription", null, null, "GET");
             res.status(400).json({ success: false, msg: err });
             throw new createError.InternalServerError(err);
         }
     },
     post_subscription: async function (req, res) {
-        const { name, userLimit, branchLimit, details, sortBy } = req.body;
-
-        if (!name || userLimit === 0 || branchLimit === 0 || !details || !sortBy) return res.status(400).json({ success: false, msg: 'Missing required fields' });
-
-        let _params = {
-            name,
-            userLimit,
-            branchLimit,
-            details,
-            sortBy
-        };
-
-        let new_subscription = new Subscription(_params);
+        const { store, feature, length } = req.body;
+        const today = new Date();
+        let expiry;
+        let price = 0;
+        if (!store || !feature || !length) return res.status(400).json({ success: false, msg: 'Missing required fields' });
         try {
-            let result = await Subscription.create(new_subscription);
-            if (!result)
-                res.status(201).json({ success: false, msg: `No such subscription.` });
-            res.json(result);
-        } catch (err) {
-            await logError(err, "Subscription.post_settings", null, JSON.stringify(req.body), "POST");
+            const isSubscriptionExist = await Subscription.find({ store: store, feature: feature, expiry: { $gte: today } })
+            .lean()
+            .exec(); 
+            if (isSubscriptionExist.length > 0) {
+                res.status(400).json({ success: false, msg: "Subscription still exist" });
+            } 
+            else {
+                if (length === "Monthly") {
+                    price = 200;
+                    expiry = new Date(today.getFullYear(), today.getMonth() + 1, today.getDate(), today.getHours(), today.getMinutes(), today.getSeconds())
+                } 
+                else {
+                    price = 2000
+                    expiry = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate(), today.getHours(), today.getMinutes(), today.getSeconds())
+                }
+                let _params = {
+                    store,
+                    feature,
+                    price,
+                    length,
+                    expiry,
+                    today,
+                    today
+                };
+
+                let new_subscription = new Subscription(_params);
+                try {
+                    let result = await Subscription.create(new_subscription);
+                    if (!result)
+                        res.status(201).json({ success: false, msg: `No such subscription.` });
+                    res.status(200).json({ success: true, msg: `Subription save` });
+                } catch (err) {
+                    await logError(err, "Subscription.post_settings", null, JSON.stringify(req.body), "POST");
+                    res.status(400).json({ success: false, msg: err });
+                    throw new createError.InternalServerError(err);
+                }
+            }     
+        } 
+        catch (err) {
+            await logError(err, "Subscription.post_subscription", null, id, "POST");
             res.status(400).json({ success: false, msg: err });
-            throw new createError.InternalServerError(err);
+            throw new createError.InternalServerError(err);  
         }
+        
     },
     patch_subscription_details: async function (req, res) {
         const { id } = req.params
