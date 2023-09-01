@@ -150,48 +150,42 @@ var controllers = {
           }
           
         }
+        else {
+          let last_record =
+            record_last.record.length >= 1
+              ? record_last.record.slice(-1).pop()
+              : record_last.record[0];
 
-        let last_record =
-          record_last.record.length >= 1
-            ? record_last.record.slice(-1).pop()
-            : record_last.record[0];
+          if (last_record.status === status)
+            return res.status(400).json({
+              success: false,
+              msg: `Unable to ${status} again`,
+            });
+          let newReports = {
+            dateTime: now,
+            status: status,
+            month: month,
+            day: day,
+            year: year,
+            time: time,
+            date: date,
+            location: location,
+            address: address,
+            ip: "Test"
+          };
 
-        if (last_record.status === status)
-          return res.status(400).json({
-            success: false,
-            msg: `Unable to ${status} again`,
-          });
-        let newReports = {
-          dateTime: now,
-          status: status,
-          month: month,
-          day: day,
-          year: year,
-          time: time,
-          date: date,
-          location: location,
-          address: address,
-          ip: "Test"
-        };
-
-        let update = {
-          $set: { status: status },
-          $push: { record: newReports },
-        };
-        result = 
-        await Reports.findOneAndUpdate(
-          { _id: mongoose.Types.ObjectId(previous) },
-           update
-        );
-        // await Reports.findOneAndUpdate(
-        //   { date: new Date(previous), uid: mongoose.Types.ObjectId(id) },
-        //   update,
-        //   { sort: { 'updatedAt': -1 } }
-        // );
-
-        // check if existing time in / time out
+          let update = {
+            $set: { status: status },
+            $push: { record: newReports },
+          };
+          result = 
+          await Reports.findOneAndUpdate(
+            { _id: mongoose.Types.ObjectId(previous) },
+             update
+          );
+        }
       } else {
-        result = await Reports.create(reports);
+        /*result = await Reports.create(reports);*/
         const response = await fetch('https://payroll.sparkles.com.ph/api/attendance', {
           method: 'post',
           body: JSON.stringify(body),
@@ -1203,10 +1197,9 @@ var controllers = {
           }
         }
       ]).match({
-        "user.company": new RegExp("star", 'i'),
         "createdAt": {
-            $gte: new Date('2023-05-01'),
-            $lte: new Date('2023-05-31')
+            $gte: new Date('2023-08-01'),
+            $lte: new Date('2023-08-31')
         }
       }).project({
         "user.company": 1,
