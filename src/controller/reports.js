@@ -118,7 +118,7 @@ var controllers = {
           ? isReportsExist.slice(-1).pop()
           : isReportsExist[0];
       let record_last_date = new Date();
-
+     
       if (record_last !== undefined) {
         // if no actual data
         record_last_date = new Date(record_last.date);
@@ -185,7 +185,15 @@ var controllers = {
           );
         }
       } else {
-        /*result = await Reports.create(reports);*/
+        const body = {
+          "emp_id": id,
+          "emp_name": emp_name.lastName + " " + emp_name.firstName,
+          "status": status,
+          "time": formattedTime,
+          "store": emp_name.company,
+          "date": formattedDate,
+        }
+        result = await Reports.create(reports);
         const response = await fetch('https://payroll.sparkles.com.ph/api/attendance', {
           method: 'post',
           body: JSON.stringify(body),
@@ -199,7 +207,6 @@ var controllers = {
           });  
         }
       }
-
       if (!result) {
         return res.status(400).json({
           success: false,
