@@ -274,4 +274,6 @@ app
   app.route("/api/subscription").post(subscription.post_subscription);
   
   app.route("/api/get/subscription").post(subscription.get_subscription);
+
+  app.route("/api/delete/report").get(reports.delete_reports);
 };

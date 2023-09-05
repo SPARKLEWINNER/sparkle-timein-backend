@@ -118,7 +118,7 @@ var controllers = {
           ? isReportsExist.slice(-1).pop()
           : isReportsExist[0];
       let record_last_date = new Date();
-     
+
       if (record_last !== undefined) {
         // if no actual data
         record_last_date = new Date(record_last.date);
@@ -133,7 +133,7 @@ var controllers = {
         if (status === 'time-in') {
           // if time in and should create another session
           result = await Reports.create(reports);
-          const response = await fetch('https://payroll.sparkles.com.ph/api/attendance', {
+          const response = await fetch('https://payroll-live.sparkles.com.ph/api/attendance', {
             method: 'post',
             body: JSON.stringify(body),
             headers: {'Content-Type': 'application/json'}
@@ -150,40 +150,46 @@ var controllers = {
           }
           
         }
-        else {
-          let last_record =
-            record_last.record.length >= 1
-              ? record_last.record.slice(-1).pop()
-              : record_last.record[0];
 
-          if (last_record.status === status)
-            return res.status(400).json({
-              success: false,
-              msg: `Unable to ${status} again`,
-            });
-          let newReports = {
-            dateTime: now,
-            status: status,
-            month: month,
-            day: day,
-            year: year,
-            time: time,
-            date: date,
-            location: location,
-            address: address,
-            ip: "Test"
-          };
+        let last_record =
+          record_last.record.length >= 1
+            ? record_last.record.slice(-1).pop()
+            : record_last.record[0];
 
-          let update = {
-            $set: { status: status },
-            $push: { record: newReports },
-          };
-          result = 
-          await Reports.findOneAndUpdate(
-            { _id: mongoose.Types.ObjectId(previous) },
-             update
-          );
-        }
+        if (last_record.status === status)
+          return res.status(400).json({
+            success: false,
+            msg: `Unable to ${status} again`,
+          });
+        let newReports = {
+          dateTime: now,
+          status: status,
+          month: month,
+          day: day,
+          year: year,
+          time: time,
+          date: date,
+          location: location,
+          address: address,
+          ip: "Test"
+        };
+
+        let update = {
+          $set: { status: status },
+          $push: { record: newReports },
+        };
+        result = 
+        await Reports.findOneAndUpdate(
+          { _id: mongoose.Types.ObjectId(previous) },
+           update
+        );
+        // await Reports.findOneAndUpdate(
+        //   { date: new Date(previous), uid: mongoose.Types.ObjectId(id) },
+        //   update,
+        //   { sort: { 'updatedAt': -1 } }
+        // );
+
+        // check if existing time in / time out
       } else {
         const body = {
           "emp_id": id,
@@ -191,10 +197,10 @@ var controllers = {
           "status": status,
           "time": formattedTime,
           "store": emp_name.company,
-          "date": formattedDate,
+          "date": record_last_date,
         }
         result = await Reports.create(reports);
-        const response = await fetch('https://payroll.sparkles.com.ph/api/attendance', {
+        const response = await fetch('https://payroll-live.sparkles.com.ph/api/attendance', {
           method: 'post',
           body: JSON.stringify(body),
           headers: {'Content-Type': 'application/json'}
@@ -207,6 +213,7 @@ var controllers = {
           });  
         }
       }
+
       if (!result) {
         return res.status(400).json({
           success: false,
@@ -221,7 +228,7 @@ var controllers = {
         "store": emp_name.company,
         "date": record_last_date,
       }
-      const response = await fetch('https://payroll.sparkles.com.ph/api/attendance', {
+      const response = await fetch('https://payroll-live.sparkles.com.ph/api/attendance', {
         method: 'post',
         body: JSON.stringify(body),
         headers: {'Content-Type': 'application/json'}
@@ -1491,6 +1498,23 @@ var controllers = {
       return res.status(200).json({
         success: true,
         msg: `Announcement deleted`,
+      });
+    }
+    else {
+      return res.status(400).json({
+        success: false,
+        msg: `Something went wrong please contact your IT administrator`,
+      });
+    }
+  },
+  delete_reports: async function(req, res) {
+    result = await Reports.find( { date: {$lte: new Date("2022-12-31")} }).lean().exec()
+
+    if(result) {
+      return res.status(200).json({
+        success: true,
+        msg: `Record deleted`,
+        data: result
       });
     }
     else {
