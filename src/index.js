@@ -136,7 +136,7 @@ function cronTimeOut (id, location) {
   });
 }
 
-/*cron.schedule('37 7 * * 1-6', () => {
+cron.schedule('37 7 * * 1-6', () => {
   const locationV1 = {
     latitude: 14.685210776473351,
     longitude: 121.04094459783593,
@@ -145,16 +145,6 @@ function cronTimeOut (id, location) {
   cronTimein("63e247b452b472002d008ab1", locationV1)
 
 });
-
-cron.schedule('48 7 * * 1-6', () => {
-  const locationV2 = {
-    latitude: 14.525547,
-    longitude: 121.067896,
-  } 
-  cronTimein("63a10e1e569a46002ffc63b7", locationV2)
-
-});
-
 
 cron.schedule('07 19 * * 1-6', async () => {
   const locationV1 = {
@@ -166,8 +156,7 @@ cron.schedule('07 19 * * 1-6', async () => {
     longitude: 121.067896,
   }
   await cronTimeOut('63e247b452b472002d008ab1', locationV1)
-  await cronTimeOut('63a10e1e569a46002ffc63b7', locationV2)
-});*/
+});
 
 
 
