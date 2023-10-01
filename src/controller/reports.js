@@ -133,7 +133,7 @@ var controllers = {
         if (status === 'time-in') {
           // if time in and should create another session
           result = await Reports.create(reports);
-          const response = await fetch('https://payroll-live.sparkles.com.ph/api/attendance', {
+          const response = await fetch('https://payroll.sparkles.com.ph/api/attendance', {
             method: 'post',
             body: JSON.stringify(body),
             headers: {'Content-Type': 'application/json'}
@@ -191,16 +191,8 @@ var controllers = {
 
         // check if existing time in / time out
       } else {
-        const body = {
-          "emp_id": id,
-          "emp_name": emp_name.lastName + " " + emp_name.firstName,
-          "status": status,
-          "time": formattedTime,
-          "store": emp_name.company,
-          "date": record_last_date,
-        }
         result = await Reports.create(reports);
-        const response = await fetch('https://payroll-live.sparkles.com.ph/api/attendance', {
+        const response = await fetch('https://payroll.sparkles.com.ph/api/attendance', {
           method: 'post',
           body: JSON.stringify(body),
           headers: {'Content-Type': 'application/json'}
@@ -228,7 +220,7 @@ var controllers = {
         "store": emp_name.company,
         "date": record_last_date,
       }
-      const response = await fetch('https://payroll-live.sparkles.com.ph/api/attendance', {
+      const response = await fetch('https://payroll.sparkles.com.ph/api/attendance', {
         method: 'post',
         body: JSON.stringify(body),
         headers: {'Content-Type': 'application/json'}
@@ -1198,47 +1190,52 @@ var controllers = {
       throw new createError.InternalServerError(err);
     }
   },
-   get_active_users: async function (req, res) {
+  get_active_users: async function (req, res) {
+    const { company, month } = req.body;
+    console.log(company)
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
       /*let records = await User.find({"createdAt": {$gte: new Date('2022-10-17'), $lte: new Date('2022-10-24')}, 
   "company": new RegExp("syzygy", 'i')})*/
-      let records = await Reports.aggregate([
-        {
-          $lookup: {
-              from: 'users',
-              localField: 'uid',
-              foreignField: '_id',
-              as: 'user'
-          }
+    let records = await Reports.aggregate([
+      {
+        $lookup: {
+            from: 'users',
+            localField: 'uid',
+            foreignField: '_id',
+            as: 'user'
         }
-      ]).match({
-        "createdAt": {
-            $gte: new Date('2023-08-01'),
-            $lte: new Date('2023-08-31')
-        }
-      }).project({
-        "user.company": 1,
-        "_id": 0,
-        "user.displayName": 1,
-      }).sort({
-        "user.company": 1
-      })
-
-      if (records.length === 0) {
-        return res.status(201).json({
-          success: true,
-          msg: "No Records",
-        });
       }
-      let finalRec = []
-      records.map(data => {
-        finalRec.push({store: data.user[0].company, name: data.user[0].displayName})
-      })
-  /*    let finalRec = []
-      records.map(data => {
-        finalRec.push({name: data.displayName})
-      })*/
-      res.json(finalRec);
-    },
+    ]).match({
+      "user.company": new RegExp(`${company}`, 'i'),
+      "createdAt": {
+          $gte: new Date(`${currentYear}-${month}-01`),
+          $lte: new Date(`${currentYear}-${month}-31`)
+      }
+    }).project({
+      "user.company": 1,
+      "_id": 0,
+      "user.displayName": 1,
+    }).sort({
+      "user.company": 1
+    })
+
+    if (records.length === 0) {
+      return res.status(201).json({
+        success: true,
+        msg: "No Records",
+      });
+    }
+    let finalRec = []
+    records.map(data => {
+      finalRec.push({store: data.user[0].company, name: data.user[0].displayName})
+    })
+/*    let finalRec = []
+    records.map(data => {
+      finalRec.push({name: data.displayName})
+    })*/
+    res.json(finalRec);
+  },
 
   set_company_coc: async function(req, res) {
     const { company, link } = req.body;

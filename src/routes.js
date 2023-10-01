@@ -227,7 +227,7 @@ app
 
   app.route("/api/settings/relog").get(settings.get_setting_force_relog); // get settings (no auth required)
 
-  app.route("/api/active").get(reports.get_active_users); // get settings (no auth required)
+  app.route("/api/active").post(reports.get_active_users); // get settings (no auth required)
 
   app.route("/api/coc").post(reports.set_company_coc); // get settings (no auth required)
 

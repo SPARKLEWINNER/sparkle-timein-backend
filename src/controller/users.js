@@ -104,7 +104,7 @@ var controllers = {
     }
   },
   update_user_store: async function (req, res) {
-    const { firstName, lastName, password, company, email, phone } = req.body;
+    const { firstName, lastName, password, company, email, phone, role, prev } = req.body;
     const { id } = req.params;
     if (Object.keys(req.body).length === 0) {
       return res.status(400).json({
@@ -155,25 +155,45 @@ var controllers = {
         });
       }
     } else {
-      try {
-        const result = await User.findOneAndUpdate(
-          { _id: mongoose.Types.ObjectId(id) },
-          { company: company }
-        );
-        if (!result)
-          res.status(400).json({
-            success: false,
-            msg: `Unable to update account ${id}`,
-          });
-        res.json(result);
-      } catch (err) {
-        await logError(err, "User.company_update", null, id, "PATCH");
-        res
-          .status(400)
-          .json({ success: false, msg: `Unable to update account ${id}` });
-      }
+      if(role) {
+        try {
+          const result = await User.updateMany({company: prev}, { $set: { company: company } });
 
-    }
+          if (!result)
+            res.status(400).json({
+              success: false,
+              msg: `Unable to update account ${id}`,
+            });
+          res.json(result);
+        } catch (err) {
+          await logError(err, "User.company_update", null, id, "PATCH");
+          res
+            .status(400)
+            .json({ success: false, msg: `Unable to update account ${id}` });
+        }  
+      }
+      else {
+          try {
+            const result = await User.findOneAndUpdate(
+              { _id: mongoose.Types.ObjectId(id) },
+              { company: company }
+            );
+            if (!result)
+              res.status(400).json({
+                success: false,
+                msg: `Unable to update account ${id}`,
+              });
+            res.json(result);
+          } catch (err) {
+            await logError(err, "User.company_update", null, id, "PATCH");
+            res
+              .status(400)
+              .json({ success: false, msg: `Unable to update account ${id}` });
+          }
+
+        } 
+      }
+      
     
   },
 
