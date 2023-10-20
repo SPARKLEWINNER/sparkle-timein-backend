@@ -133,7 +133,7 @@ var controllers = {
         if (status === 'time-in') {
           // if time in and should create another session
           result = await Reports.create(reports);
-          const response = await fetch('https://payroll-live.sparkles.com.ph/api/attendance', {
+          /*const response = await fetch('https://payroll-live.sparkles.com.ph/api/attendance', {
             method: 'post',
             body: JSON.stringify(body),
             headers: {'Content-Type': 'application/json'}
@@ -147,8 +147,8 @@ var controllers = {
           }
           else {
             return res.json(result);  
-          }
-          
+          }*/
+          return res.json(result);
         }
 
         let last_record =
@@ -192,7 +192,7 @@ var controllers = {
         // check if existing time in / time out
       } else {
         result = await Reports.create(reports);
-        const response = await fetch('https://payroll-live.sparkles.com.ph/api/attendance', {
+        /*const response = await fetch('https://payroll-live.sparkles.com.ph/api/attendance', {
           method: 'post',
           body: JSON.stringify(body),
           headers: {'Content-Type': 'application/json'}
@@ -203,7 +203,7 @@ var controllers = {
             success: false,
             msg: "Connection to payroll error",
           });  
-        }
+        }*/
       }
 
       if (!result) {
@@ -212,7 +212,7 @@ var controllers = {
           msg: `Unable to process request ${status}`,
         });
       }
-      const body = {
+      /*const body = {
         "emp_id": id,
         "emp_name": emp_name.lastName + " " + emp_name.firstName,
         "status": status,
@@ -233,7 +233,8 @@ var controllers = {
       }
       else {
         res.json(result);  
-      } 
+      } */
+      res.json(result);
     } catch (err) {
       console.log(err);
       await logError(err, "Reports", req.body, id, "POST");
