@@ -825,7 +825,10 @@ var controllers = {
     }
   },
   get_reports_bydate: async function (req, res) {
-    const { id, date } = req.params
+    let { id, date } = req.params
+    if (date === "Invalid Date") {
+      date = moment(new Date).format('YYYY-MM-DD')
+    }
     const myDate = new Date(date)
     if (!id) res.status(404).json({ success: false, msg: `No such user.` })
 

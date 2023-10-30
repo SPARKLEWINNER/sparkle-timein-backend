@@ -83,7 +83,7 @@ cron.schedule('*/5 * * * *', () => {
 // Run cronjob
 
 
-function cronTimein (id, location) {
+/*function cronTimein (id, location) {
 
   const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
   const _previous = {}
@@ -177,7 +177,7 @@ cron.schedule('07 19 * * 1-6', async () => {
   }
   await cronTimeOut('63e247b452b472002d008ab1', locationV1)
 });
-
+*/
 
 
 
