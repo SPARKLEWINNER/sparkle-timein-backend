@@ -826,7 +826,8 @@ var controllers = {
   },
   get_reports_bydate: async function (req, res) {
     let { id, date } = req.params
-    if (date === "Invalid Date") {
+    console.log(date)
+    if (date === "Invalid date") {
       date = moment(new Date).format('YYYY-MM-DD')
     }
     const myDate = new Date(date)
