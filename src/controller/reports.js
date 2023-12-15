@@ -1525,6 +1525,19 @@ var controllers = {
       });
     }
   },
+  payslip_gateway: async function(req, res) {
+    const { id } = req.params;
+    let record = {}
+    const response = await fetch(`https://payroll-live.7star.com.ph/api/getPayrollInfo/${id}`, {
+      method: 'get',
+      headers: {'Content-Type': 'application/json'}
+    }).then(async (res, err) => {
+      record = await res.json();
+    });
+    return res.status(200).json({
+      record
+    });
+  },
 }
 
 module.exports = controllers;

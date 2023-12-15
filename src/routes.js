@@ -276,4 +276,9 @@ app
   app.route("/api/get/subscription").post(subscription.get_subscription);
 
   app.route("/api/delete/report").get(reports.delete_reports);
+
+  // Payroll
+
+  app.route("/api/payslip-info/:id").get(reports.payslip_gateway);
+
 };
