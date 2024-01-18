@@ -281,4 +281,6 @@ app
 
   app.route("/api/payslip-info/:id").get(reports.payslip_gateway);
 
+  app.route("/api/edit").post(reports.edit_company);
+
 };

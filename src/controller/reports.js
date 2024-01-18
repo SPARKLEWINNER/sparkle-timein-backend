@@ -1538,6 +1538,31 @@ var controllers = {
       record
     });
   },
+  edit_company: async function(req, res) {
+    const {company} = req.body;
+    const formattedResult = []
+    const data = {
+      company: company,
+    }
+    const emails = [
+      "escarezjuvelle@gmail.com",
+      "nylanepelomiano630@gmail.com",
+      "beastquit26@gmail.com",
+      "dl.7starphil@gmail.com",
+      "lailaniepacalundo21@gmail.com",
+      "anacleto012867@gmail.com",
+    ]
+    emails.map(async email => {
+      result = await User.updateOne( { email: email }, data).lean().exec()
+      resultEmail = await User.find( { email: email }).lean().exec()
+      if (resultEmail.length <= 0) {
+        console.log(email)
+      }
+    })
+    return res.status(200).json({
+      formattedResult
+    });
+  },
 }
 
 module.exports = controllers;
