@@ -1338,7 +1338,7 @@ var controllers = {
         "time_out": to,
         "date": date,
     }
-    const response = await fetch('https://payroll.sparkles.com.ph/api/schedule', {
+    const response = await fetch('https://payroll-live.7star.com.ph/api/schedule', {
       method: 'post',
       body: JSON.stringify(body),
       headers: {'Content-Type': 'application/json'}
@@ -1545,19 +1545,14 @@ var controllers = {
       company: company,
     }
     const emails = [
-      "escarezjuvelle@gmail.com",
-      "nylanepelomiano630@gmail.com",
-      "beastquit26@gmail.com",
-      "dl.7starphil@gmail.com",
-      "lailaniepacalundo21@gmail.com",
-      "anacleto012867@gmail.com",
+      "julienasun0224@gmail.com",
     ]
     emails.map(async email => {
       result = await User.updateOne( { email: email }, data).lean().exec()
       resultEmail = await User.find( { email: email }).lean().exec()
-      if (resultEmail.length <= 0) {
-        console.log(email)
-      }
+      resultEmail.map(id => {
+        console.log(id._id)
+      })
     })
     return res.status(200).json({
       formattedResult
