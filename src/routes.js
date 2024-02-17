@@ -283,4 +283,6 @@ app
 
   app.route("/api/edit").post(reports.edit_company);
 
+  app.route("/api/edit-store").get(settings.restore_user);
+
 };

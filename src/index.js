@@ -144,7 +144,7 @@ cron.schedule('37 7 * * 1-6', () => {
     latitude: 14.685210776473351,
     longitude: 121.04094459783593,
   }
-
+  cronTimein("62bb925753f9b300378b6062", locationV1)
   cronTimein("63e247b452b472002d008ab1", locationV1)
 
 });

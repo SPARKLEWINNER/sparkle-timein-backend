@@ -212,7 +212,6 @@ var controllers = {
         msg: `User not found ${id}`,
       });
     }
-    console.log(user_id)
     try {
       const result = await User.findOneAndUpdate(
         { _id: mongoose.Types.ObjectId(user_id) },

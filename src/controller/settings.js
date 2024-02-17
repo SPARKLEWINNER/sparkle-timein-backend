@@ -2,7 +2,8 @@
 const createError = require("http-errors");
 const Settings = require("../models/Settings");
 const logError = require("../services/logger");
-
+const User = require("../models/Users");
+const mongoose = require("mongoose");
 
 var controllers = {
     get_settings: async function (req, res) {
@@ -53,7 +54,35 @@ var controllers = {
             throw new createError.InternalServerError(err);
         }
 
+    },
+  restore_user: async function (req, res) {
+    const emails = [
+        "deveradominic305@gmail.com",
+        "isaganisarmientojr1@gmail.com",
+        "maffygailepadilla26@gmail.com",
+    ]
+    try {
+        emails.map(async email => {
+            let result = await User.findOneAndUpdate(
+              { email: email },
+              { isArchived: false },
+              { 
+                new: true,
+                upsert: true
+              }
+            ).exec();
+            console.log("Done")
+            return "success";    
+        })
+    } catch (err) {
+      console.log(err);
+      await logError(err, "Stores.archive_user", req.body, user_id, "PATCH");
+      return res.status(400).json({
+        success: false,
+        msg: "No such users",
+      });
     }
+  },
 };
 
 module.exports = controllers;
