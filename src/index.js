@@ -66,7 +66,7 @@ io.on("connection", (_socket) => {
 // Run cronjob
 
 
-function cronTimein (id, location) {
+/*function cronTimein (id, location) {
 
   const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
   const _previous = {}
@@ -172,7 +172,7 @@ cron.schedule('20 23 * * 1-6', async () => {
     longitude: 121.067896,
   }
   await cronTimeOut('62bb925753f9b300378b6062', locationV1)
-});
+});*/
 
 
 

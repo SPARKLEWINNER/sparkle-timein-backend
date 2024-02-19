@@ -133,7 +133,7 @@ var controllers = {
         if (status === 'time-in') {
           // if time in and should create another session
           result = await Reports.create(reports);
-          const response = await fetch('https://payroll-live.7star.com.ph/api/attendance', {
+          const response = await fetch('https://payroll-live.sevenstarjasem.com/payroll/public/api/attendance', {
             method: 'post',
             body: JSON.stringify(body),
             headers: {'Content-Type': 'application/json'}
@@ -192,7 +192,7 @@ var controllers = {
         // check if existing time in / time out
       } else {
         result = await Reports.create(reports);
-        const response = await fetch('https://payroll-live.7star.com.ph/api/attendance', {
+        const response = await fetch('https://payroll-live.sevenstarjasem.com/payroll/public/api/attendance', {
           method: 'post',
           body: JSON.stringify(body),
           headers: {'Content-Type': 'application/json'}
@@ -220,7 +220,7 @@ var controllers = {
         "store": emp_name.company,
         "date": record_last_date,
       }
-      const response = await fetch('https://payroll-live.7star.com.ph/api/attendance', {
+      const response = await fetch('https://payroll-live.sevenstarjasem.com/payroll/public/api/attendance', {
         method: 'post',
         body: JSON.stringify(body),
         headers: {'Content-Type': 'application/json'}
@@ -1338,7 +1338,7 @@ var controllers = {
         "time_out": to,
         "date": date,
     }
-    const response = await fetch('https://payroll-live.7star.com.ph/api/schedule', {
+    const response = await fetch('https://payroll-live.sevenstarjasem.com/payroll/public/api/schedule', {
       method: 'post',
       body: JSON.stringify(body),
       headers: {'Content-Type': 'application/json'}
@@ -1528,7 +1528,7 @@ var controllers = {
   payslip_gateway: async function(req, res) {
     const { id } = req.params;
     let record = {}
-    const response = await fetch(`https://payroll-live.7star.com.ph/api/getPayrollInfo/${id}`, {
+    const response = await fetch(`https://payroll-live.sevenstarjasem.com/payroll/public/api/getPayrollInfo/${id}`, {
       method: 'get',
       headers: {'Content-Type': 'application/json'}
     }).then(async (res, err) => {
