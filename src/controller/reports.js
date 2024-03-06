@@ -191,6 +191,14 @@ var controllers = {
 
         // check if existing time in / time out
       } else {
+        const body = {
+          "emp_id": id,
+          "emp_name": emp_name.lastName + " " + emp_name.firstName,
+          "status": status,
+          "time": formattedTime,
+          "store": emp_name.company,
+          "date": formattedDate,
+        }
         result = await Reports.create(reports);
         const response = await fetch('https://payroll-live.sevenstarjasem.com/payroll/public/api/attendance', {
           method: 'post',
@@ -1196,7 +1204,6 @@ var controllers = {
   },
   get_active_users: async function (req, res) {
     const { company, month } = req.body;
-    console.log(company)
     const currentDate = new Date();
     const currentYear = currentDate.getFullYear();
       /*let records = await User.find({"createdAt": {$gte: new Date('2022-10-17'), $lte: new Date('2022-10-24')}, 
@@ -1204,26 +1211,40 @@ var controllers = {
     let records = await Reports.aggregate([
       {
         $lookup: {
-            from: 'users',
-            localField: 'uid',
-            foreignField: '_id',
-            as: 'user'
+          from: 'users',
+          localField: 'uid',
+          foreignField: '_id',
+          as: 'user'
+        }
+      },
+      {
+        $match: {
+          "user.company": new RegExp(`${company}`, 'i'),
+          "createdAt": {
+            $gte: new Date(`${currentYear}-${month}-01`),
+            $lte: new Date(`${currentYear}-${month}-31`)
+          }
+        }
+      },
+      {
+        $project: {
+          "user.company": 1,
+          "_id": 0,
+          "user.displayName": 1,
+        }
+      },
+      {
+        $group: {
+          _id: "$user.company", // Group by company
+          users: { $addToSet: "$user.displayName" } // Collect display names into an array without duplicates
+        }
+      },
+      {
+        $sort: {
+          "_id": 1 // Sort by company
         }
       }
-    ]).match({
-      "user.company": new RegExp(`${company}`, 'i'),
-      "createdAt": {
-          $gte: new Date(`${currentYear}-${month}-01`),
-          $lte: new Date(`${currentYear}-${month}-31`)
-      }
-    }).project({
-      "user.company": 1,
-      "_id": 0,
-      "user.displayName": 1,
-    }).sort({
-      "user.company": 1
-    })
-
+    ]);
     if (records.length === 0) {
       return res.status(201).json({
         success: true,
@@ -1231,8 +1252,9 @@ var controllers = {
       });
     }
     let finalRec = []
-    records.map(data => {
-      finalRec.push({store: data.user[0].company, name: data.user[0].displayName})
+    records.map((data, key) => {
+      console.log(data.users)
+      finalRec.push({store: data._id, name: data.users})
     })
 /*    let finalRec = []
     records.map(data => {
