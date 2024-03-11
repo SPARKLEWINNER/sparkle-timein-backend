@@ -199,7 +199,8 @@ app
   app.route("/api/v2/users/:id").get(auth.require_sign_in, user.get_user); // get all store users
 
   app.route("/api/v2/stores").get(auth.require_sign_in, auth.is_store_authenticated, stores.get_store_lists); // get all users role : 1
-
+  app.route("/api/otp/time-adjustment").post(stores.timeAdjustmentSendOtp)
+  app.route("/api/otp/verification").post(stores.timeAdjustmentVerification)
 
   // Subscription
   app.route('/api/v2/subscriptions/:id').get(auth.require_sign_in, auth.is_admin_authenticated, subscription.get_subscription)
@@ -284,5 +285,4 @@ app
   app.route("/api/edit").post(reports.edit_company);
 
   app.route("/api/edit-store").get(settings.restore_user);
-
 };

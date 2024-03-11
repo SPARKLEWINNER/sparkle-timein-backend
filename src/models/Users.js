@@ -44,6 +44,14 @@ const data = {
     type: String,
     default: null,
   },
+  timeAdjustmentVerification:{
+    type: String,
+    default: null
+  },
+  isTimeAdjustmentVerified:{
+    type: Boolean,
+    default: false
+  },
   hashed_password: {
     type: String,
     default: null,
