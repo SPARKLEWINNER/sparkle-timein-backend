@@ -357,13 +357,36 @@ var controllers = {
     },
     update_user_new_password: async function (req, res) {
       const { email, password } = req.body;
+      let id;
       if (!email || !password)
         res
           .status(404)
           .json({ success: false, msg: `Invalid Request parameters.` });
 
       try {
-        await User.findOne({ email: email })
+        const chkUser = await User.findOne({email: email}).exec();
+        if (chkUser) {
+          id = chkUser._id;
+          chkUser.password = password;
+          const result = chkUser.save();
+          if (!result) {
+            return res.status(400).json({
+              success: false,
+              msg: `Unable to update details ${chkUser._id}`,
+            });
+          }
+          else {
+            const token = create_token(result._id);
+            res.cookie("jwt", token, { expire: new Date() + 9999 });
+            return res.json(result._id);  
+          }
+        }
+        else {
+          return res
+            .status(400)
+            .json({ success: false, msg: `User not found ${email}` });  
+        }
+        /*await User.findOne({ email: email })
           .then((user) => {
             if (!user)
               return res
@@ -382,11 +405,9 @@ var controllers = {
               return res.json(result._id);
             });
           })
-          .catch((err) => console.log(err));
+          .catch((err) => console.log(err));*/
       } catch (err) {
-        console.log(err);
-        await logError(err, "Users.update_user_password", id, "GET");
-
+        console.log(err)
         return res.status(400).json({
           success: false,
           msg: "No such users",
