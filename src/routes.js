@@ -8,6 +8,7 @@ var stores = require("./controller/stores");
 var settings = require("./controller/settings");
 var subscription = require("./controller/subscription");
 var billing = require("./controller/billing");
+var videoTutorial = require("./controller/videoTutorial");
 var UploadController = require('./services/upload')
 var AnnouncementUploadController = require('./services/timein-upload')
 
@@ -287,4 +288,11 @@ app
   app.route("/api/edit").post(reports.edit_company);
 
   app.route("/api/edit-store").get(settings.restore_user);
+
+  // Video Tutorial
+
+  app.route("/api/store/video").post(videoTutorial.addVideoTutorial);
+  app.route("/api/store/:_id").put(videoTutorial.editVedioTutorial);
+  app.route("/api/store/video/:_id").delete(videoTutorial.deleteVideoTutorial);
+  app.route("/api/store/videos").get(videoTutorial.getAllVideos)
 };
