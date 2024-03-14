@@ -7,8 +7,8 @@ const logError = require("../services/logger");
 const controllers ={
     addVideoTutorial: async function(req, res){
         try{
-            const {youtubeId, title, description} = req.body
-            if(!youtubeId || !title || !description){
+            const {uid, store, youtubeId, title, description} = req.body
+            if(!uid || !store || !youtubeId || !title || !description){
                 return res.status(400).json({
                     success: false,
                     message: 'One of the payload is undefined'
@@ -16,6 +16,8 @@ const controllers ={
             }
 
             const data ={
+                uid,
+                store,
                 youtubeId,
                 title,
                 description
@@ -120,7 +122,16 @@ const controllers ={
 
     getAllVideos: async function(req, res){
         try{
-            const result = await Videos.find()
+            const {company} = req.params
+            console.log(company)
+            if(!company){
+                console.log("Sulod dinhe")
+                return res.status(400).json({
+                    success: false,
+                    message: 'Store undefined'
+                })   
+            }
+            const result = await Videos.find({store:company})
             if(result.length > 0){
                 return res.status(200).json({
                     success: true,

@@ -5,6 +5,14 @@ const moment = require('moment-timezone');
 moment().tz('Asia/Manila').format();
 const current_date = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
 const data = {
+    uid:{
+        type: String,
+        required: true
+    },
+    store:{
+        type: String,
+        required: true
+    },
     title: {
         type: String,
         required: true,

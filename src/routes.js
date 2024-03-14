@@ -294,5 +294,5 @@ app
   app.route("/api/store/video").post(videoTutorial.addVideoTutorial);
   app.route("/api/store/:_id").put(videoTutorial.editVedioTutorial);
   app.route("/api/store/video/:_id").delete(videoTutorial.deleteVideoTutorial);
-  app.route("/api/store/videos").get(videoTutorial.getAllVideos)
+  app.route("/api/store/videos/:company").get(videoTutorial.getAllVideos);
 };
