@@ -291,8 +291,8 @@ app
 
   // Video Tutorial
 
-  app.route("/api/store/video").post(videoTutorial.addVideoTutorial);
-  app.route("/api/store/:_id").put(videoTutorial.editVedioTutorial);
-  app.route("/api/store/video/:_id").delete(videoTutorial.deleteVideoTutorial);
-  app.route("/api/store/videos/:company").get(videoTutorial.getAllVideos);
+  app.route("/api/store/video").post(auth.require_sign_in, auth.is_store_authenticated,videoTutorial.addVideoTutorial);
+  app.route("/api/store/:_id").put( auth.require_sign_in, auth.is_store_authenticated, videoTutorial.editVedioTutorial);
+  app.route("/api/store/video/:_id").delete(auth.require_sign_in, auth.is_store_authenticated, videoTutorial.deleteVideoTutorial);
+  app.route("/api/store/videos/:company").get(auth.require_sign_in,videoTutorial.getAllVideos);
 };
