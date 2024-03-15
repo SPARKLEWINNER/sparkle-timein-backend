@@ -377,8 +377,9 @@ var controllers = {
           }
           else {
             const token = create_token(result._id);
-            res.cookie("jwt", token, { expire: new Date() + 9999 });
-            return res.json(result._id);  
+            const expirationDate = new Date();
+            expirationDate.setTime(expirationDate.getTime() + 9999);
+            return res.cookie("jwt", token, { expires: expirationDate }).json(result._id); 
           }
         }
         else {
