@@ -3,6 +3,8 @@ const stringCapitalizeName = require("string-capitalize-name");
 const mongoose = require("mongoose");
 const User = require("../models/Users");
 const logError = require("../services/logger");
+const nodemailer = require("nodemailer");
+const {emailVerificationHTML} = require("../helpers/timeAdjustMailFormat");
 
 var controllers = {
   get_user: async function (req, res) {
@@ -324,6 +326,112 @@ var controllers = {
       });
     }
   },
+
+  timeAdjustmentSendOtp: async function (req, res){
+    try{
+      const {email} = req.body
+      console.log(email)
+        if(!email){
+          return res.status(400).json({
+            success: false,
+            message: "Email is required"
+          })
+        }
+        const token = Math.trunc(Math.random() * 999999)
+        const storeTokenResult = await User.findOneAndUpdate(
+          {email: email},
+          {$set:{timeAdjustmentVerification: token}},
+          {new: true}
+        )
+
+        if(storeTokenResult){
+          let transporter = nodemailer.createTransport({
+            host: process.env.SES_HOST,
+            port: 587,
+            secure: false, // true for 465, false for other ports
+            auth: {
+              user: process.env.SES_USER, // generated ethereal user
+              pass: process.env.SES_PASS, // generated ethereal password
+            },
+          });
+
+          let mailOptions = {
+            from: 'no-reply@sparkles.com.ph',
+            to: email,
+            subject: 'Forgot Password',
+            html: emailVerificationHTML({
+              verificationToken: token,
+            })
+          };
+          transporter.sendMail(mailOptions, function(error, info){
+            if (error) {
+              return res.status(400).json({
+                success: false,
+                msg: error,
+              });
+            } else {
+              return res.status(200).json({
+                success: true,
+                msg: "Success",
+              });
+            }
+          });
+        }
+    }catch(error){
+      console.log(error)
+      return res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        body: error
+      })
+    }
+  },
+
+  timeAdjustmentVerification: async function( req, res){
+    try{
+      const {email, token} = req.body
+
+      if(!email || !token){
+        return res.status(400).json({
+          success: false,
+          message: "Check email or token payload because undefined"
+        })
+      }
+
+      const findTokenResult = await User.findOne({email: email}).select("timeAdjustmentVerification")
+
+      if(findTokenResult){
+        const tokenStored = findTokenResult.timeAdjustmentVerification
+        if(tokenStored === token){
+          const updateStatus = await User.findOneAndUpdate(
+            {email:email}, 
+            {$set:{isTimeAdjustmentVerified: true}},
+            {new:true}
+          )
+          if(updateStatus){
+            return res.status(200).json({
+              success: true,
+              message: "verified successfully"
+            })
+          }
+        }
+        return res.status(409).json({
+          success: false,
+          message: "OTP is invalid"
+        })
+      }
+      return res.status(404).json({
+        success: false,
+        message:"Not found email"
+      })
+    }catch(error){
+      return res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        body: error
+      })
+    }
+  }
 };
 
 module.exports = controllers;
