@@ -1580,6 +1580,32 @@ var controllers = {
       formattedResult
     });
   },
+  remove_many_schedules: async function(req, res) {
+    const {id} = req.params;
+    try {
+      const result = await Schedule.deleteMany({ uid: id }).lean().exec();
+      if (result.deletedCount === 0) {
+        return res.status(200).json({
+          success: true,
+          msg: "No record found",
+        });  
+      }
+      else {
+        return res.status(200).json({
+          success: true,
+          msg: "Record updated",
+        }); 
+      }      
+    }
+    catch (e) {
+      console.log(err);
+      return res.status(400).json({
+        success: false,
+        msg: "Something went wrong",
+      });
+    }
+
+  },
 }
 
 module.exports = controllers;
