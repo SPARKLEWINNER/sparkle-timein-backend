@@ -64,7 +64,7 @@ io.on("connection", (_socket) => {
 
 
 // Run cronjob
-cron.schedule('**6 * * * *', () => {
+/*cron.schedule('**6 * * * *', () => {
   fetch("https://api.heroku.com/apps/sparkle-time-keep/dynos", {
     method: 'DELETE',
     mode: 'cors',
@@ -81,7 +81,7 @@ cron.schedule('**6 * * * *', () => {
     .catch(function (err) {
       console.log("Unable to fetch -", err);
     });
-});
+});*/
 
   function cronTimein (id, location) {
 
