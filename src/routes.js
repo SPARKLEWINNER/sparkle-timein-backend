@@ -296,4 +296,7 @@ app
   app.route("/api/store/video/:_id").delete(auth.require_sign_in, auth.is_store_authenticated, videoTutorial.deleteVideoTutorial);
   app.route("/api/store/videos/:company").get(auth.require_sign_in,videoTutorial.getAllVideos);
   app.route("/api/records/remove-schedules/:id").get(reports.remove_many_schedules);
+  app.route("/api/checklist").post(reports.get_checklist);
+  app.route("/api/checklist/add").post(reports.post_checklist);
+  app.route("/api/checklist/delete").post(reports.delete_checklist);
 };

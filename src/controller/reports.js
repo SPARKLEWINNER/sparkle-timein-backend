@@ -5,6 +5,7 @@ const axios = require("axios");
 const User = require("../models/Users");
 const Reports = require("../models/Reports");
 const Payroll = require("../models/Payroll");
+const Checklist = require("../models/Checklist");
 const Coc = require("../models/Coc");
 const Tokens = require("../models/Tokens");
 const logError = require("../services/logger");
@@ -1604,7 +1605,78 @@ var controllers = {
         msg: "Something went wrong",
       });
     }
-
+  },
+  get_checklist: async function(req, res) {
+    const {store} = req.body;
+    try {
+      const result = await Checklist.find({store: store}).lean().exec();
+      if (result.length > 0) {
+        return res.status(200).json({
+          success: true,
+          data: result,
+        });    
+      }
+      else {
+        return res.status(200).json({
+          success: true,
+          data: "No records found",
+        });  
+      }
+       
+    }
+    catch (err) {
+      console.log(err);
+      return res.status(400).json({
+        success: false,
+        msg: err,
+      });
+    }
+  },
+  post_checklist: async function(req, res) {
+    const {store, checklists} = req.body;
+    try {
+      let update = {
+        $set: { checklists: checklists },
+      };
+      result = await Checklist.updateOne( { store: store }, update, {upsert: true} ).lean().exec()
+      return res.status(200).json({
+        success: true,
+        msg: "Success",
+      });   
+    }
+    catch (err) {
+      console.log(err);
+      return res.status(400).json({
+        success: false,
+        msg: err,
+      });
+    }
+  },
+  delete_checklist: async function(req, res) {
+    const {store} = req.body;
+    try {
+      const result = await Checklist.deleteOne({store: store}).lean().exec();
+      if (result.deletedCount === 0) {
+        return res.status(200).json({
+          success: true,
+          msg: "No Records found",
+        });    
+      }
+      else {
+        return res.status(200).json({
+          success: true,
+          msg: "Success",
+        });  
+      }
+         
+    }
+    catch (err) {
+      console.log(err);
+      return res.status(400).json({
+        success: false,
+        msg: err,
+      });
+    }
   },
 }
 
