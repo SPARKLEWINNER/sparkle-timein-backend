@@ -799,7 +799,7 @@ var controllers = {
   },
   get_limited_reports: async function (req, res) {
     const { id } = req.params;
-    if (!id) res.status(404).json({ success: false, msg: `No such user.` });
+    if (!id || id === undefined) res.status(404).json({ success: false, msg: `Something went wrong please try again.` });
 
     let user = await User.findOne({
       _id: mongoose.Types.ObjectId(id),
@@ -1598,7 +1598,7 @@ var controllers = {
         }); 
       }      
     }
-    catch (e) {
+    catch (err) {
       console.log(err);
       return res.status(400).json({
         success: false,
