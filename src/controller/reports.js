@@ -14,6 +14,7 @@ const moment = require('moment-timezone');
 const uuid = require("uuid").v1;
 const Schedule = require("../models/Schedule");
 const Announcement = require("../models/announcements");
+const crypto = require("crypto");
 moment().tz('Asia/Manila').format();
 const current_date = `${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`;
 const { generateExcelFile } = require('../helpers/rangedData')
@@ -1676,6 +1677,27 @@ var controllers = {
         success: false,
         msg: err,
       });
+    }
+  },
+  verify_password: async function(req, res) {
+    const user = await User.findOne({ email: req.body.email , isArchived: false }).lean().exec();
+    if (!user) return false;
+    let encryptPassword = crypto
+      .createHmac("sha1", user.salt)
+      .update(req.body.password)
+      .digest("hex");
+
+    if (encryptPassword !== user.hashed_password) {
+      return res.status(400).json({
+        success: false,
+        msg: "Fail",
+      });
+    }
+    else {
+      return res.status(200).json({
+        success: true,
+        msg: "Success",
+      });  
     }
   },
 }

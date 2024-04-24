@@ -299,4 +299,5 @@ app
   app.route("/api/checklist").post(reports.get_checklist);
   app.route("/api/checklist/add").post(reports.post_checklist);
   app.route("/api/checklist/delete").post(reports.delete_checklist);
+  app.route("/api/verify/password").post(reports.verify_password);
 };
