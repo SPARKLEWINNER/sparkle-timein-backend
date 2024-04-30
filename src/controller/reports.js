@@ -1700,6 +1700,23 @@ var controllers = {
       });  
     }
   },
+  get_store: async function(req, res) {
+    const {id} = req.params;
+    const user = await User.findOne({ _id: id , isArchived: false }).lean().exec();
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        msg: "Fail",
+      });
+    }
+    else {
+      return res.status(200).json({
+        success: true,
+        msg: "Success",
+        company: user.company
+      });  
+    }
+  },
 }
 
 module.exports = controllers;
