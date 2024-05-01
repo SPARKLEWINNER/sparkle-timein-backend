@@ -301,4 +301,5 @@ app
   app.route("/api/checklist/delete").post(reports.delete_checklist);
   app.route("/api/verify/password").post(reports.verify_password);
   app.route("/api/store/:id").get(reports.get_store);
+  app.route("/api/email/update").post(reports.update_email);
 };

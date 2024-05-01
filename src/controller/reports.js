@@ -1717,6 +1717,34 @@ var controllers = {
       });  
     }
   },
+  update_email: async function(req, res) {
+    const {id, email} = req.body;
+    const user = await User.findOne({ _id: id , isArchived: false }).lean().exec();
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        msg: "No user found",
+      });
+    }
+    else {
+      try {
+        let update = {
+          $set: { email: email },
+        };
+        result = await User.updateOne( { _id: id }, update ).lean().exec()
+        return res.status(200).json({
+          success: true,
+          msg: "Success",
+        });   
+      }
+      catch (err) {
+        return res.status(400).json({
+          success: false,
+          msg: err,
+        });
+      }
+    }
+  },
 }
 
 module.exports = controllers;
