@@ -34,8 +34,6 @@ var controllers = {
     const { status, location, logdate, previous, ip } = req.body;
     const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
     const emp_name = await User.findOne({_id: mongoose.Types.ObjectId(id)}, { _id: 0, firstName: 1, lastName: 1, displayName: 1, company: 1 }).lean().exec()
-    console.log('PREVIOUS', previous);
-    console.log('REPORT_TIME', now);
     let month = now.getUTCMonth() + 1;
     let day = now.getUTCDate();
     let year = now.getUTCFullYear();
@@ -83,9 +81,6 @@ var controllers = {
       success: false,
       msg: "No such users",
     });
-    console.log(current_date)
-
-    console.log(without_time(now))
 
     try {
       let result;
@@ -246,7 +241,6 @@ var controllers = {
       } 
 /*      res.json(result);*/
     } catch (err) {
-      console.log(err);
       await logError(err, "Reports", req.body, id, "POST");
       return res.status(400).json({
         success: false,
@@ -670,9 +664,6 @@ var controllers = {
       success: false,
       msg: "No such users",
     });
-    console.log(current_date)
-
-    console.log(without_time(now))
 
     try {
       let result;
@@ -836,7 +827,6 @@ var controllers = {
   },
   get_reports_bydate: async function (req, res) {
     let { id, date } = req.params
-    console.log(date)
     if (date === "Invalid date") {
       date = moment(new Date).format('YYYY-MM-DD')
     }
@@ -908,7 +898,6 @@ var controllers = {
         msg: "Record updated",
       });
     } catch (err) {
-      console.log(err);
       await logError(err, "Reports", req.body, id, "PATCH");
 
       return res.status(400).json({
@@ -1255,7 +1244,6 @@ var controllers = {
     }
     let finalRec = []
     records.map((data, key) => {
-      console.log(data.users)
       finalRec.push({store: data._id, name: data.users})
     })
 /*    let finalRec = []
