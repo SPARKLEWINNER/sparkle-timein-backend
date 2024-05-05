@@ -791,6 +791,7 @@ var controllers = {
   },
   get_limited_reports: async function (req, res) {
     const { id } = req.params;
+    console.log(id)
     if (!id || id === undefined) res.status(404).json({ success: false, msg: `Something went wrong please try again.` });
 
     let user = await User.findOne({
