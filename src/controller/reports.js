@@ -15,6 +15,12 @@ const uuid = require("uuid").v1;
 const Schedule = require("../models/Schedule");
 const Announcement = require("../models/announcements");
 const crypto = require("crypto");
+const jwt = require("jsonwebtoken"); // to generate signed token
+const jwt_decode = require('jwt-decode')
+const maxAge = 3 * 24 * 60 * 60;
+const create_token = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: maxAge });
+};
 moment().tz('Asia/Manila').format();
 const current_date = `${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`;
 const { generateExcelFile } = require('../helpers/rangedData')
@@ -791,39 +797,40 @@ var controllers = {
   },
   get_limited_reports: async function (req, res) {
     const { id } = req.params;
-    console.log(id)
-    if (!id || id === undefined) res.status(404).json({ success: false, msg: `Something went wrong please try again.` });
-
-    let user = await User.findOne({
-      _id: mongoose.Types.ObjectId(id),
-    })
-      .lean()
-      .exec();
-    if (!user) {
-      return res.status(400).json({
-        success: false,
-        msg: "No such users",
-      });
+    if (!id || id === undefined) {
+      res.status(404).json({ success: false, msg: `Something went wrong please try again.` });
     }
-
-    try {
-      let records = await Reports.find({uid: mongoose.Types.ObjectId(id)})
-      .sort([['date', -1]])
-      .limit(10)
-      .exec();
-
-      if (records.length === 0) {
-        return res.status(201).json({
-          success: true,
-          msg: "No Records",
+    else {
+      let user = await User.findOne({
+        _id: mongoose.Types.ObjectId(id),
+      })
+        .lean()
+        .exec();
+      if (!user) {
+        return res.status(400).json({
+          success: false,
+          msg: "No such users",
         });
       }
 
-      res.json(records);
-    } catch (err) {
-      await logError(err, "Reports", null, id, "GET");
-      res.status(400).json({ success: false, msg: err });
-      throw new createError.InternalServerError(err);
+      try {
+        let records = await Reports.find({uid: mongoose.Types.ObjectId(id)})
+        .sort([['date', -1]])
+        .limit(10)
+        .exec();
+
+        if (records.length === 0) {
+          return res.status(201).json({
+            success: true,
+            msg: "No Records",
+          });
+        }
+        res.json(records);
+      } catch (err) {
+        await logError(err, "Reports", null, id, "GET");
+        res.status(400).json({ success: false, msg: err });
+        throw new createError.InternalServerError(err);
+      }
     }
   },
   get_reports_bydate: async function (req, res) {
@@ -1733,6 +1740,48 @@ var controllers = {
         });
       }
     }
+  },
+  verify_password_phone: async function(req, res) {
+    let {password, phone} = req.body;
+    let code = Math.floor(100000 + Math.random() * 900000);
+    const numberFormat =
+      String(phone).charAt(0) +
+      String(phone).charAt(1) +
+      String(phone).charAt(2);
+    if (numberFormat !== "+63") {
+      phone = "+63" + phone.substring(1);
+    }
+    const user = await User.findOne({ phone: phone , isArchived: false }).lean().exec();
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        msg: "Invalid mobile no. or password",
+      });
+    }
+    else {
+      let encryptPassword = crypto
+        .createHmac("sha1", user.salt)
+        .update(password)
+        .digest("hex");
+
+      if (encryptPassword !== user.hashed_password) {
+        return res.status(400).json({
+          success: false,
+          msg: "Fail",
+        });
+      }
+      else {
+        const store = await User.find({
+          company: user.company,
+        })
+        .lean()
+        .exec();
+        const token = create_token(user._id);
+        res.cookie("jwt", token, { httpOnly: true, maxAge: maxAge * 1000 });
+        res.status(200).json({ ...user, token, store_id: store[0]._id });  
+      }
+    }
+    
   },
 }
 
