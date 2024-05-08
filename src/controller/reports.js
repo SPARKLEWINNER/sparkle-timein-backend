@@ -797,7 +797,7 @@ var controllers = {
   },
   get_limited_reports: async function (req, res) {
     const { id } = req.params;
-    if (!id || id === undefined) {
+    if (!id || id === undefined || id === "") {
       res.status(404).json({ success: false, msg: `Something went wrong please try again.` });
     }
     else {
