@@ -285,36 +285,6 @@ var controllers = {
         status: false,
         msg: `No existing Record`,
       }]);
-      let OneDay = result.slice(-1).pop().createdAt.getTime() + (1 * 24 * 60 * 60 * 1000)
-      let DateToday = now.getTime()
-      if (result.slice(-1).pop().status !== "time-out" && DateToday >= OneDay) {
-        let month = now.getUTCMonth() + 1;
-        let day = now.getUTCDate();
-        let year = now.getUTCFullYear();
-        let time = Date.now();
-        let newReports = {
-          dateTime: now,
-          status: "time-out",
-          month: month,
-          day: day,
-          year: year,
-          time: time,
-          date: new Date(),
-          location: "N/A",
-          address: "N/A",
-          ip: "Test"
-        };
-
-        let update = {
-          $set: { status: "time-out" },
-          $push: { record: newReports },
-        };
-        /*result = */
-        await Reports.findOneAndUpdate(
-          { _id: mongoose.Types.ObjectId(result.slice(-1).pop()._id) },
-          update
-        );
-      }
       res.json([result.slice(-1).pop()]);
     } catch (err) {
       await logError(err, "Reports", null, id, "GET");
