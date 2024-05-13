@@ -129,8 +129,6 @@ userSchema.statics.login = async function (email, password) {
     .update(password)
     .digest("hex");
 
-  console.log(encryptPassword, user.hashed_password)
-
   if (encryptPassword !== user.hashed_password) return false;
 
 

@@ -771,6 +771,7 @@ var controllers = {
       res.status(404).json({ success: false, msg: `Something went wrong please try again.` });
     }
     else {
+      console.log("get_limited_reports - " + id)
       let user = await User.findOne({
         _id: mongoose.Types.ObjectId(id),
       })
@@ -1722,6 +1723,7 @@ var controllers = {
       phone = "+63" + phone.substring(1);
     }
     const user = await User.findOne({ phone: phone , isArchived: false }).lean().exec();
+    
     if (!user) {
       return res.status(400).json({
         success: false,
@@ -1729,6 +1731,7 @@ var controllers = {
       });
     }
     else {
+      console.log("verify phone password" + user)
       let encryptPassword = crypto
         .createHmac("sha1", user.salt)
         .update(password)
