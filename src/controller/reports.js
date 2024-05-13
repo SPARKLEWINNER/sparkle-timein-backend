@@ -771,37 +771,43 @@ var controllers = {
       res.status(404).json({ success: false, msg: `Something went wrong please try again.` });
     }
     else {
-      console.log("get_limited_reports - " + id)
-      let user = await User.findOne({
-        _id: mongoose.Types.ObjectId(id),
-      })
-        .lean()
-        .exec();
-      if (!user) {
-        return res.status(400).json({
-          success: false,
-          msg: "No such users",
-        });
-      }
-
       try {
-        let records = await Reports.find({uid: mongoose.Types.ObjectId(id)})
-        .sort([['date', -1]])
-        .limit(10)
-        .exec();
-
-        if (records.length === 0) {
-          return res.status(201).json({
-            success: true,
-            msg: "No Records",
+        let user = await User.findOne({
+          _id: mongoose.Types.ObjectId(id),
+        })
+          .lean()
+          .exec();
+        if (!user) {
+          return res.status(400).json({
+            success: false,
+            msg: "No such users",
           });
         }
-        res.json(records);
+
+        try {
+          let records = await Reports.find({uid: mongoose.Types.ObjectId(id)})
+          .sort([['date', -1]])
+          .limit(10)
+          .exec();
+
+          if (records.length === 0) {
+            return res.status(201).json({
+              success: true,
+              msg: "No Records",
+            });
+          }
+          res.json(records);
+        } catch (err) {
+          await logError(err, "get_limited_reports", null, id, "POST");
+          res.status(400).json({ success: false, msg: err });
+          throw new createError.InternalServerError(err);
+        }
       } catch (err) {
-        await logError(err, "Reports", null, id, "GET");
-        res.status(400).json({ success: false, msg: err });
-        throw new createError.InternalServerError(err);
+          await logError(err, "get_limited_reports", null, id, "POST");
+          res.status(400).json({ success: false, msg: err });
+          throw new createError.InternalServerError(err);
       }
+      
     }
   },
   get_reports_bydate: async function (req, res) {
@@ -1731,28 +1737,35 @@ var controllers = {
       });
     }
     else {
-      console.log("verify phone password" + user)
-      let encryptPassword = crypto
-        .createHmac("sha1", user.salt)
-        .update(password)
-        .digest("hex");
+      try {
+        let encryptPassword = crypto
+          .createHmac("sha1", user.salt)
+          .update(password)
+          .digest("hex");
 
-      if (encryptPassword !== user.hashed_password) {
-        return res.status(400).json({
+        if (encryptPassword !== user.hashed_password) {
+          return res.status(400).json({
+            success: false,
+            msg: "Fail",
+          });
+        }
+        else {
+          const store = await User.find({
+            company: user.company,
+          })
+          .lean()
+          .exec();
+          const token = create_token(user._id);
+          res.cookie("jwt", token, { httpOnly: true, maxAge: maxAge * 1000 });
+          res.status(200).json({ ...user, token, store_id: store[0]._id });  
+        } 
+      } catch (err) {
+          return res.status(400).json({
           success: false,
-          msg: "Fail",
+          msg: err,
         });
       }
-      else {
-        const store = await User.find({
-          company: user.company,
-        })
-        .lean()
-        .exec();
-        const token = create_token(user._id);
-        res.cookie("jwt", token, { httpOnly: true, maxAge: maxAge * 1000 });
-        res.status(200).json({ ...user, token, store_id: store[0]._id });  
-      }
+      
     }
     
   },
