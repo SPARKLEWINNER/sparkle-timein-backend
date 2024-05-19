@@ -303,4 +303,5 @@ app
   app.route("/api/store/:id").get(reports.get_store);
   app.route("/api/email/update").post(reports.update_email);
   app.route("/api/verify/phone").post(reports.verify_password_phone);
+  app.route("/api/breaklist").post(reports.get_breaklist);
 };

@@ -1769,6 +1769,112 @@ var controllers = {
     }
     
   },
+  get_breaklist: async function(req, res) {
+    let {from, to, store} = req.body;
+    let records = []
+    let schedulesFound = []
+    let timeIn = null
+    let timeOut = null
+    let hoursWork = null
+    let daysWork = 0
+    const startDate = new Date(from)
+    const endDate = new Date(to)
+    try {
+      let personnels = await User.find({company: store, isArchived: false})
+      .lean()
+      .exec();
+      if (personnels.length > 0) {
+        const results = await Promise.all(personnels.map(async (data) => {
+           const result = await Reports.find({
+             $and: [
+               { uid: data._id },
+               { date: { $gte: startDate, $lte: endDate } }
+             ]
+           }).lean().exec();
+           if (result.length < 1) {
+            records.push({ 
+              _id: data._id,
+              empName: data.displayName, 
+              dayswork: 0, 
+              hourswork: 0, 
+              hourstardy: 0, 
+              overtime: 0,
+              nightdiff: 0 
+            }); 
+           }
+           else {
+            
+            result.map(item => {
+              const hasTimeOut = item.record.some(record => record.status === "time-out");
+              if (hasTimeOut) {
+                item.record.forEach(record => {
+                  if (record.status === 'time-in') {
+                    timeIn = record.dateTime;
+                  } else if (record.status === 'time-out') {
+                    timeOut = record.dateTime;
+                  }
+                });
+                if (timeIn && timeOut) {
+                  const timeDifference = timeOut - timeIn;
+                  hoursWork = timeDifference / (1000 * 60 * 60);  
+                } else {
+                  return null;
+                }
+                const existingRecord = records.find(record => record.empName === data.displayName);
+                if (existingRecord) {
+                  existingRecord.hourswork += hoursWork;
+                }
+                else {
+                  records.push({ 
+                    _id: data._id,
+                    empName: data.displayName, 
+                    dayswork: 0, 
+                    hourswork: hoursWork, 
+                    hourstardy: 0, 
+                    overtime: 0, 
+                    nightdiff: 0 
+                  });   
+                }   
+              } else {
+                records.push({ 
+                  _id: data._id,
+                  empName: data.displayName, 
+                  dayswork: 0, 
+                  hourswork: 0, 
+                  hourstardy: 0, 
+                  overtime: 0, 
+                  nightdiff: 0 
+                });
+              }  
+            }) 
+           }
+           
+         }));
+         return res.status(200).json({
+           success: true,
+           msg: "Success",
+           data: records
+         });  
+      }
+      else {
+        return res.status(400).json({
+          success: false,
+          msg: "No user found",
+        })
+      }
+    } catch (err) {
+        return res.status(400).json({
+        success: false,
+        msg: "endpoint" + err,
+      })
+    }
+    
+    /*personnels.map(async data => {
+      const result = await Reports.find({$and: [{uid: data._id}, { date: { $gte: startDate, $lt: endDate } }]}).lean().exec()
+      records.push({empName: data.displayName})
+    })
+    console.log(records)*/
+  },
 }
 
 module.exports = controllers;
