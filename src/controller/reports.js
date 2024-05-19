@@ -1816,19 +1816,24 @@ var controllers = {
                 });
                 if (timeIn && timeOut) {
                   const timeDifference = timeOut - timeIn;
-                  hoursWork = timeDifference / (1000 * 60 * 60);  
+                  hoursWork = timeDifference / (1000 * 60 * 60);
+                  if (hoursWork >= 8) {
+                    daysWork += 1
+                  }  
                 } else {
                   return null;
                 }
                 const existingRecord = records.find(record => record.empName === data.displayName);
+
                 if (existingRecord) {
                   existingRecord.hourswork += hoursWork;
+                  existingRecord.dayswork += 1;
                 }
                 else {
                   records.push({ 
                     _id: data._id,
                     empName: data.displayName, 
-                    dayswork: 0, 
+                    dayswork: daysWork, 
                     hourswork: hoursWork, 
                     hourstardy: 0, 
                     overtime: 0, 
@@ -1839,7 +1844,7 @@ var controllers = {
                 records.push({ 
                   _id: data._id,
                   empName: data.displayName, 
-                  dayswork: 0, 
+                  dayswork: daysWork, 
                   hourswork: 0, 
                   hourstardy: 0, 
                   overtime: 0, 
