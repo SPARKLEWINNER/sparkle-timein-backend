@@ -1317,15 +1317,15 @@ var controllers = {
     res.json(record)
   },
   post_schedule: async function(req, res) {
-    const { uid, from, to, date, name, company, totalHours } = req.body;
-    if (!uid || !from || !to || !date || !name || !company || !totalHours) {
+    const { uid, from, to, date, name, company, totalHours, breakMin, position } = req.body;
+    if (!uid || !from || !to || !date || !name || !company || !totalHours || !breakMin || !position) {
       return res.status(400).json({
         success: false,
         msg: `Missing fields`,
       });
     }
     let update = {
-      $set: { from: from, to: to, name: name, company: company, totalHours: totalHours},
+      $set: { from: from, to: to, name: name, company: company, totalHours: totalHours, breakMin: breakMin, position: position},
     };
     result = await Payroll.updateOne( { uid: uid, date: new Date(date) }, update, {upsert: true} ).lean().exec()
     const body = {
@@ -1333,7 +1333,7 @@ var controllers = {
         "time_in": from,
         "total_hours" : totalHours,
         "time_out": to,
-        "date": date,
+        "date": date
     }
     const response = await fetch('https://payroll-live.sevenstarjasem.com/payroll/public/api/schedule', {
       method: 'post',
@@ -1879,6 +1879,84 @@ var controllers = {
       records.push({empName: data.displayName})
     })
     console.log(records)*/
+  },
+  get_schedule_all_v2: async function (req, res) {
+
+    const { id, date } = req.body;
+    var dates = []
+    if (!id || !date )
+      res
+        .status(404)
+        .json({ success: false, msg: `Invalid Request parameters.` });
+
+    let user = await User.findOne({ _id: mongoose.Types.ObjectId(id) })
+      .lean()
+      .exec();
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        msg: "No such users",
+      });
+    }
+    try {
+      let employees = await User.find({$and: [{company: user.company, role: 0, isArchived: false}]}, { displayName: 1, lastName: 1, firstName: 1})
+        .lean()
+        .exec();
+      if (!employees) {
+        return res.status(200).json({
+          success: true,
+          msg: "No registered employees",
+        });
+      }
+      let records = []
+      const oldDate = new Date(date);
+      oldDate.setUTCHours(16, 0, 0, 0); // Set hours to 16:00:00.000 UTC
+
+      const newDateString = oldDate.toISOString().replace("Z", "+00:00");
+      
+      const promises = employees.map(async (data) => {
+        const results = await Payroll.find({
+          uid: data._id, 
+          date: {
+            $gte: new Date(newDateString),
+            $lte: new Date(newDateString)
+          }
+        })
+        .sort({ from: 1 })
+        .lean()
+        .exec();
+
+        if (results.length > 0) {
+          results.forEach(result => {
+            records.push({
+              emp: data.displayName,
+              position: result.position,
+              date: result.date,
+              startShift: result.from,
+              endShift: result.to
+            });
+          });
+        } else {
+          records.push({
+            emp: data.displayName,
+            position: null,
+            date: new Date(newDateString),
+            startShift: null,
+            endShift: null
+          });
+        }
+      });
+
+      await Promise.all(promises);
+      return res.status(200).json({
+        success: true,
+        records,
+      })
+    } catch (err) {
+      await logError(err, "Reports", null, id, "GET");
+      res.status(400).json({ success: false, msg: err });
+      throw new createError.InternalServerError(err);
+    }
   },
 }
 

@@ -31,6 +31,14 @@ const data = {
         type: String,
         required: true,
     },
+    breakMin: {
+        type: String,
+        required: true,
+    },
+    position: {
+        type: String,
+        required: true,
+    },
     totalHours: {
         type: String,
         required: true,
