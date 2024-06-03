@@ -1933,7 +1933,8 @@ var controllers = {
               position: result.position,
               date: result.date,
               startShift: result.from,
-              endShift: result.to
+              endShift: result.to,
+              totalHours: result.totalHours
             });
           });
         } else {
@@ -1942,15 +1943,17 @@ var controllers = {
             position: null,
             date: new Date(newDateString),
             startShift: null,
-            endShift: null
+            endShift: null,
+            totalHours: null
           });
         }
       });
 
       await Promise.all(promises);
+      let filteredRecords = records.filter(record => record.startShift !== null);
       return res.status(200).json({
         success: true,
-        records,
+        filteredRecords,
       })
     } catch (err) {
       await logError(err, "Reports", null, id, "GET");
