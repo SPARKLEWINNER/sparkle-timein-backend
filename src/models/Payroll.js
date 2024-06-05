@@ -32,7 +32,7 @@ const data = {
         required: true,
     },
     breakMin: {
-        type: String,
+        type: Number,
         required: true,
     },
     position: {

@@ -1318,7 +1318,7 @@ var controllers = {
   },
   post_schedule: async function(req, res) {
     const { uid, from, to, date, name, company, totalHours, breakMin, position } = req.body;
-    if (!uid || !from || !to || !date || !name || !company || !totalHours || !breakMin || !position) {
+    if (!uid || !from || !to || !date || !name || !company || !totalHours || !position) {
       return res.status(400).json({
         success: false,
         msg: `Missing fields`,
@@ -1911,15 +1911,14 @@ var controllers = {
       let records = []
       const oldDate = new Date(date);
       oldDate.setUTCHours(16, 0, 0, 0); // Set hours to 16:00:00.000 UTC
-
       const newDateString = oldDate.toISOString().replace("Z", "+00:00");
-      
+      console.log(newDateString)
       const promises = employees.map(async (data) => {
         const results = await Payroll.find({
           uid: data._id, 
           date: {
-            $gte: new Date(newDateString),
-            $lte: new Date(newDateString)
+            $gte: new Date(date),
+            $lte: new Date(date)
           }
         })
         .sort({ from: 1 })
@@ -1934,7 +1933,7 @@ var controllers = {
               date: result.date,
               startShift: result.from,
               endShift: result.to,
-              totalHours: result.totalHours
+              totalHours: result.totalHours,
             });
           });
         } else {
