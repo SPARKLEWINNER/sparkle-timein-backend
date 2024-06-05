@@ -1912,14 +1912,10 @@ var controllers = {
       const oldDate = new Date(date);
       oldDate.setUTCHours(16, 0, 0, 0); // Set hours to 16:00:00.000 UTC
       const newDateString = oldDate.toISOString().replace("Z", "+00:00");
-      console.log(newDateString)
       const promises = employees.map(async (data) => {
         const results = await Payroll.find({
           uid: data._id, 
-          date: {
-            $gte: new Date(date),
-            $lte: new Date(date)
-          }
+          date: date
         })
         .sort({ from: 1 })
         .lean()
@@ -1940,7 +1936,7 @@ var controllers = {
           records.push({
             emp: data.displayName,
             position: null,
-            date: new Date(newDateString),
+            date: new Date(date),
             startShift: null,
             endShift: null,
             totalHours: null
