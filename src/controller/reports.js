@@ -1945,11 +1945,21 @@ var controllers = {
       });
 
       await Promise.all(promises);
-      let filteredRecords = records.filter(record => record.startShift !== null).sort((a, b) => a.emp.localeCompare(b.emp));;
-      return res.status(200).json({
-        success: true,
-        filteredRecords,
-      })
+      let filteredRecords = records
+        .filter(record => record.startShift !== null)
+        .sort((a, b) => {
+          // First compare by startShift
+          const startShiftComparison = a.startShift.localeCompare(b.startShift);
+          if (startShiftComparison !== 0) {
+            return startShiftComparison;
+          }
+          // If startShift is the same, compare by name
+          return a.emp.localeCompare(b.emp);
+        });
+        return res.status(200).json({
+          success: true,
+          filteredRecords,
+        })
     } catch (err) {
       await logError(err, "Reports", null, id, "GET");
       res.status(400).json({ success: false, msg: err });
