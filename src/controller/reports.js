@@ -1945,7 +1945,7 @@ var controllers = {
       });
 
       await Promise.all(promises);
-      let filteredRecords = records.filter(record => record.startShift !== null);
+      let filteredRecords = records.filter(record => record.startShift !== null).sort((a, b) => a.emp.localeCompare(b.emp));;
       return res.status(200).json({
         success: true,
         filteredRecords,
