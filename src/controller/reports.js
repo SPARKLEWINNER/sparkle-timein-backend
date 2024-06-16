@@ -1324,10 +1324,12 @@ var controllers = {
         msg: `Missing fields`,
       });
     }
+    const [month, day, year] = date.split('/');
+    const formattedDate = new Date(Date.UTC(year, month - 1, day));
     let update = {
       $set: { from: from, to: to, name: name, company: company, totalHours: totalHours, breakMin: breakMin, position: position},
     };
-    result = await Payroll.updateOne( { uid: uid, date: new Date(date) }, update, {upsert: true} ).lean().exec()
+    result = await Payroll.updateOne( { uid: uid, date: formattedDate }, update, {upsert: true} ).lean().exec()
     const body = {
         "emp_id": uid,
         "time_in": from,
@@ -1769,117 +1771,6 @@ var controllers = {
     }
     
   },
-  get_breaklist: async function(req, res) {
-    let {from, to, store} = req.body;
-    let records = []
-    let schedulesFound = []
-    let timeIn = null
-    let timeOut = null
-    let hoursWork = null
-    let daysWork = 0
-    const startDate = new Date(from)
-    const endDate = new Date(to)
-    try {
-      let personnels = await User.find({company: store, isArchived: false})
-      .lean()
-      .exec();
-      if (personnels.length > 0) {
-        const results = await Promise.all(personnels.map(async (data) => {
-           const result = await Reports.find({
-             $and: [
-               { uid: data._id },
-               { date: { $gte: startDate, $lte: endDate } }
-             ]
-           }).lean().exec();
-           if (result.length < 1) {
-            records.push({ 
-              _id: data._id,
-              empName: data.displayName, 
-              dayswork: 0, 
-              hourswork: 0, 
-              hourstardy: 0, 
-              overtime: 0,
-              nightdiff: 0 
-            }); 
-           }
-           else {
-            
-            result.map(item => {
-              const hasTimeOut = item.record.some(record => record.status === "time-out");
-              if (hasTimeOut) {
-                item.record.forEach(record => {
-                  if (record.status === 'time-in') {
-                    timeIn = record.dateTime;
-                  } else if (record.status === 'time-out') {
-                    timeOut = record.dateTime;
-                  }
-                });
-                if (timeIn && timeOut) {
-                  const timeDifference = timeOut - timeIn;
-                  hoursWork = timeDifference / (1000 * 60 * 60);
-                  if (hoursWork >= 8) {
-                    daysWork += 1
-                  }  
-                } else {
-                  return null;
-                }
-                const existingRecord = records.find(record => record.empName === data.displayName);
-
-                if (existingRecord) {
-                  existingRecord.hourswork += hoursWork;
-                  existingRecord.dayswork += 1;
-                }
-                else {
-                  records.push({ 
-                    _id: data._id,
-                    empName: data.displayName, 
-                    dayswork: daysWork, 
-                    hourswork: hoursWork, 
-                    hourstardy: 0, 
-                    overtime: 0, 
-                    nightdiff: 0 
-                  });   
-                }   
-              } else {
-                records.push({ 
-                  _id: data._id,
-                  empName: data.displayName, 
-                  dayswork: daysWork, 
-                  hourswork: 0, 
-                  hourstardy: 0, 
-                  overtime: 0, 
-                  nightdiff: 0 
-                });
-              }  
-            }) 
-           }
-           
-         }));
-         return res.status(200).json({
-           success: true,
-           msg: "Success",
-           data: records
-         });  
-      }
-      else {
-        return res.status(400).json({
-          success: false,
-          msg: "No user found",
-        })
-      }
-    } catch (err) {
-        return res.status(400).json({
-        success: false,
-        msg: "endpoint" + err,
-      })
-    }
-    
-    /*personnels.map(async data => {
-      const result = await Reports.find({$and: [{uid: data._id}, { date: { $gte: startDate, $lt: endDate } }]}).lean().exec()
-      records.push({empName: data.displayName})
-    })
-    console.log(records)*/
-  },
   get_schedule_all_v2: async function (req, res) {
 
     const { id, date } = req.body;
@@ -1908,6 +1799,8 @@ var controllers = {
           msg: "No registered employees",
         });
       }
+      const [month, day, year] = date.split('/');
+      const formattedDate = new Date(Date.UTC(year, month - 1, day));
       let records = []
       const oldDate = new Date(date);
       oldDate.setUTCHours(16, 0, 0, 0); // Set hours to 16:00:00.000 UTC
@@ -1915,7 +1808,7 @@ var controllers = {
       const promises = employees.map(async (data) => {
         const results = await Payroll.find({
           uid: data._id, 
-          date: date
+          date: new Date(formattedDate)
         })
         .sort({ from: 1 })
         .lean()
@@ -1964,6 +1857,158 @@ var controllers = {
       await logError(err, "Reports", null, id, "GET");
       res.status(400).json({ success: false, msg: err });
       throw new createError.InternalServerError(err);
+    }
+  },
+
+  get_breaklist: async function(req, res) {
+    let {from, to, store} = req.body;
+    let reportsFound = []
+    let records = []
+    let timeIn = null
+    let timeOut = null
+    let hoursWork = null
+    let daysWork = 0
+    let dates = [];
+    const startDate = new Date(from)
+    const endDate = new Date(to)
+    function getDatesBetween(startDate, endDate) {
+        const start = moment(startDate);
+        const end = moment(endDate);
+
+
+        if (start.isAfter(end)) {
+            throw new Error('startDate must be before or equal to endDate');
+        }
+
+        for (let dt = start; dt.isSameOrBefore(end); dt.add(1, 'days')) {
+            dates.push(dt.format('YYYY-MM-DD'));
+        }
+
+        return dates;
+    }
+    const dateBetween = getDatesBetween(startDate, endDate)
+    try {
+      let personnels = await User.find({company: store, isArchived: false})
+      .lean()
+      .exec();
+      if (personnels.length > 0) {
+        const results = await Promise.all(personnels.map(async (data) => {
+          await Promise.all(dates.map(async date => {
+            let schedulesFound = await Payroll.find({uid: data._id, date: date}).lean().exec()
+            if (schedulesFound.length > 0) {
+              let reportsFound = await Reports.find({uid: schedulesFound[0].uid, date: schedulesFound[0].date}).lean().exec()
+              if (reportsFound.length > 0) {
+                const hasTimeIn = reportsFound[0].record.some(entry => entry.status === 'time-in');
+                const hasTimeOut = reportsFound[0].record.some(entry => entry.status === 'time-out');
+                if (hasTimeIn && hasTimeOut) {
+                  let reportsLength = reportsFound[0].record.length
+                  let timeIn = `${moment(reportsFound[0].record[0].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
+                  let timeOut = `${moment(reportsFound[0].record[reportsLength - 1].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
+                  const parsedDate = new Date(timeIn);
+                  const [year, month, day] = [
+                    parsedDate.getUTCFullYear(),
+                    parsedDate.getUTCMonth(),
+                    parsedDate.getUTCDate()
+                  ];
+                  const [hours, minutes] = schedulesFound[0].from.split(':').map(Number);
+                  const combinedDate = new Date(Date.UTC(year, month, day, hours, minutes));
+                  const parsedDate1 = new Date(timeIn);
+                  const parsedDate2 = new Date(combinedDate);
+                  if (parsedDate1 > parsedDate2) {
+                    const differenceInMilliseconds = parsedDate2 - parsedDate1;
+                    const differenceInMinutes = Math.floor(differenceInMilliseconds / 60000);
+                    const minutes = differenceInMinutes % 60;
+                    records.push({ 
+                      _id: data._id,
+                      empName: data.displayName, 
+                      dayswork: 0, 
+                      hourswork: 0, 
+                      hourstardy: minutes, 
+                      overtime: 0,
+                      nightdiff: 0 
+                    });
+                  } else {
+                    records.push({ 
+                      _id: data._id,
+                      empName: data.displayName, 
+                      dayswork: 0, 
+                      hourswork: schedulesFound[0].totalHours, 
+                      hourstardy: 0, 
+                      overtime: 0,
+                      nightdiff: 0 
+                    });
+                  }
+/*                  let formattedScheduleFromDate = new Date(schedulesFound[0].from);
+                  const scheduleFromDate = `${moment(formattedScheduleFromDate).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
+                  if (timeInDate > scheduleFromDate) {
+                    const timeDifference = timeInDate - scheduleFromDate;
+                    // Convert the time difference from milliseconds to hours and minutes
+                    const differenceInMinutes = Math.floor(timeDifference / 60000);
+                    const hours = Math.floor(differenceInMinutes / 60);
+                    const minutes = differenceInMinutes % 60;
+                    console.log(`The time-in is after the scheduled from time by ${hours} hours and ${minutes} minutes.`);
+                  } else {
+                    console.log("The time-in is before or exactly at the scheduled from time.");
+                  }*/
+                }
+                else {
+                  records.push({ 
+                    _id: data._id,
+                    empName: data.displayName, 
+                    dayswork: 0, 
+                    hourswork: 0, 
+                    hourstardy: 0, 
+                    overtime: 0,
+                    nightdiff: 0 
+                  });  
+                }
+              } 
+            }
+            else {
+              records.push({ 
+                _id: data._id,
+                empName: data.displayName, 
+                dayswork: 0, 
+                hourswork: 0, 
+                hourstardy: 0, 
+                overtime: 0,
+                nightdiff: 0 
+              });
+            }
+          }))
+        }))
+        const uniqueData = {};
+
+        records.forEach(entry => {
+            const empId = entry._id;
+            if (uniqueData[empId]) {
+                uniqueData[empId].hourswork += parseInt(entry.hourswork, 10);
+            } else {
+                // Convert hourswork to int before storing
+                uniqueData[empId] = { ...entry, hourswork: parseInt(entry.hourswork, 10) };
+            }
+        });
+
+        records = Object.values(uniqueData);
+
+        return res.status(200).json({
+          success: true,
+          msg: "Success",
+          data: records
+        });
+      }  
+      else {
+        return res.status(400).json({
+          success: false,
+          msg: "No user found",
+        })
+      }
+
+    } catch (err) {
+        return res.status(400).json({
+        success: false,
+        msg: "endpoint" + err,
+      })
     }
   },
 }
