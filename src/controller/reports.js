@@ -1938,18 +1938,6 @@ var controllers = {
                       nightdiff: 0 
                     });
                   }
-/*                  let formattedScheduleFromDate = new Date(schedulesFound[0].from);
-                  const scheduleFromDate = `${moment(formattedScheduleFromDate).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
-                  if (timeInDate > scheduleFromDate) {
-                    const timeDifference = timeInDate - scheduleFromDate;
-                    // Convert the time difference from milliseconds to hours and minutes
-                    const differenceInMinutes = Math.floor(timeDifference / 60000);
-                    const hours = Math.floor(differenceInMinutes / 60);
-                    const minutes = differenceInMinutes % 60;
-                    console.log(`The time-in is after the scheduled from time by ${hours} hours and ${minutes} minutes.`);
-                  } else {
-                    console.log("The time-in is before or exactly at the scheduled from time.");
-                  }*/
                 }
                 else {
                   records.push({ 
