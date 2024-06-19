@@ -1355,6 +1355,7 @@ var controllers = {
   },
   get_schedule: async function(req, res) {
     const { id } = req.params;
+
     if (!id) {
       return res.status(400).json({
         success: false,
@@ -1368,18 +1369,104 @@ var controllers = {
   },
   get_schedule_range: async function(req, res) {
     const { id, from, to } = req.body;
+    let records = []
+    let personnelName
     if (!id) {
       return res.status(400).json({
         success: false,
         msg: `Missing fields`,
       });
     }
+    else {
+      let personnels = await User.findOne({_id: mongoose.Types.ObjectId(id), isArchived: false})
+      .lean()
+      .exec();
+      personnelName = personnels.displayName
+    }
     let formattedDate = new Date(to);
     formattedDate.setDate(formattedDate.getDate() + 1);
     const record = await Payroll.find({uid: mongoose.Types.ObjectId(id), date: {$gte: new Date(from), $lte: new Date(formattedDate) }}).sort({date: 1})
       .lean()
       .exec();
-    res.json(record)
+    await Promise.all(record.map(async data => {
+      let date = moment(data.date).utc().format('YYYY-MM-DD')
+      let reportsArray = await Reports.find({uid: mongoose.Types.ObjectId(id), date: date})
+      .sort([['date', -1]])
+      .limit(1)
+      .exec();
+      
+      if (reportsArray.length > 0) {
+        const hasTimeIn = reportsArray[0].record.some(entry => entry.status === 'time-in');
+        const hasTimeOut = reportsArray[0].record.some(entry => entry.status === 'time-out');
+        if (hasTimeIn && hasTimeOut) {
+          let timeInStamp = `${moment(reportsArray[0].record[0].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
+          let timeOutStamp = `${moment(reportsArray[0].record[reportsArray.length].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
+          const parsedDate = new Date(timeInStamp);
+          const [year, month, day] = [
+            parsedDate.getUTCFullYear(),
+            parsedDate.getUTCMonth(),
+            parsedDate.getUTCDate()
+          ];
+          const [hours, minutes] = data.from.split(':').map(Number);
+          const combinedDate = new Date(Date.UTC(year, month, day, hours, minutes));
+          const timeIn = moment(timeInStamp).utc().format('HH:mm');
+          const timeOut = moment(timeOutStamp).utc().format('HH:mm');
+          const parsedDate1 = new Date(timeInStamp);
+          const parsedDate2 = new Date(combinedDate);
+          if (parsedDate1 < parsedDate2) {
+            const differenceInMilliseconds = parsedDate2 - parsedDate1;
+            const differenceInMinutes = Math.floor(differenceInMilliseconds / 60000);
+            const minutes = differenceInMinutes % 60;
+            records.push({
+              _id: id,
+              date: date,
+              from: data.from,
+              to: data.to,
+              timeIn: timeIn,
+              timeOut: timeOut,
+              hourswork: data.totalHours,
+              hoursTardy: 0,
+              overtime: 0,
+              nightdiff: 0
+            })
+          }
+        }
+        else {
+          records.push({
+            _id: id,
+            date: date,
+            from: data.from,
+            to: data.to,
+            timeIn: 0,
+            timeOut: 0,
+            hourswork: 0,
+            hoursTardy: minutes,
+            overtime: 0,
+            nightdiff: 0
+          })
+        }
+      }
+      else {
+        records.push({
+          _id: id,
+          date: date,
+          from: data.from,
+          to: data.to,
+          timeIn: 0,
+          timeOut: 0,
+          hourswork: 0,
+          hoursTardy: 0,
+          overtime: 0,
+          nightdiff: 0
+        })
+      }
+    }))
+    records.sort((a, b) => {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      return dateA - dateB;
+    });
+    res.json(records)
   },
   get_all_schedule: async function(req, res) {
     const { company } = req.body;
@@ -1823,6 +1910,8 @@ var controllers = {
               startShift: result.from,
               endShift: result.to,
               totalHours: result.totalHours,
+              timeIn: 0,
+              timeOut: 0
             });
           });
         } else {
@@ -1997,6 +2086,88 @@ var controllers = {
         success: false,
         msg: "endpoint" + err,
       })
+    }
+  },
+  get_reports_for_breaklist: async function (req, res) {
+    let { id, from, to } = req.body
+    let dates = []
+    let records = []
+    const startDate = new Date(from)
+    const endDate = new Date(to)
+    function getDatesBetween(startDate, endDate) {
+        const start = moment(startDate);
+        const end = moment(endDate);
+
+
+        if (start.isAfter(end)) {
+            throw new Error('startDate must be before or equal to endDate');
+        }
+
+        for (let dt = start; dt.isSameOrBefore(end); dt.add(1, 'days')) {
+            dates.push(dt.format('YYYY-MM-DD'));
+        }
+
+        return dates;
+    }
+    let user = await User.findOne({
+      _id: mongoose.Types.ObjectId(id),
+    })
+      .lean()
+      .exec();
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        msg: "No such users",
+      });
+    }
+    else {
+      const dateBetween = getDatesBetween(startDate, endDate)
+      try {
+        await Promise.all(dates.map(async date => {
+          let result = await Reports.find({uid: mongoose.Types.ObjectId(id), date: date})
+          .sort([['date', -1]])
+          .limit(1)
+          .exec();
+          if (result.length === 0) {
+            return false
+          }
+          else {
+            const hasTimeIn = result[0].record.some(entry => entry.status === 'time-in');
+            const hasTimeOut = result[0].record.some(entry => entry.status === 'time-out');
+            if (hasTimeIn && hasTimeOut) {
+              let timeInStamp = `${moment(result[0].record[0].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
+              let timeOutStamp = `${moment(result[0].record[result.length].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
+              const timeIn = moment(timeInStamp).utc().format('HH:mm');
+              const timeOut = moment(timeOutStamp).utc().format('HH:mm');
+              records.push({ 
+                _id: user._id,
+                date: date,
+                empName: user.displayName, 
+                timein: timeIn, 
+                timeout: timeOut,
+              }); 
+            }
+      
+          }
+        }))
+        if (records.length > 0) {
+          return res.status(200).json({
+            success: true,
+            msg: "Success",
+            data: records
+          });  
+        }
+        else {
+          return res.status(200).json({
+            success: true,
+            msg: "No records found",
+          });
+        }
+      } catch (err) {
+        await logError(err, "Reports", null, id, "GET");
+        res.status(400).json({ success: false, msg: err });
+        throw new createError.InternalServerError(err);
+      }
     }
   },
 }
