@@ -1953,7 +1953,7 @@ var controllers = {
   },
 
   get_breaklist: async function(req, res) {
-    // console.log(req.body)
+    console.log(req.body, 'BOOOOODDYyy')
     let {from, to, store} = req.body;
     let reportsFound = []
     let records = []
@@ -2008,7 +2008,7 @@ var controllers = {
       .lean()
       .exec();
 
-      console.log(personnels, 'personnelspersonnels')
+      // console.log(personnels, 'personnelspersonnels')
       if (personnels.length > 0) {
         const results = await Promise.all(personnels.map(async (data) => {
           await Promise.all(dates.map(async date => {
@@ -2255,13 +2255,11 @@ var controllers = {
     }
   },
 
-  get_all_breaklist: async function (req, res) {
-    console.log(req.body)
+  get_store_breaklist: async function (req, res) {
+    const {store} = req.body;
+
     try {
-      console.log('Received request to get all breaklist');
-  
-      // Retrieve all documents from the Breaklistinfo collection
-      const breaklist = await Breaklist.find({});
+      const breaklist = await Breaklist.find({store: store}).exec();
       
       console.log( breaklist, 'Breaklist retrieved successfully:');
   
@@ -2269,6 +2267,7 @@ var controllers = {
         success: true,
         data: breaklist
       });
+
     } catch (err) {
       console.error('Error retrieving breaklist:', err);
   
