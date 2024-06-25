@@ -308,4 +308,5 @@ app
   app.route("/api/reports/breaklist").post(reports.get_reports_for_breaklist);
   app.route("/api/save/breaklist").post(reports.post_save_breaklist);
   app.route("/api/list/breaklist").get(reports.get_all_breaklist);
+  app.route("/api/delete/breaklist").post(reports.delete_breaklist);
 };

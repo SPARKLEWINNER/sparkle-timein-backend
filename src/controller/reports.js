@@ -1985,22 +1985,23 @@ var controllers = {
       const latestDateToDoc = await Breaklist.findOne().sort({ dateto: -1 }).exec();
       const earliestDateFromDoc = await Breaklist.findOne().sort({ datefrom: 1 }).exec();
 
-      if (!latestDateToDoc || !earliestDateFromDoc) {
-        return res.status(500).json({ success: false, msg: "No data found in the collection" });
-      }
-  
-      const latestDateTo = moment(latestDateToDoc.dateto).startOf('day');
-      const earliestDateFrom = moment(earliestDateFromDoc.datefrom).startOf('day');
-      const fromDate = moment(from).startOf('day');
-      const toDate = moment(to).startOf('day');
 
-      // check if date is valid
-      if (fromDate.isBetween(earliestDateFrom, latestDateTo, undefined, '[]') ||
-      toDate.isBetween(earliestDateFrom, latestDateTo, undefined, '[]')) {      
+      if (latestDateToDoc && earliestDateFromDoc) {
+        const latestDateTo = moment(latestDateToDoc.dateto).startOf('day');
+        const earliestDateFrom = moment(earliestDateFromDoc.datefrom).startOf('day');
+        const fromDate = moment(from).startOf('day');
+        const toDate = moment(to).startOf('day');
+      
+        // Check if the dates are within the existing date range
+        if (
+          fromDate.isBetween(earliestDateFrom, latestDateTo, undefined, '[]') ||
+          toDate.isBetween(earliestDateFrom, latestDateTo, undefined, '[]')
+        ) {
           return res.status(400).json({
-          success: false,
-          msg: "Invalid Dates. Breaklist date already submitted and saved.",
-        })
+            success: false,
+            msg: "Invalid Dates. Breaklist date already submitted and saved.",
+          });
+        }
       }
 
       let personnels = await User.find({company: store, isArchived: false})
@@ -2273,6 +2274,35 @@ var controllers = {
   
       return res.status(500).json({ success: false, msg: "Internal Server Error" });
     }
-  }
+  },
+
+  delete_breaklist: async function(req, res) {
+    const {breaklistid} = req.body;
+    try {
+      const breaklistResult = await Breaklist.deleteOne({breaklistid: breaklistid}).lean().exec();
+      
+      const breaklistinfoResult= await Breaklistinfo.deleteMany({breaklistid: breaklistid}).lean().exec();
+      if (breaklistResult.deletedCount === 0 || breaklistinfoResult.deletedCount === 0){
+        return res.status(200).json({
+          success: true,
+          msg: "No Records found",
+        });    
+      }
+      else {
+        return res.status(200).json({
+          success: true,
+          msg: "Success",
+        });  
+      }
+         
+    }
+    catch (err) {
+      console.log(err);
+      return res.status(400).json({
+        success: false,
+        msg: err,
+      });
+    }
+  },
 }
 module.exports = controllers;
