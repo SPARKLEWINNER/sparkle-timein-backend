@@ -10,16 +10,16 @@ const data = {
         required: true,
     },
     breaklistid: {
-    	type: Number,
+    	type: String,
     	required: true,
-    }
+    },
     datefrom: {
         type: Date,
         default: new Date(),
         required: true,
     },
     dateto: {
-        type: Number,
+        type: Date,
         default: new Date(),
         required: true,
     },
