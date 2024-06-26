@@ -32,6 +32,10 @@ const data = {
         required: true,
         default: 0,
     },
+    approved: {
+        type: Boolean,
+        default: false,
+    },
 };
 
 const breaklistSchema = new Schema(data, { timestamps: true });

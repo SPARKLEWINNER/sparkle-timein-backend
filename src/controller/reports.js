@@ -2275,6 +2275,44 @@ var controllers = {
     }
   },
 
+  get_store_breaklist_approved: async function (req, res) {
+    const { store } = req.body;
+  
+    try {
+      const allBreaklists = await Breaklist.find({ store: store }).exec();
+      const approvedBreaklists = allBreaklists.filter(item => { 
+        return item.approved;
+      });
+    
+      const detailedBreaklist = await Promise.all(approvedBreaklists.map(async (item) => {
+        const breaklistDetails = await Breaklistinfo.find({ breaklistid: item.breaklistid }).exec();
+        return {
+          ...item._doc,
+          details: breaklistDetails
+        };
+      }));
+  
+      const totalBreaklist = allBreaklists.length;
+      const totalApproved = approvedBreaklists.length;
+  
+      console.log(detailedBreaklist, 'Breaklist retrieved successfully:');
+  
+      return res.status(200).json({
+        success: true,
+        data: detailedBreaklist,
+        summary: {
+          totalBreaklist: totalBreaklist,
+          totalApproved: totalApproved
+        }
+      });
+  
+    } catch (err) {
+      console.error('Error retrieving breaklist:', err);
+  
+      return res.status(500).json({ success: false, msg: "Internal Server Error" });
+    }
+  },
+  
   delete_breaklist: async function(req, res) {
     const {breaklistid} = req.body;
     try {
