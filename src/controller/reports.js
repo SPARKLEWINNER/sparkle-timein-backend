@@ -2261,7 +2261,7 @@ var controllers = {
     try {
       const breaklist = await Breaklist.find({store: store}).exec();
       
-      console.log( breaklist, 'Breaklist retrieved successfully:');
+      console.log('Breaklist retrieved successfully:');
   
       return res.status(200).json({
         success: true,
@@ -2306,6 +2306,26 @@ var controllers = {
         }
       });
   
+    } catch (err) {
+      console.error('Error retrieving breaklist:', err);
+  
+      return res.status(500).json({ success: false, msg: "Internal Server Error" });
+    }
+  },
+  
+  get_breaklistinfo: async function (req, res) {
+    const {breaklistid} = req.body;
+
+    try {
+      const breaklistinfo = await Breaklistinfo.find({breaklistid: breaklistid}).exec();
+      
+      console.log('Breaklistinfo retrieved successfully:');
+  
+      return res.status(200).json({
+        success: true,
+        data: breaklistinfo
+      });
+
     } catch (err) {
       console.error('Error retrieving breaklist:', err);
   
