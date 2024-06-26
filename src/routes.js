@@ -310,4 +310,5 @@ app
   app.route("/api/list/breaklist").post(reports.get_store_breaklist);
   app.route("/api/list/breaklistapproved").post(reports.get_store_breaklist_approved);
   app.route("/api/delete/breaklist").post(reports.delete_breaklist);
+  app.route("/api/approve/breaklist").post(reports.post_approve_breaklist);
 };

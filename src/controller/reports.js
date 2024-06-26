@@ -2379,5 +2379,42 @@ var controllers = {
       });
     }
   },
+  post_approve_breaklist: async function(req, res) {
+    const { breaklistid } = req.body;
+    try {
+      let breaklist = await Breaklist.findOne({ breaklistid: breaklistid })
+        .lean()
+        .exec();
+      if (!breaklist) {
+        return res.status(400).json({
+          success: false,
+          msg: "No such breaklist",
+        });
+      }
+      else {
+        let update = {
+          $set: { approved: true },
+        };
+        result = 
+        await Breaklist.findOneAndUpdate(
+          { breaklistid: breaklistid },
+           update
+        );
+        if (result) {
+          return res.status(200).json({
+            success: true,
+            msg: "Update successfull",
+          });  
+        }
+      }
+    }
+    catch (err) {
+      console.log(err);
+      return res.status(400).json({
+        success: false,
+        msg: err,
+      });
+    }
+  },
 }
 module.exports = controllers;
