@@ -2170,6 +2170,45 @@ var controllers = {
       }
     }
   },
+  remove_breaklist_record: async function (req, res) {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        msg: `Record not found ${id}`,
+      });
+    }
+
+    try {
+      await Reports.deleteOne({ _id: mongoose.Types.ObjectId(id) }).then((record) => {
+        if (!record)
+          return res
+            .status(400)
+            .json({ success: false, msg: `Unable to remove record ${id}` });
+        if (record.deletedCount === 0) {
+          return res.status(400).json({
+            success: true,
+            msg: "No record found",
+          }); 
+        }
+        else {
+          return res.status(200).json({
+            success: true,
+            msg: "Record updated",
+          });  
+        }
+        
+      });
+    } catch (err) {
+      console.log(err);
+      await logError(err, "Reports.remove_record", req.body, id, "DELETE");
+      return res.status(400).json({
+        success: false,
+        msg: "No such users",
+      });
+    }
+  },
 }
 
 module.exports = controllers;
