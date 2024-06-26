@@ -6,6 +6,9 @@ const User = require("../models/Users");
 const Reports = require("../models/Reports");
 const Payroll = require("../models/Payroll");
 const Checklist = require("../models/Checklist");
+const Breaklistinfo = require("../models/Breaklistinfo");
+const Breaklist = require("../models/Breaklist");
+
 const Coc = require("../models/Coc");
 const Tokens = require("../models/Tokens");
 const logError = require("../services/logger");
@@ -1950,6 +1953,7 @@ var controllers = {
   },
 
   get_breaklist: async function(req, res) {
+    console.log(req.body, 'BOOOOODDYyy')
     let {from, to, store} = req.body;
     let reportsFound = []
     let records = []
@@ -1977,9 +1981,34 @@ var controllers = {
     }
     const dateBetween = getDatesBetween(startDate, endDate)
     try {
+
+      const latestDateToDoc = await Breaklist.findOne().sort({ dateto: -1 }).exec();
+      const earliestDateFromDoc = await Breaklist.findOne().sort({ datefrom: 1 }).exec();
+
+
+      if (latestDateToDoc && earliestDateFromDoc) {
+        const latestDateTo = moment(latestDateToDoc.dateto).startOf('day');
+        const earliestDateFrom = moment(earliestDateFromDoc.datefrom).startOf('day');
+        const fromDate = moment(from).startOf('day');
+        const toDate = moment(to).startOf('day');
+      
+        // Check if the dates are within the existing date range
+        if (
+          fromDate.isBetween(earliestDateFrom, latestDateTo, undefined, '[]') ||
+          toDate.isBetween(earliestDateFrom, latestDateTo, undefined, '[]')
+        ) {
+          return res.status(400).json({
+            success: false,
+            msg: "Invalid Dates. Breaklist date already submitted and saved.",
+          });
+        }
+      }
+
       let personnels = await User.find({company: store, isArchived: false})
       .lean()
       .exec();
+
+      // console.log(personnels, 'personnelspersonnels')
       if (personnels.length > 0) {
         const results = await Promise.all(personnels.map(async (data) => {
           await Promise.all(dates.map(async date => {
@@ -2209,6 +2238,146 @@ var controllers = {
       });
     }
   },
-}
+  post_save_breaklist: async function (req, res) {
+    const {employees, from, to, store, generatedby, employeecount} = req.body
+    console.log(req.body, 'BODY')
+    const breaklistId = uuid();
 
+    const data = new Breaklist({
+      store: store,
+      breaklistid: breaklistId,
+      datefrom: from,
+      dateto: to,
+      generatedby: generatedby,
+      employeecount: employeecount,
+    })
+
+    try {
+    
+        const promises = employees.map(async (doc) => {
+        const { _id, empName, ...rest } = doc;
+
+        // Create new Breaklist document
+        const info = new Breaklistinfo({
+          store: store,
+          breaklistid: breaklistId,
+          employeeid: _id,
+          employeename: empName,
+          ...rest 
+        });
+
+        // Save the document
+        const result = await info.save();
+        return result;
+      });
+
+      const results = await Promise.all(promises);
+
+      if (results){
+      await data.save();
+      }
+
+      console.log(`${results} Breaklist documents were inserted`);
+
+      return res.status(200).json({
+        success: true,
+        msg: "Breaklists Saved",
+        results: results  // Optionally return inserted documents or IDs
+      });
+    
+    } catch (err) {
+      // await logError(err, "Reports", null, breaklistid, "POST");  // Adjusted the method to POST
+      console.log(err)
+
+      return res.status(500).json({ success: false, msg: "Internal Server Error" });
+    }
+  },
+
+  get_store_breaklist: async function (req, res) {
+    const {store} = req.body;
+
+    try {
+      const breaklist = await Breaklist.find({store: store}).exec();
+      
+      console.log( breaklist, 'Breaklist retrieved successfully:');
+  
+      return res.status(200).json({
+        success: true,
+        data: breaklist
+      });
+
+    } catch (err) {
+      console.error('Error retrieving breaklist:', err);
+  
+      return res.status(500).json({ success: false, msg: "Internal Server Error" });
+    }
+  },
+
+  get_store_breaklist_approved: async function (req, res) {
+    const { store } = req.body;
+  
+    try {
+      const allBreaklists = await Breaklist.find({ store: store }).exec();
+      const approvedBreaklists = allBreaklists.filter(item => { 
+        return item.approved;
+      });
+    
+      const detailedBreaklist = await Promise.all(approvedBreaklists.map(async (item) => {
+        const breaklistDetails = await Breaklistinfo.find({ breaklistid: item.breaklistid }).exec();
+        return {
+          ...item._doc,
+          details: breaklistDetails
+        };
+      }));
+  
+      const totalBreaklist = allBreaklists.length;
+      const totalApproved = approvedBreaklists.length;
+  
+      console.log(detailedBreaklist, 'Breaklist retrieved successfully:');
+  
+      return res.status(200).json({
+        success: true,
+        data: detailedBreaklist,
+        summary: {
+          totalBreaklist: totalBreaklist,
+          totalApproved: totalApproved
+        }
+      });
+  
+    } catch (err) {
+      console.error('Error retrieving breaklist:', err);
+  
+      return res.status(500).json({ success: false, msg: "Internal Server Error" });
+    }
+  },
+  
+  delete_breaklist: async function(req, res) {
+    const {breaklistid} = req.body;
+    try {
+      const breaklistResult = await Breaklist.deleteOne({breaklistid: breaklistid}).lean().exec();
+      
+      const breaklistinfoResult= await Breaklistinfo.deleteMany({breaklistid: breaklistid}).lean().exec();
+      if (breaklistResult.deletedCount === 0 || breaklistinfoResult.deletedCount === 0){
+        return res.status(200).json({
+          success: true,
+          msg: "No Records found",
+        });    
+      }
+      else {
+        return res.status(200).json({
+          success: true,
+          msg: "Success",
+        });  
+      }
+         
+    }
+    catch (err) {
+      console.log(err);
+      return res.status(400).json({
+        success: false,
+        msg: err,
+      });
+    }
+  },
+}
 module.exports = controllers;

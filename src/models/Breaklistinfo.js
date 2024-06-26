@@ -10,15 +10,15 @@ const data = {
         required: true,
     },
     breaklistid: {
-    	type: Number,
+        type: String, 
     	required: true,
-    }
+    },
     employeename: {
         type: String,
         required: true,
     },
     employeeid: {
-        type: Number,
+        type: Types.ObjectId, 
         required: true,
     },
     dayswork: {
@@ -36,7 +36,7 @@ const data = {
        	default: 0,
     },
     overtime: {
-        type: Date,
+        type: Number,
         default: 0,
     },
     specialholiday: {
