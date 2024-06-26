@@ -2199,7 +2199,45 @@ var controllers = {
       }
     }
   },
+  remove_breaklist_record: async function (req, res) {
+    const { id } = req.params;
 
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        msg: `Record not found ${id}`,
+      });
+    }
+
+    try {
+      await Reports.deleteOne({ _id: mongoose.Types.ObjectId(id) }).then((record) => {
+        if (!record)
+          return res
+            .status(400)
+            .json({ success: false, msg: `Unable to remove record ${id}` });
+        if (record.deletedCount === 0) {
+          return res.status(400).json({
+            success: true,
+            msg: "No record found",
+          }); 
+        }
+        else {
+          return res.status(200).json({
+            success: true,
+            msg: "Record updated",
+          });  
+        }
+        
+      });
+    } catch (err) {
+      console.log(err);
+      await logError(err, "Reports.remove_record", req.body, id, "DELETE");
+      return res.status(400).json({
+        success: false,
+        msg: "No such users",
+      });
+    }
+  },
   post_save_breaklist: async function (req, res) {
     const {employees, from, to, store, generatedby, employeecount} = req.body
     console.log(req.body, 'BODY')
@@ -2352,6 +2390,43 @@ var controllers = {
         });  
       }
          
+    }
+    catch (err) {
+      console.log(err);
+      return res.status(400).json({
+        success: false,
+        msg: err,
+      });
+    }
+  },
+  post_approve_breaklist: async function(req, res) {
+    const { breaklistid } = req.body;
+    try {
+      let breaklist = await Breaklist.findOne({ breaklistid: breaklistid })
+        .lean()
+        .exec();
+      if (!breaklist) {
+        return res.status(400).json({
+          success: false,
+          msg: "No such breaklist",
+        });
+      }
+      else {
+        let update = {
+          $set: { approved: true },
+        };
+        result = 
+        await Breaklist.findOneAndUpdate(
+          { breaklistid: breaklistid },
+           update
+        );
+        if (result) {
+          return res.status(200).json({
+            success: true,
+            msg: "Update successfull",
+          });  
+        }
+      }
     }
     catch (err) {
       console.log(err);
