@@ -1387,15 +1387,15 @@ var controllers = {
       personnelName = personnels.displayName
     }
     let formattedDate = new Date(to);
-    formattedDate.setDate(formattedDate.getDate() + 1);
+    formattedDate.setDate(formattedDate.getDate() + 0);
     const record = await Payroll.find({uid: mongoose.Types.ObjectId(id), date: {$gte: new Date(from), $lte: new Date(formattedDate) }}).sort({date: 1})
       .lean()
       .exec();
     await Promise.all(record.map(async data => {
       let date = moment(data.date).utc().format('YYYY-MM-DD')
       let reportsArray = await Reports.find({uid: mongoose.Types.ObjectId(id), date: date})
-      .sort([['date', -1]])
       .limit(1)
+      .lean()
       .exec();
       
       if (reportsArray.length > 0) {
@@ -1416,7 +1416,7 @@ var controllers = {
           const timeOut = moment(timeOutStamp).utc().format('HH:mm');
           const parsedDate1 = new Date(timeInStamp);
           const parsedDate2 = new Date(combinedDate);
-          if (parsedDate1 < parsedDate2) {
+          if (parsedDate1 > parsedDate2) {
             const differenceInMilliseconds = parsedDate2 - parsedDate1;
             const differenceInMinutes = Math.floor(differenceInMilliseconds / 60000);
             const minutes = differenceInMinutes % 60;
@@ -1428,10 +1428,24 @@ var controllers = {
               timeIn: timeIn,
               timeOut: timeOut,
               hourswork: data.totalHours,
-              hoursTardy: 0,
+              hoursTardy: minutes,
               overtime: 0,
               nightdiff: 0
             })
+          }
+          else {
+            records.push({
+              _id: id,
+              date: date,
+              from: data.from,
+              to: data.to,
+              timeIn: timeIn,
+              timeOut: timeOut,
+              hourswork: data.totalHours,
+              hoursTardy: 0,
+              overtime: 0,
+              nightdiff: 0
+            }) 
           }
         }
         else {
@@ -1443,7 +1457,7 @@ var controllers = {
             timeIn: 0,
             timeOut: 0,
             hourswork: 0,
-            hoursTardy: minutes,
+            hoursTardy: 0,
             overtime: 0,
             nightdiff: 0
           })
@@ -2297,7 +2311,7 @@ var controllers = {
     const {store} = req.body;
 
     try {
-      const breaklist = await Breaklist.find({store: store}).exec();
+      const breaklist = await Breaklist.find({ store: store }).sort({ createdAt: -1 }).exec();
       
       console.log('Breaklist retrieved successfully:');
   
