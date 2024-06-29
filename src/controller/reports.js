@@ -2018,7 +2018,7 @@ var controllers = {
         }
       }
 
-      let personnels = await User.find({company: store, isArchived: false})
+      let personnels = await User.find({company: store, role:0, isArchived: false})
       .lean()
       .exec();
 

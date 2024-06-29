@@ -36,7 +36,7 @@ var controllers = {
       res.status(404).json({ success: false, msg: `No such store found.` });
 
     try {
-      const result = await User.find({ company: store.company, isArchived: false }).lean().exec();
+      const result = await User.find({ company: store.company, role:0, isArchived: false }).lean().exec();
       if (!result) {
         res.status(400).json({
           success: false,
