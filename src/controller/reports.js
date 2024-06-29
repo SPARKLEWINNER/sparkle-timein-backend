@@ -2052,7 +2052,7 @@ var controllers = {
                     const minutes = differenceInMinutes % 60;
                     records.push({ 
                       _id: data._id,
-                      empName: data.displayName, 
+                      empName: data.lastName + ", " + data.firstName, 
                       dayswork: 0, 
                       hourswork: 0, 
                       hourstardy: minutes, 
@@ -2062,7 +2062,7 @@ var controllers = {
                   } else {
                     records.push({ 
                       _id: data._id,
-                      empName: data.displayName, 
+                      empName: data.lastName + ", " + data.firstName, 
                       dayswork: 0, 
                       hourswork: schedulesFound[0].totalHours, 
                       hourstardy: 0, 
@@ -2074,7 +2074,7 @@ var controllers = {
                 else {
                   records.push({ 
                     _id: data._id,
-                    empName: data.displayName, 
+                    empName: data.lastName + ", " + data.firstName, 
                     dayswork: 0, 
                     hourswork: 0, 
                     hourstardy: 0, 
@@ -2087,7 +2087,7 @@ var controllers = {
             else {
               records.push({ 
                 _id: data._id,
-                empName: data.displayName, 
+                empName: data.lastName + ", " + data.firstName, 
                 dayswork: 0, 
                 hourswork: 0, 
                 hourstardy: 0, 
