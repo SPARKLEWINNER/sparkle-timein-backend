@@ -1190,40 +1190,26 @@ var controllers = {
     let records = await Reports.aggregate([
       {
         $lookup: {
-          from: 'users',
-          localField: 'uid',
-          foreignField: '_id',
-          as: 'user'
-        }
-      },
-      {
-        $match: {
-          "user.company": new RegExp(`${company}`, 'i'),
-          "createdAt": {
-            $gte: new Date(`${currentYear}-${month}-01`),
-            $lte: new Date(`${currentYear}-${month}-31`)
-          }
-        }
-      },
-      {
-        $project: {
-          "user.company": 1,
-          "_id": 0,
-          "user.displayName": 1,
-        }
-      },
-      {
-        $group: {
-          _id: "$user.company", // Group by company
-          users: { $addToSet: "$user.displayName" } // Collect display names into an array without duplicates
-        }
-      },
-      {
-        $sort: {
-          "_id": 1 // Sort by company
+            from: 'users',
+            localField: 'uid',
+            foreignField: '_id',
+            as: 'user'
         }
       }
-    ]);
+    ]).match({
+      "user.company": new RegExp(`${company}`, 'i'),
+      "createdAt": {
+          $gte: new Date(`${currentYear}-${month}-01`),
+          $lte: new Date(`${currentYear}-${month}-31`)
+      }
+    }).project({
+      "user.company": 1,
+      "_id": 0,
+      "user.displayName": 1,
+    }).sort({
+      "user.company": 1
+    })
+
     if (records.length === 0) {
       return res.status(201).json({
         success: true,
@@ -1231,8 +1217,8 @@ var controllers = {
       });
     }
     let finalRec = []
-    records.map((data, key) => {
-      finalRec.push({store: data._id, name: data.users})
+    records.map(data => {
+      finalRec.push({store: data.user[0].company, name: data.user[0].displayName})
     })
 /*    let finalRec = []
     records.map(data => {
