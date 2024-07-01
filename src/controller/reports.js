@@ -1967,14 +1967,12 @@ var controllers = {
   },
 
   get_breaklist: async function(req, res) {
-    console.log(req.body, 'BOOOOODDYyy')
     let {from, to, store} = req.body;
     let reportsFound = []
     let records = []
     let timeIn = null
     let timeOut = null
     let hoursWork = null
-    let daysWork = 0
     let dates = [];
     const startDate = new Date(from)
     const endDate = new Date(to)
@@ -2030,9 +2028,11 @@ var controllers = {
             if (schedulesFound.length > 0) {
               let reportsFound = await Reports.find({uid: schedulesFound[0].uid, date: schedulesFound[0].date}).lean().exec()
               if (reportsFound.length > 0) {
+
                 const hasTimeIn = reportsFound[0].record.some(entry => entry.status === 'time-in');
                 const hasTimeOut = reportsFound[0].record.some(entry => entry.status === 'time-out');
                 if (hasTimeIn && hasTimeOut) {
+                  let daysWork = 0
                   let reportsLength = reportsFound[0].record.length
                   let timeIn = `${moment(reportsFound[0].record[0].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
                   let timeOut = `${moment(reportsFound[0].record[reportsLength - 1].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
@@ -2046,6 +2046,7 @@ var controllers = {
                   const combinedDate = new Date(Date.UTC(year, month, day, hours, minutes));
                   const parsedDate1 = new Date(timeIn);
                   const parsedDate2 = new Date(combinedDate);
+                  daysWork = daysWork + 1
                   if (parsedDate1 > parsedDate2) {
                     const differenceInMilliseconds = parsedDate2 - parsedDate1;
                     const differenceInMinutes = Math.floor(differenceInMilliseconds / 60000);
@@ -2060,10 +2061,11 @@ var controllers = {
                       nightdiff: 0 
                     });
                   } else {
+                    
                     records.push({ 
                       _id: data._id,
                       empName: data.lastName + ", " + data.firstName, 
-                      dayswork: 0, 
+                      dayswork: daysWork, 
                       hourswork: schedulesFound[0].totalHours, 
                       hourstardy: 0, 
                       overtime: 0,
@@ -2103,6 +2105,7 @@ var controllers = {
             const empId = entry._id;
             if (uniqueData[empId]) {
                 uniqueData[empId].hourswork += parseInt(entry.hourswork, 10);
+                uniqueData[empId].dayswork += parseInt(entry.dayswork, 10);
             } else {
                 // Convert hourswork to int before storing
                 uniqueData[empId] = { ...entry, hourswork: parseInt(entry.hourswork, 10) };
@@ -2254,7 +2257,6 @@ var controllers = {
   },
   post_save_breaklist: async function (req, res) {
     const {employees, from, to, store, generatedby, employeecount} = req.body
-    console.log(req.body, 'BODY')
     const breaklistId = uuid();
 
     const data = new Breaklist({
