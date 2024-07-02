@@ -1315,8 +1315,10 @@ var controllers = {
     }
     const [month, day, year] = date.split('/');
     const formattedDate = new Date(Date.UTC(year, month - 1, day));
+    const hours = breakMin / 60;
+    computedHours = totalHours - hours
     let update = {
-      $set: { from: from, to: to, name: name, company: company, totalHours: totalHours, breakMin: breakMin, position: position},
+      $set: { from: from, to: to, name: name, company: company, totalHours: computedHours, breakMin: breakMin, position: position},
     };
     result = await Payroll.updateOne( { uid: uid, date: formattedDate }, update, {upsert: true} ).lean().exec()
     const body = {
