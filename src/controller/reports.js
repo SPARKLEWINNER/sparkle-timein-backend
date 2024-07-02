@@ -1387,11 +1387,37 @@ var controllers = {
       .exec();
       
       if (reportsArray.length > 0) {
+        let timeInStamp
+        let timeOutStamp
         const hasTimeIn = reportsArray[0].record.some(entry => entry.status === 'time-in');
         const hasTimeOut = reportsArray[0].record.some(entry => entry.status === 'time-out');
         if (hasTimeIn && hasTimeOut) {
-          let timeInStamp = `${moment(reportsArray[0].record[0].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
-          let timeOutStamp = `${moment(reportsArray[0].record[reportsArray.length].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
+          if(typeof reportsArray[0].record[0].time != "number") {
+            let [hours, minutes] = reportsArray[0].record[0].time.split(':').map(part => parseInt(part, 10));
+            let date = new Date();
+            date.setHours(hours);
+            date.setMinutes(minutes);
+            date.setSeconds(0);
+            date.setMilliseconds(0);
+            let timestamp = date.getTime();
+            timeInStamp = `${moment(timestamp).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
+          }
+          else {
+            timeInStamp = `${moment(reportsArray[0].record[0].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z` 
+          }
+          if(typeof reportsArray[0].record[reportsArray.length].time != "number") {
+            let [hours, minutes] = reportsArray[0].record[reportsArray.length].time.split(':').map(part => parseInt(part, 10));
+            let date = new Date();
+            date.setHours(hours);
+            date.setMinutes(minutes);
+            date.setSeconds(0);
+            date.setMilliseconds(0);
+            let timestamp2 = date.getTime();
+            timeOutStamp = `${moment(timestamp2).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
+          }
+          else {
+            timeOutStamp = `${moment(reportsArray[0].record[reportsArray.length].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`   
+          }
           const parsedDate = new Date(timeInStamp);
           const [year, month, day] = [
             parsedDate.getUTCFullYear(),
@@ -1404,6 +1430,7 @@ var controllers = {
           const timeOut = moment(timeOutStamp).utc().format('HH:mm');
           const parsedDate1 = new Date(timeInStamp);
           const parsedDate2 = new Date(combinedDate);
+
           const timeOnly1 = `${parsedDate1.getUTCHours().toString().padStart(2, '0')}:${parsedDate1.getUTCMinutes().toString().padStart(2, '0')}:${parsedDate1.getUTCSeconds().toString().padStart(2, '0')}`;
           const timeOnly2 = `${parsedDate2.getUTCHours().toString().padStart(2, '0')}:${parsedDate2.getUTCMinutes().toString().padStart(2, '0')}:${parsedDate2.getUTCSeconds().toString().padStart(2, '0')}`;
           if (parsedDate1 > parsedDate2) {
@@ -2019,6 +2046,8 @@ var controllers = {
         const results = await Promise.all(personnels.map(async (data) => {
           await Promise.all(dates.map(async date => {
             let schedulesFound = await Payroll.find({uid: data._id, date: date}).lean().exec()
+            let timeIn
+            let timeOut
             if (schedulesFound.length > 0) {
               let reportsFound = await Reports.find({uid: schedulesFound[0].uid, date: schedulesFound[0].date}).lean().exec()
               if (reportsFound.length > 0) {
@@ -2027,8 +2056,32 @@ var controllers = {
                 const hasTimeOut = reportsFound[0].record.some(entry => entry.status === 'time-out');
                 if (hasTimeIn && hasTimeOut) {
                   let reportsLength = reportsFound[0].record.length
-                  let timeIn = `${moment(reportsFound[0].record[0].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
-                  let timeOut = `${moment(reportsFound[0].record[reportsLength - 1].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
+                  if(typeof reportsFound[0].record[0].time != "number") {
+                    let [hours, minutes] = reportsFound[0].record[0].time.split(':').map(part => parseInt(part, 10));
+                    let date = new Date();
+                    date.setHours(hours);
+                    date.setMinutes(minutes);
+                    date.setSeconds(0);
+                    date.setMilliseconds(0);
+                    let timestamp = date.getTime();
+                    timeIn = `${moment(timestamp).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
+                  }
+                  else {
+                    timeIn = `${moment(reportsFound[0].record[0].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`   
+                  }
+                  if(typeof reportsFound[0].record[reportsLength - 1].time != "number") {
+                    let [hours, minutes] = reportsFound[0].record[reportsLength - 1].time.split(':').map(part => parseInt(part, 10));
+                    let date = new Date();
+                    date.setHours(hours);
+                    date.setMinutes(minutes);
+                    date.setSeconds(0);
+                    date.setMilliseconds(0);
+                    let timestamp2 = date.getTime();
+                    timeOut = `${moment(timestamp2).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
+                  }
+                  else {
+                    timeOut = `${moment(reportsFound[0].record[reportsLength - 1].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`   
+                  }
                   const parsedDate = new Date(timeIn);
                   const [year, month, day] = [
                     parsedDate.getUTCFullYear(),
