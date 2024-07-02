@@ -1402,10 +1402,16 @@ var controllers = {
           const timeOut = moment(timeOutStamp).utc().format('HH:mm');
           const parsedDate1 = new Date(timeInStamp);
           const parsedDate2 = new Date(combinedDate);
+          const timeOnly1 = `${parsedDate1.getUTCHours().toString().padStart(2, '0')}:${parsedDate1.getUTCMinutes().toString().padStart(2, '0')}:${parsedDate1.getUTCSeconds().toString().padStart(2, '0')}`;
+          const timeOnly2 = `${parsedDate2.getUTCHours().toString().padStart(2, '0')}:${parsedDate2.getUTCMinutes().toString().padStart(2, '0')}:${parsedDate2.getUTCSeconds().toString().padStart(2, '0')}`;
           if (parsedDate1 > parsedDate2) {
-            const differenceInMilliseconds = parsedDate2 - parsedDate1;
-            const differenceInMinutes = Math.floor(differenceInMilliseconds / 60000);
-            const minutes = differenceInMinutes % 60;
+            const referenceDate = '1970-01-01T';
+            const dateTime1 = new Date(referenceDate + timeOnly1 + 'Z');
+            const dateTime2 = new Date(referenceDate + timeOnly2 + 'Z');
+            const timeDifferenceMilliseconds = Math.abs(dateTime2 - dateTime1);
+            const hoursDifference = Math.floor(timeDifferenceMilliseconds / (1000 * 60 * 60));
+            const minutesDifference = Math.floor((timeDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
+            const totalMinutesDifference = (hoursDifference * 60) + minutesDifference;
             records.push({
               _id: id,
               date: date,
@@ -1414,7 +1420,7 @@ var controllers = {
               timeIn: timeIn,
               timeOut: timeOut,
               hourswork: data.totalHours,
-              hoursTardy: minutes,
+              hoursTardy: totalMinutesDifference,
               overtime: 0,
               nightdiff: 0
             })
@@ -2018,7 +2024,6 @@ var controllers = {
                 const hasTimeIn = reportsFound[0].record.some(entry => entry.status === 'time-in');
                 const hasTimeOut = reportsFound[0].record.some(entry => entry.status === 'time-out');
                 if (hasTimeIn && hasTimeOut) {
-                  let daysWork = 0
                   let reportsLength = reportsFound[0].record.length
                   let timeIn = `${moment(reportsFound[0].record[0].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
                   let timeOut = `${moment(reportsFound[0].record[reportsLength - 1].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
@@ -2032,17 +2037,23 @@ var controllers = {
                   const combinedDate = new Date(Date.UTC(year, month, day, hours, minutes));
                   const parsedDate1 = new Date(timeIn);
                   const parsedDate2 = new Date(combinedDate);
-                  daysWork = daysWork + 1
-                  if (parsedDate1 > parsedDate2) {
-                    const differenceInMilliseconds = parsedDate2 - parsedDate1;
-                    const differenceInMinutes = Math.floor(differenceInMilliseconds / 60000);
-                    const minutes = differenceInMinutes % 60;
+                  const timeOnly1 = `${parsedDate1.getUTCHours().toString().padStart(2, '0')}:${parsedDate1.getUTCMinutes().toString().padStart(2, '0')}:${parsedDate1.getUTCSeconds().toString().padStart(2, '0')}`;
+                  const timeOnly2 = `${parsedDate2.getUTCHours().toString().padStart(2, '0')}:${parsedDate2.getUTCMinutes().toString().padStart(2, '0')}:${parsedDate2.getUTCSeconds().toString().padStart(2, '0')}`;
+                  
+                  if (timeOnly1 > timeOnly2) {
+                    const referenceDate = '1970-01-01T';
+                    const dateTime1 = new Date(referenceDate + timeOnly1 + 'Z');
+                    const dateTime2 = new Date(referenceDate + timeOnly2 + 'Z');
+                    const timeDifferenceMilliseconds = Math.abs(dateTime2 - dateTime1);
+                    const hoursDifference = Math.floor(timeDifferenceMilliseconds / (1000 * 60 * 60));
+                    const minutesDifference = Math.floor((timeDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
+                    const totalMinutesDifference = (hoursDifference * 60) + minutesDifference;
                     records.push({ 
                       _id: data._id,
                       empName: data.lastName + ", " + data.firstName, 
                       dayswork: 0, 
-                      hourswork: 0, 
-                      hourstardy: minutes, 
+                      hourswork: schedulesFound[0].totalHours, 
+                      hourstardy: totalMinutesDifference, 
                       overtime: 0,
                       nightdiff: 0 
                     });
@@ -2051,7 +2062,7 @@ var controllers = {
                     records.push({ 
                       _id: data._id,
                       empName: data.lastName + ", " + data.firstName, 
-                      dayswork: daysWork, 
+                      dayswork: 0, 
                       hourswork: schedulesFound[0].totalHours, 
                       hourstardy: 0, 
                       overtime: 0,
@@ -2090,11 +2101,15 @@ var controllers = {
         records.forEach(entry => {
             const empId = entry._id;
             if (uniqueData[empId]) {
-                uniqueData[empId].hourswork += parseInt(entry.hourswork, 10);
-                uniqueData[empId].dayswork += parseInt(entry.dayswork, 10);
+              if (uniqueData[empId].hourswork > 0) {
+                uniqueData[empId].dayswork += 1
+              }
+              uniqueData[empId].hourswork += parseInt(entry.hourswork, 10);
+              uniqueData[empId].hourstardy += parseInt(entry.hourstardy, 10);
+                
             } else {
-                // Convert hourswork to int before storing
-                uniqueData[empId] = { ...entry, hourswork: parseInt(entry.hourswork, 10) };
+              // Convert hourswork to int before storing
+              uniqueData[empId] = { ...entry, hourswork: parseInt(entry.hourswork, 10) };
             }
         });
 
