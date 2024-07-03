@@ -1315,10 +1315,8 @@ var controllers = {
     }
     const [month, day, year] = date.split('/');
     const formattedDate = new Date(Date.UTC(year, month - 1, day));
-    const hours = breakMin / 60;
-    computedHours = totalHours - hours
     let update = {
-      $set: { from: from, to: to, name: name, company: company, totalHours: computedHours, breakMin: breakMin, position: position},
+      $set: { from: from, to: to, name: name, company: company, totalHours: totalHours, breakMin: breakMin, position: position},
     };
     result = await Payroll.updateOne( { uid: uid, date: formattedDate }, update, {upsert: true} ).lean().exec()
     const body = {
@@ -2015,8 +2013,8 @@ var controllers = {
     const dateBetween = getDatesBetween(startDate, endDate)
     try {
 
-      const latestDateToDoc = await Breaklist.findOne().sort({ dateto: -1 }).exec();
-      const earliestDateFromDoc = await Breaklist.findOne().sort({ datefrom: 1 }).exec();
+      const latestDateToDoc = await Breaklist.findOne({store: store}).sort({ dateto: -1 }).exec();
+      const earliestDateFromDoc = await Breaklist.findOne({store: store}).sort({ datefrom: 1 }).exec();
 
 
       if (latestDateToDoc && earliestDateFromDoc) {
