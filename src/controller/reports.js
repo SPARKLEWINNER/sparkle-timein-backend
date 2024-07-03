@@ -2154,6 +2154,7 @@ var controllers = {
         records.forEach(entry => {
             const empId = entry._id;
             if (uniqueData[empId]) {
+
               if (uniqueData[empId].hourswork > 0) {
                 uniqueData[empId].dayswork += 1
               }
@@ -2162,7 +2163,15 @@ var controllers = {
                 
             } else {
               // Convert hourswork to int before storing
-              uniqueData[empId] = { ...entry, hourswork: parseInt(entry.hourswork, 10) };
+              if (entry.hourswork > 0) {
+                entry.dayswork += 1
+              }
+              uniqueData[empId] = {
+                  ...entry,
+                  hourswork: parseInt(entry.hourswork, 10),
+                  hourstardy: parseInt(entry.hourstardy, 10),
+                  dayswork: parseInt(entry.dayswork, 10)
+              };
             }
         });
 
