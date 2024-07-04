@@ -2393,14 +2393,21 @@ var controllers = {
   },
 
   get_store_breaklist_approved: async function (req, res) {
-    const { store } = req.body;
+    const {  payroll } = req.body;
   
     try {
-      const allBreaklists = await Breaklist.find({ store: store }).exec();
-      const approvedBreaklists = allBreaklists.filter(item => { 
+      let allBreaklists;
+  
+      if (payroll === 2) {
+        allBreaklists = await Breaklist.find({ store: { $regex: /Inhouse/i } }).exec();
+      } else {
+        allBreaklists = await Breaklist.find({ store: { $not: { $regex: /Inhouse/i } } }).exec();
+      }
+  
+      const approvedBreaklists = allBreaklists.filter(item => {
         return item.approved;
       });
-    
+  
       const detailedBreaklist = await Promise.all(approvedBreaklists.map(async (item) => {
         const breaklistDetails = await Breaklistinfo.find({ breaklistid: item.breaklistid }).exec();
         return {
