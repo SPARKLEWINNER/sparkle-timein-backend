@@ -2150,7 +2150,6 @@ var controllers = {
           }))
         }))
         const uniqueData = {};
-
         records.forEach(entry => {
             const empId = entry._id;
             if (uniqueData[empId]) {
@@ -2176,7 +2175,11 @@ var controllers = {
         });
 
         records = Object.values(uniqueData);
-
+        records.sort(function(a, b){
+            if(a.empName < b.empName) { return -1; }
+            if(a.empName > b.empName) { return 1; }
+            return 0;
+        })
         return res.status(200).json({
           success: true,
           msg: "Success",
