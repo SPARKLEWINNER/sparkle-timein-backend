@@ -2449,7 +2449,11 @@ var controllers = {
       const breaklistinfo = await Breaklistinfo.find({breaklistid: breaklistid}).exec();
       
       console.log('Breaklistinfo retrieved successfully:');
-  
+      breaklistinfo.sort(function(a, b){
+          if(a.employeename < b.employeename) { return -1; }
+          if(a.employeename > b.employeename) { return 1; }
+          return 0;
+      })
       return res.status(200).json({
         success: true,
         data: breaklistinfo
