@@ -2067,7 +2067,7 @@ var controllers = {
                   else {
                     timeIn = `${moment(reportsFound[0].record[0].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`   
                   }
-                  if(typeof reportsFound[0].record[reportsLength - 1].time != "number") {
+/*                  if(typeof reportsFound[0].record[reportsLength - 1].time != "number") {
                     let [hours, minutes] = reportsFound[0].record[reportsLength - 1].time.split(':').map(part => parseInt(part, 10));
                     let date = new Date();
                     date.setHours(hours);
@@ -2079,7 +2079,7 @@ var controllers = {
                   }
                   else {
                     timeOut = `${moment(reportsFound[0].record[reportsLength - 1].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`   
-                  }
+                  }*/
                   const parsedDate = new Date(timeIn);
                   const [year, month, day] = [
                     parsedDate.getUTCFullYear(),
@@ -2153,16 +2153,18 @@ var controllers = {
         records.forEach(entry => {
             const empId = entry._id;
             if (uniqueData[empId]) {
-
-              if (uniqueData[empId].hourswork > 0) {
+              uniqueData[empId].hourswork += parseInt(entry.hourswork, 10);
+              if (parseInt(uniqueData[empId].hourswork, 10) > 0) {
                 uniqueData[empId].dayswork += 1
               }
-              uniqueData[empId].hourswork += parseInt(entry.hourswork, 10);
+              else {
+                uniqueData[empId].dayswork += parseInt(entry.dayswork, 10);
+              }
+              
               uniqueData[empId].hourstardy += parseInt(entry.hourstardy, 10);
-                
             } else {
               // Convert hourswork to int before storing
-              if (entry.hourswork > 0) {
+              if (parseInt(entry.hourswork, 10) > 0) {
                 entry.dayswork += 1
               }
               uniqueData[empId] = {
