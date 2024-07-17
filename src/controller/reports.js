@@ -1428,10 +1428,9 @@ var controllers = {
           const timeOut = moment(timeOutStamp).utc().format('HH:mm');
           const parsedDate1 = new Date(timeInStamp);
           const parsedDate2 = new Date(combinedDate);
-
           const timeOnly1 = `${parsedDate1.getUTCHours().toString().padStart(2, '0')}:${parsedDate1.getUTCMinutes().toString().padStart(2, '0')}:${parsedDate1.getUTCSeconds().toString().padStart(2, '0')}`;
           const timeOnly2 = `${parsedDate2.getUTCHours().toString().padStart(2, '0')}:${parsedDate2.getUTCMinutes().toString().padStart(2, '0')}:${parsedDate2.getUTCSeconds().toString().padStart(2, '0')}`;
-          if (parsedDate1 > parsedDate2) {
+          if (timeOnly1 > timeOnly2) {
             const referenceDate = '1970-01-01T';
             const dateTime1 = new Date(referenceDate + timeOnly1 + 'Z');
             const dateTime2 = new Date(referenceDate + timeOnly2 + 'Z');
@@ -2067,7 +2066,7 @@ var controllers = {
                   else {
                     timeIn = `${moment(reportsFound[0].record[0].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`   
                   }
-/*                  if(typeof reportsFound[0].record[reportsLength - 1].time != "number") {
+                  if(typeof reportsFound[0].record[reportsLength - 1].time != "number") {
                     let [hours, minutes] = reportsFound[0].record[reportsLength - 1].time.split(':').map(part => parseInt(part, 10));
                     let date = new Date();
                     date.setHours(hours);
@@ -2079,39 +2078,70 @@ var controllers = {
                   }
                   else {
                     timeOut = `${moment(reportsFound[0].record[reportsLength - 1].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`   
-                  }*/
+                  }
                   const parsedDate = new Date(timeIn);
                   const [year, month, day] = [
                     parsedDate.getUTCFullYear(),
                     parsedDate.getUTCMonth(),
                     parsedDate.getUTCDate()
                   ];
+                  const parsedDateTimeOut = new Date(timeOut);
+                  const [timeOutYear, timeOutMonth, timeOutDay] = [
+                    parsedDateTimeOut.getUTCFullYear(),
+                    parsedDateTimeOut.getUTCMonth(),
+                    parsedDateTimeOut.getUTCDate()
+                  ];
                   const [hours, minutes] = schedulesFound[0].from.split(':').map(Number);
+                  const [hoursTimeOut, minutesTimeOut] = schedulesFound[0].to.split(':').map(Number);
                   const combinedDate = new Date(Date.UTC(year, month, day, hours, minutes));
+                  const combinedDate2 = new Date(Date.UTC(timeOutYear, timeOutMonth, timeOutDay, hoursTimeOut, minutesTimeOut));
                   const parsedDate1 = new Date(timeIn);
                   const parsedDate2 = new Date(combinedDate);
+                  const parsedDateTimeOut1 = new Date(timeOut);
+                  const parsedDateTimeOut2 = new Date(combinedDate2);
                   const timeOnly1 = `${parsedDate1.getUTCHours().toString().padStart(2, '0')}:${parsedDate1.getUTCMinutes().toString().padStart(2, '0')}:${parsedDate1.getUTCSeconds().toString().padStart(2, '0')}`;
                   const timeOnly2 = `${parsedDate2.getUTCHours().toString().padStart(2, '0')}:${parsedDate2.getUTCMinutes().toString().padStart(2, '0')}:${parsedDate2.getUTCSeconds().toString().padStart(2, '0')}`;
-                  
-                  if (timeOnly1 > timeOnly2) {
-                    const referenceDate = '1970-01-01T';
-                    const dateTime1 = new Date(referenceDate + timeOnly1 + 'Z');
-                    const dateTime2 = new Date(referenceDate + timeOnly2 + 'Z');
-                    const timeDifferenceMilliseconds = Math.abs(dateTime2 - dateTime1);
-                    const hoursDifference = Math.floor(timeDifferenceMilliseconds / (1000 * 60 * 60));
-                    const minutesDifference = Math.floor((timeDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
-                    const totalMinutesDifference = (hoursDifference * 60) + minutesDifference;
-                    records.push({ 
-                      _id: data._id,
-                      empName: data.lastName + ", " + data.firstName, 
-                      dayswork: 0, 
-                      hourswork: schedulesFound[0].totalHours, 
-                      hourstardy: totalMinutesDifference, 
-                      overtime: 0,
-                      nightdiff: 0 
-                    });
+                  const timeOutTimeOnly1 = `${parsedDateTimeOut1.getUTCHours().toString().padStart(2, '0')}:${parsedDateTimeOut1.getUTCMinutes().toString().padStart(2, '0')}:${parsedDateTimeOut1.getUTCSeconds().toString().padStart(2, '0')}`;
+                  const timeOutTimeOnly2 = `${parsedDateTimeOut2.getUTCHours().toString().padStart(2, '0')}:${parsedDateTimeOut2.getUTCMinutes().toString().padStart(2, '0')}:${parsedDateTimeOut2.getUTCSeconds().toString().padStart(2, '0')}`;
+                  const referenceDate = '1970-01-01T';
+                  const dateTime1 = new Date(referenceDate + timeOnly1 + 'Z');
+                  const dateTime2 = new Date(referenceDate + timeOnly2 + 'Z'); 
+                  const dateTimeOut1 = new Date(referenceDate + timeOutTimeOnly1 + 'Z');
+                  const dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');
+                  const timeDifferenceMilliseconds = Math.abs(dateTime2 - dateTime1);
+                  const hoursDifference = Math.floor(timeDifferenceMilliseconds / (1000 * 60 * 60));
+                  const minutesDifference = Math.floor((timeDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
+                  const totalMinutesDifference = (hoursDifference * 60) + minutesDifference;
+                  const timeOutDifferenceMilliseconds = Math.abs(dateTimeOut2 - dateTimeOut1);
+                  const hoursTimeOutDifference = Math.floor(timeDifferenceMilliseconds / (1000 * 60 * 60));
+                  const minutesTimeOutDifference = Math.floor((timeDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
+                  const totalTimeOutMinutesDifference = (hoursTimeOutDifference * 60) + minutesTimeOutDifference;
+                  if (timeOnly2 < timeOnly1) {
+                    if (timeOutTimeOnly2 < timeOutTimeOnly1) {
+                      records.push({ 
+                        _id: data._id,
+                        empName: data.lastName + ", " + data.firstName, 
+                        dayswork: 0, 
+                        hourswork: schedulesFound[0].totalHours, 
+                        hourstardy: totalMinutesDifference, 
+                        overtime: 0,
+                        nightdiff: 0,
+                        undertime: totalTimeOutMinutesDifference 
+                      });
+                    }
                   } else {
-                    
+                    if (timeOutTimeOnly2 < timeOutTimeOnly1) {
+                      records.push({ 
+                        _id: data._id,
+                        empName: data.lastName + ", " + data.firstName, 
+                        dayswork: 0, 
+                        hourswork: 0, 
+                        hourstardy: 0, 
+                        overtime: 0,
+                        nightdiff: 0,
+                        undertime: totalTimeOutMinutesDifference 
+                      })
+                    }
                     records.push({ 
                       _id: data._id,
                       empName: data.lastName + ", " + data.firstName, 
@@ -2119,7 +2149,8 @@ var controllers = {
                       hourswork: schedulesFound[0].totalHours, 
                       hourstardy: 0, 
                       overtime: 0,
-                      nightdiff: 0 
+                      nightdiff: 0, 
+                      undertime: 0
                     });
                   }
                 }
@@ -2131,7 +2162,8 @@ var controllers = {
                     hourswork: 0, 
                     hourstardy: 0, 
                     overtime: 0,
-                    nightdiff: 0 
+                    nightdiff: 0,
+                    undertime: 0 
                   });  
                 }
               } 
@@ -2144,7 +2176,8 @@ var controllers = {
                 hourswork: 0, 
                 hourstardy: 0, 
                 overtime: 0,
-                nightdiff: 0 
+                nightdiff: 0,
+                undertime: 0 
               });
             }
           }))
@@ -2162,6 +2195,7 @@ var controllers = {
               }
               
               uniqueData[empId].hourstardy += parseInt(entry.hourstardy, 10);
+              uniqueData[empId].undertime += parseInt(entry.undertime, 10);
             } else {
               // Convert hourswork to int before storing
               if (parseInt(entry.hourswork, 10) > 0) {
@@ -2171,7 +2205,8 @@ var controllers = {
                   ...entry,
                   hourswork: parseInt(entry.hourswork, 10),
                   hourstardy: parseInt(entry.hourstardy, 10),
-                  dayswork: parseInt(entry.dayswork, 10)
+                  dayswork: parseInt(entry.dayswork, 10),
+                  undertime: parseInt(entry.undertime, 10)
               };
             }
         });
@@ -2324,7 +2359,7 @@ var controllers = {
     }
   },
   post_save_breaklist: async function (req, res) {
-    const {employees, from, to, store, generatedby, employeecount} = req.body
+    const {employees, from, to, store, generatedby, employeecount, cutoff} = req.body
     const breaklistId = uuid();
 
     const data = new Breaklist({
@@ -2334,6 +2369,7 @@ var controllers = {
       dateto: to,
       generatedby: generatedby,
       employeecount: employeecount,
+      cutoff: cutoff
     })
 
     try {
