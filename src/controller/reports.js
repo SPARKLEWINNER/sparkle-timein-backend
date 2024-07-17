@@ -2117,31 +2117,16 @@ var controllers = {
                   const minutesTimeOutDifference = Math.floor((timeDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
                   const totalTimeOutMinutesDifference = (hoursTimeOutDifference * 60) + minutesTimeOutDifference;
                   if (timeOnly2 < timeOnly1) {
-                    if (timeOutTimeOnly2 < timeOutTimeOnly1) {
-                      records.push({ 
-                        _id: data._id,
-                        empName: data.lastName + ", " + data.firstName, 
-                        dayswork: 0, 
-                        hourswork: schedulesFound[0].totalHours, 
-                        hourstardy: totalMinutesDifference, 
-                        overtime: 0,
-                        nightdiff: 0,
-                        undertime: totalTimeOutMinutesDifference 
-                      });
-                    }
+                    records.push({ 
+                      _id: data._id,
+                      empName: data.lastName + ", " + data.firstName, 
+                      dayswork: 0, 
+                      hourswork: schedulesFound[0].totalHours, 
+                      hourstardy: totalMinutesDifference, 
+                      overtime: 0,
+                      nightdiff: 0,
+                    });
                   } else {
-                    if (timeOutTimeOnly2 < timeOutTimeOnly1) {
-                      records.push({ 
-                        _id: data._id,
-                        empName: data.lastName + ", " + data.firstName, 
-                        dayswork: 0, 
-                        hourswork: 0, 
-                        hourstardy: 0, 
-                        overtime: 0,
-                        nightdiff: 0,
-                        undertime: totalTimeOutMinutesDifference 
-                      })
-                    }
                     records.push({ 
                       _id: data._id,
                       empName: data.lastName + ", " + data.firstName, 
@@ -2150,7 +2135,6 @@ var controllers = {
                       hourstardy: 0, 
                       overtime: 0,
                       nightdiff: 0, 
-                      undertime: 0
                     });
                   }
                 }
@@ -2163,7 +2147,6 @@ var controllers = {
                     hourstardy: 0, 
                     overtime: 0,
                     nightdiff: 0,
-                    undertime: 0 
                   });  
                 }
               } 
@@ -2185,29 +2168,25 @@ var controllers = {
         const uniqueData = {};
         records.forEach(entry => {
             const empId = entry._id;
+            if (entry.hourswork >= 1) {
+              entry.dayswork += 1
+            }
             if (uniqueData[empId]) {
               uniqueData[empId].hourswork += parseInt(entry.hourswork, 10);
-              if (parseInt(uniqueData[empId].hourswork, 10) > 0) {
-                uniqueData[empId].dayswork += 1
-              }
-              else {
-                uniqueData[empId].dayswork += parseInt(entry.dayswork, 10);
-              }
-              
               uniqueData[empId].hourstardy += parseInt(entry.hourstardy, 10);
-              uniqueData[empId].undertime += parseInt(entry.undertime, 10);
+              uniqueData[empId].dayswork += parseInt(entry.dayswork, 10);
             } else {
               // Convert hourswork to int before storing
-              if (parseInt(entry.hourswork, 10) > 0) {
+              if (parseInt(entry.hourswork, 10) >= 1) {
                 entry.dayswork += 1
               }
               uniqueData[empId] = {
-                  ...entry,
-                  hourswork: parseInt(entry.hourswork, 10),
-                  hourstardy: parseInt(entry.hourstardy, 10),
-                  dayswork: parseInt(entry.dayswork, 10),
-                  undertime: parseInt(entry.undertime, 10)
-              };
+                ...entry,
+                hourswork: parseInt(entry.hourswork, 10),
+                hourstardy: parseInt(entry.hourstardy, 10),
+                dayswork: parseInt(entry.dayswork, 10),
+              }; 
+
             }
         });
 
