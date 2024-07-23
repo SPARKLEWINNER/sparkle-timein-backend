@@ -2027,7 +2027,7 @@ var controllers = {
           fromDate.isBetween(earliestDateFrom, latestDateTo, undefined, '[]') ||
           toDate.isBetween(earliestDateFrom, latestDateTo, undefined, '[]')
         ) {
-          return res.status(400).json({
+          return res.status(200).json({
             success: false,
             msg: "Invalid Dates. Breaklist date already submitted and saved.",
           });
