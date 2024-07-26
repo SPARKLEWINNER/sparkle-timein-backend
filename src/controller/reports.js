@@ -1416,6 +1416,25 @@ var controllers = {
           else {
             timeOutStamp = `${moment(reportsArray[0].record[reportsArray.length].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`   
           }
+          var dateStr = data.date;
+          var timeStr = data.to.toString();
+
+          // Parse the date string using Moment.js
+          var dateTest = moment(dateStr);
+
+          // Parse the time string and set the hours and minutes to the date
+          var timeParts = timeStr.split(':');
+          var hoursTest = parseInt(timeParts[0], 10);
+          var minutesTest = parseInt(timeParts[1], 10);
+
+          dateTest.set({
+              hour: hoursTest,
+              minute: minutesTest,
+          });
+
+          // Output the combined date and time
+          console.log("Combined Date and Time: " + moment(dateTest).format());
+   /*       console.log(reportsArray[0].record[reportsArray.length].dateTime)*/
           const parsedDate = new Date(timeInStamp);
           const [year, month, day] = [
             parsedDate.getUTCFullYear(),
@@ -1446,15 +1465,28 @@ var controllers = {
           const dateTime1 = new Date(referenceDate + timeOnly1 + 'Z');
           const dateTime2 = new Date(referenceDate + timeOnly2 + 'Z');
           const dateTimeOut1 = new Date(referenceDate + timeOutTimeOnly1 + 'Z');
-          const dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');
+          let dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');
+          if (data.from < data.to) {
+            dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');
+          }
+          else {
+            dateTimeOut2 = new Date(dateTimeOut2.getTime() + 24 * 60 * 60 * 1000);
+          }
+          const parsedDateTimeOutTest1 = new Date(dateTimeOut1)
+          const parsedDateTimeOutTest2 = new Date(dateTimeOut2)
           const timeDifferenceMilliseconds = Math.abs(dateTime2 - dateTime1);
           const hoursDifference = Math.floor(timeDifferenceMilliseconds / (1000 * 60 * 60));
           const minutesDifference = Math.floor((timeDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
           const totalMinutesDifference = (hoursDifference * 60) + minutesDifference;
           const timeOutDifferenceMilliseconds = Math.abs(dateTimeOut2 - dateTimeOut1);
-          const hoursTimeOutDifference = Math.floor(timeOutDifferenceMilliseconds / (1000 * 60 * 60));
+          let hoursTimeOutDifference = Math.floor(timeOutDifferenceMilliseconds / (1000 * 60 * 60));
+          const minutesTimeOutDifference = Math.floor((timeOutDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
+          const totalMinutesTimeOutDifference = (hoursTimeOutDifference * 60) + minutesTimeOutDifference;
+          if(totalMinutesTimeOutDifference === 59){
+            hoursTimeOutDifference += 1
+          }
           if (timeOnly2 < timeOnly1) {
-            if (dateTimeOut2 > dateTimeOut1) {
+            if (moment(dateTimeOut2).utc().format() > moment(dateTimeOut1).utc().format()) {
               records.push({
                 _id: id,
                 date: date,
@@ -1484,7 +1516,7 @@ var controllers = {
             }
           }
           else {
-            if (dateTimeOut2 > dateTimeOut1) {
+            if (moment(dateTimeOut2).utc().format() > moment(dateTimeOut1).utc().format()) {
               records.push({
                 _id: id,
                 date: date,
@@ -2155,15 +2187,26 @@ var controllers = {
                   const dateTime1 = new Date(referenceDate + timeOnly1 + 'Z');
                   const dateTime2 = new Date(referenceDate + timeOnly2 + 'Z'); 
                   const dateTimeOut1 = new Date(referenceDate + timeOutTimeOnly1 + 'Z');
-                  const dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');
+                  let dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');
+                  if (schedulesFound[0].from < schedulesFound[0].to) {
+                    dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');
+                  }
+                  else {
+                    dateTimeOut2 = new Date(dateTimeOut2.getTime() + 24 * 60 * 60 * 1000);
+                  }
                   const timeDifferenceMilliseconds = Math.abs(dateTime2 - dateTime1);
                   const hoursDifference = Math.floor(timeDifferenceMilliseconds / (1000 * 60 * 60));
                   const minutesDifference = Math.floor((timeDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
                   const totalMinutesDifference = (hoursDifference * 60) + minutesDifference;
                   const timeOutDifferenceMilliseconds = Math.abs(dateTimeOut2 - dateTimeOut1);
-                  const hoursTimeOutDifference = Math.floor(timeOutDifferenceMilliseconds / (1000 * 60 * 60));
+                  let hoursTimeOutDifference = Math.floor(timeOutDifferenceMilliseconds / (1000 * 60 * 60));
+                  const minutesTimeOutDifference = Math.floor((timeDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
+                  const totalMinutesTimeOutDifference = (hoursTimeOutDifference * 60) + minutesTimeOutDifference;
+                 /* if(totalMinutesTimeOutDifference === 59){
+                    hoursTimeOutDifference += 1
+                  }*/
                   if (timeOnly2 < timeOnly1) {
-                    if (dateTimeOut2 > dateTimeOut1) {
+                    if (moment(dateTimeOut2).utc().format() > moment(dateTimeOut1).utc().format()) {
                       records.push({ 
                         _id: data._id,
                         empName: data.lastName + ", " + data.firstName, 
@@ -2186,7 +2229,7 @@ var controllers = {
                       });
                     }
                   } else {
-                    if (dateTimeOut2 > dateTimeOut1) {
+                    if (moment(dateTimeOut2).utc().format() > moment(dateTimeOut1).utc().format()) {
                       records.push({ 
                         _id: data._id,
                         empName: data.lastName + ", " + data.firstName, 
@@ -2241,7 +2284,7 @@ var controllers = {
         const uniqueData = {};
         records.forEach(entry => {
             const empId = entry._id;
-            if (parseInt(entry.hourswork, 10) > 3) {
+            if (parseInt(entry.hourswork, 10) > 1) {
               entry.dayswork += 1
             }
             if (uniqueData[empId]) {
