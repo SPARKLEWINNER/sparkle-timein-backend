@@ -1389,6 +1389,7 @@ var controllers = {
         let timeOutStamp
         const hasTimeIn = reportsArray[0].record.some(entry => entry.status === 'time-in');
         const hasTimeOut = reportsArray[0].record.some(entry => entry.status === 'time-out');
+        let reportsLength = reportsArray[0].record.length
         if (hasTimeIn && hasTimeOut) {
           if(typeof reportsArray[0].record[0].time != "number") {
             let [hours, minutes] = reportsArray[0].record[0].time.split(':').map(part => parseInt(part, 10));
@@ -1403,8 +1404,8 @@ var controllers = {
           else {
             timeInStamp = `${moment(reportsArray[0].record[0].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z` 
           }
-          if(typeof reportsArray[0].record[reportsArray.length].time != "number") {
-            let [hours, minutes] = reportsArray[0].record[reportsArray.length].time.split(':').map(part => parseInt(part, 10));
+          if(typeof reportsArray[0].record[reportsLength - 1].time != "number") {
+            let [hours, minutes] = reportsArray[0].record[reportsLength - 1].time.split(':').map(part => parseInt(part, 10));
             let date = new Date();
             date.setHours(hours);
             date.setMinutes(minutes);
@@ -1414,9 +1415,9 @@ var controllers = {
             timeOutStamp = `${moment(timestamp2).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
           }
           else {
-            timeOutStamp = `${moment(reportsArray[0].record[reportsArray.length].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`   
+            timeOutStamp = `${moment(reportsArray[0].record[reportsLength - 1].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`   
           }
-          var dateStr = data.date;
+/*          var dateStr = data.date;
           var timeStr = data.to.toString();
 
           // Parse the date string using Moment.js
@@ -1433,7 +1434,7 @@ var controllers = {
           });
 
           // Output the combined date and time
-          console.log("Combined Date and Time: " + moment(dateTest).format());
+          console.log("Combined Date and Time: " + moment(dateTest).format());*/
    /*       console.log(reportsArray[0].record[reportsArray.length].dateTime)*/
           const parsedDate = new Date(timeInStamp);
           const [year, month, day] = [
@@ -1485,6 +1486,7 @@ var controllers = {
           if(totalMinutesTimeOutDifference === 59){
             hoursTimeOutDifference += 1
           }
+          console.log(moment(dateTimeOut2).utc().format() + " " + moment(dateTimeOut1).utc().format())
           if (timeOnly2 < timeOnly1) {
             if (moment(dateTimeOut2).utc().format() > moment(dateTimeOut1).utc().format()) {
               records.push({
@@ -2131,8 +2133,9 @@ var controllers = {
 
                 const hasTimeIn = reportsFound[0].record.some(entry => entry.status === 'time-in');
                 const hasTimeOut = reportsFound[0].record.some(entry => entry.status === 'time-out');
+                let reportsLength = reportsFound[0].record.length
                 if (hasTimeIn && hasTimeOut) {
-                  let reportsLength = reportsFound[0].record.length
+                    
                   if(typeof reportsFound[0].record[0].time != "number") {
                     let [hours, minutes] = reportsFound[0].record[0].time.split(':').map(part => parseInt(part, 10));
                     let date = new Date();
@@ -2205,6 +2208,7 @@ var controllers = {
                  /* if(totalMinutesTimeOutDifference === 59){
                     hoursTimeOutDifference += 1
                   }*/
+
                   if (timeOnly2 < timeOnly1) {
                     if (moment(dateTimeOut2).utc().format() > moment(dateTimeOut1).utc().format()) {
                       records.push({ 
@@ -2284,7 +2288,7 @@ var controllers = {
         const uniqueData = {};
         records.forEach(entry => {
             const empId = entry._id;
-            if (parseInt(entry.hourswork, 10) > 1) {
+            if (parseInt(entry.hourswork, 10) >= 1) {
               entry.dayswork += 1
             }
             if (uniqueData[empId]) {
