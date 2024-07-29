@@ -1465,7 +1465,7 @@ var controllers = {
           const referenceDate = '1970-01-01T';
           const dateTime1 = new Date(referenceDate + timeOnly1 + 'Z');
           const dateTime2 = new Date(referenceDate + timeOnly2 + 'Z');
-          const dateTimeOut1 = new Date(referenceDate + timeOutTimeOnly1 + 'Z');
+          const dateTimeOut1 = new Date(reportsArray[0].record[reportsLength - 1].datetime);
           let dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');
           if (data.from < data.to) {
             dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');
@@ -2189,10 +2189,10 @@ var controllers = {
                   const referenceDate = '1970-01-01T';
                   const dateTime1 = new Date(referenceDate + timeOnly1 + 'Z');
                   const dateTime2 = new Date(referenceDate + timeOnly2 + 'Z'); 
-                  const dateTimeOut1 = new Date(referenceDate + timeOutTimeOnly1 + 'Z');
-                  let dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');
+                  const dateTimeOut1 = new Date(reportsFound[0].record[0].datetime);
+                  let dateTimeOut2 = new Date(reportsFound[0].record[reportsLength - 1].datetime);
                   if (schedulesFound[0].from < schedulesFound[0].to) {
-                    dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');
+                    dateTimeOut2 = new Date(reportsFound[0].record[reportsLength - 1].datetime);
                   }
                   else {
                     dateTimeOut2 = new Date(dateTimeOut2.getTime() + 24 * 60 * 60 * 1000);
