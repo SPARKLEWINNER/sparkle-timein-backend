@@ -1465,12 +1465,14 @@ var controllers = {
           const referenceDate = '1970-01-01T';
           const dateTime1 = new Date(referenceDate + timeOnly1 + 'Z');
           const dateTime2 = new Date(referenceDate + timeOnly2 + 'Z');
-          const dateTimeOut1 = new Date(referenceDate + timeOutTimeOnly1 + 'Z');
+          let dateTimeOut1 = new Date(referenceDate + timeOutTimeOnly1 + 'Z');
           let dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');
           if (data.from < data.to) {
+            dateTimeOut1 = new Date(referenceDate + timeOutTimeOnly1 + 'Z');
             dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');
           }
           else {
+            dateTimeOut1 = new Date(dateTimeOut1.getTime() + 24 * 60 * 60 * 1000);
             dateTimeOut2 = new Date(dateTimeOut2.getTime() + 24 * 60 * 60 * 1000);
           }
           const parsedDateTimeOutTest1 = new Date(dateTimeOut1)
@@ -1483,10 +1485,11 @@ var controllers = {
           let hoursTimeOutDifference = Math.floor(timeOutDifferenceMilliseconds / (1000 * 60 * 60));
           const minutesTimeOutDifference = Math.floor((timeOutDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
           const totalMinutesTimeOutDifference = (hoursTimeOutDifference * 60) + minutesTimeOutDifference;
-          if(totalMinutesTimeOutDifference === 59){
+          const totalUndertimeHours = Math.round(totalMinutesTimeOutDifference / 60)
+          console.log(totalUndertimeHours + " Schedule Range")
+          /*if(totalMinutesTimeOutDifference === 59){
             hoursTimeOutDifference += 1
-          }
-          console.log(moment(dateTimeOut2).utc().format() + " " + moment(dateTimeOut1).utc().format())
+          }*/
           if (timeOnly2 < timeOnly1) {
             if (moment(dateTimeOut2).utc().format() > moment(dateTimeOut1).utc().format()) {
               records.push({
@@ -1496,7 +1499,7 @@ var controllers = {
                 to: data.to,
                 timeIn: timeIn,
                 timeOut: timeOut,
-                hourswork: data.totalHours - hoursTimeOutDifference,
+                hourswork: data.totalHours - totalUndertimeHours,
                 hoursTardy: totalMinutesDifference,
                 overtime: 0,
                 nightdiff: 0
@@ -1526,7 +1529,7 @@ var controllers = {
                 to: data.to,
                 timeIn: timeIn,
                 timeOut: timeOut,
-                hourswork: data.totalHours - hoursTimeOutDifference,
+                hourswork: data.totalHours - totalUndertimeHours,
                 hoursTardy: 0,
                 overtime: 0,
                 nightdiff: 0
@@ -2189,12 +2192,14 @@ var controllers = {
                   const referenceDate = '1970-01-01T';
                   const dateTime1 = new Date(referenceDate + timeOnly1 + 'Z');
                   const dateTime2 = new Date(referenceDate + timeOnly2 + 'Z'); 
-                  const dateTimeOut1 = new Date(reportsFound[0].record[reportsLength - 1].datetime);
+                  let dateTimeOut1 = new Date(referenceDate + timeOutTimeOnly1 + 'Z');
                   let dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');
-                  if (schedulesFound[0].from < schedulesFound[0].to) {
+                  if (data.from < data.to) {
+                    dateTimeOut1 = new Date(referenceDate + timeOutTimeOnly1 + 'Z');
                     dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');
                   }
                   else {
+                    dateTimeOut1 = new Date(dateTimeOut1.getTime() + 24 * 60 * 60 * 1000);
                     dateTimeOut2 = new Date(dateTimeOut2.getTime() + 24 * 60 * 60 * 1000);
                   }
                   const timeDifferenceMilliseconds = Math.abs(dateTime2 - dateTime1);
@@ -2203,8 +2208,10 @@ var controllers = {
                   const totalMinutesDifference = (hoursDifference * 60) + minutesDifference;
                   const timeOutDifferenceMilliseconds = Math.abs(dateTimeOut2 - dateTimeOut1);
                   let hoursTimeOutDifference = Math.floor(timeOutDifferenceMilliseconds / (1000 * 60 * 60));
-                  const minutesTimeOutDifference = Math.floor((timeDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
+                  const minutesTimeOutDifference = Math.floor((timeOutDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
                   const totalMinutesTimeOutDifference = (hoursTimeOutDifference * 60) + minutesTimeOutDifference;
+                  const totalUndertimeHours = Math.round(totalMinutesTimeOutDifference / 60)
+                  
                  /* if(totalMinutesTimeOutDifference === 59){
                     hoursTimeOutDifference += 1
                   }*/
@@ -2215,7 +2222,7 @@ var controllers = {
                         _id: data._id,
                         empName: data.lastName + ", " + data.firstName, 
                         dayswork: 0, 
-                        hourswork: schedulesFound[0].totalHours - hoursTimeOutDifference, 
+                        hourswork: schedulesFound[0].totalHours - totalUndertimeHours, 
                         hourstardy: totalMinutesDifference, 
                         overtime: 0,
                         nightdiff: 0,
@@ -2238,7 +2245,7 @@ var controllers = {
                         _id: data._id,
                         empName: data.lastName + ", " + data.firstName, 
                         dayswork: 0, 
-                        hourswork: schedulesFound[0].totalHours - hoursTimeOutDifference, 
+                        hourswork: schedulesFound[0].totalHours - totalUndertimeHours, 
                         hourstardy: 0, 
                         overtime: 0,
                         nightdiff: 0, 
