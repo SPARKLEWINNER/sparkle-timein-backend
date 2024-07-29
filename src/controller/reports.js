@@ -1486,7 +1486,6 @@ var controllers = {
           const minutesTimeOutDifference = Math.floor((timeOutDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
           const totalMinutesTimeOutDifference = (hoursTimeOutDifference * 60) + minutesTimeOutDifference;
           const totalUndertimeHours = Math.round(totalMinutesTimeOutDifference / 60)
-          console.log(totalUndertimeHours + " Schedule Range")
           /*if(totalMinutesTimeOutDifference === 59){
             hoursTimeOutDifference += 1
           }*/
