@@ -1465,18 +1465,15 @@ var controllers = {
           const referenceDate = '1970-01-01T';
           const dateTime1 = new Date(referenceDate + timeOnly1 + 'Z');
           const dateTime2 = new Date(referenceDate + timeOnly2 + 'Z');
-          let dateTimeOut1 = new Date(referenceDate + timeOutTimeOnly1 + 'Z');
+          let dateTimeOut1 = new Date(combinedDate2);
           let dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');
           if (data.from < data.to) {
             dateTimeOut1 = new Date(referenceDate + timeOutTimeOnly1 + 'Z');
             dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');
           }
           else {
-            dateTimeOut1 = new Date(dateTimeOut1.getTime() + 24 * 60 * 60 * 1000);
-            dateTimeOut2 = new Date(dateTimeOut2.getTime() + 24 * 60 * 60 * 1000);
+            dateTimeOut2 = new Date(reportsArray[0].record[reportsLength - 1].dateTime);
           }
-          const parsedDateTimeOutTest1 = new Date(dateTimeOut1)
-          const parsedDateTimeOutTest2 = new Date(dateTimeOut2)
           const timeDifferenceMilliseconds = Math.abs(dateTime2 - dateTime1);
           const hoursDifference = Math.floor(timeDifferenceMilliseconds / (1000 * 60 * 60));
           const minutesDifference = Math.floor((timeDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
@@ -2210,7 +2207,7 @@ var controllers = {
                   const minutesTimeOutDifference = Math.floor((timeOutDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
                   const totalMinutesTimeOutDifference = (hoursTimeOutDifference * 60) + minutesTimeOutDifference;
                   const totalUndertimeHours = Math.round(totalMinutesTimeOutDifference / 60)
-                  
+
                  /* if(totalMinutesTimeOutDifference === 59){
                     hoursTimeOutDifference += 1
                   }*/
