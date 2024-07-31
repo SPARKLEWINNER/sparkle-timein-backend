@@ -2170,7 +2170,7 @@ var controllers = {
                     parsedDate.getUTCMonth(),
                     parsedDate.getUTCDate()
                   ];
-                  const parsedDateTimeOut = new Date(timeOut);
+                  const parsedDateTimeOut = new Date(schedulesFound[0].date);
                   const [timeOutYear, timeOutMonth, timeOutDay] = [
                     parsedDateTimeOut.getUTCFullYear(),
                     parsedDateTimeOut.getUTCMonth(),
@@ -2191,17 +2191,19 @@ var controllers = {
                   const referenceDate = '1970-01-01T';
                   const dateTime1 = new Date(referenceDate + timeOnly1 + 'Z');
                   const dateTime2 = new Date(referenceDate + timeOnly2 + 'Z'); 
-                  let dateTimeOut1 = new Date(referenceDate + timeOutTimeOnly1 + 'Z');
-                  let dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');
-                  if (data.from < data.to) {
+
+                  /*let dateTimeOut1 = new Date(referenceDate + timeOutTimeOnly1 + 'Z');
+                  let dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');*/
+                  let dateTimeOut1 = new Date(parsedDateTimeOut1);
+                  let dateTimeOut2 = new Date(parsedDateTimeOut2);
+                  /*if (data.from < data.to) {
                     dateTimeOut1 = new Date(referenceDate + timeOutTimeOnly1 + 'Z');
                     dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');
                   }
                   else {
                     dateTimeOut1 = new Date(reportsFound[0].record[0]);
                     dateTimeOut2 = new Date(dateTimeOut2.getTime() + 24 * 60 * 60 * 1000);
-                    
-                  }
+                  }*/
                   const timeDifferenceMilliseconds = Math.abs(dateTime2 - dateTime1);
                   const hoursDifference = Math.floor(timeDifferenceMilliseconds / (1000 * 60 * 60));
                   const minutesDifference = Math.floor((timeDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
@@ -2214,7 +2216,6 @@ var controllers = {
                  /* if(totalMinutesTimeOutDifference === 59){
                     hoursTimeOutDifference += 1
                   }*/
-
                   if (timeOnly2 < timeOnly1) {
                     if (moment(dateTimeOut2).utc().format() > moment(dateTimeOut1).utc().format()) {
                       records.push({ 
@@ -2251,8 +2252,6 @@ var controllers = {
                       });
                     }
                     else {
-                      console.log(data.lastName + ", " + data.firstName + " Schedule: " + dateTimeOut2)
-                      console.log(dateTimeOut1)
                       records.push({ 
                         _id: data._id,
                         empName: data.lastName + ", " + data.firstName, 
