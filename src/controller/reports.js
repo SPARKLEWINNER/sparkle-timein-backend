@@ -2276,6 +2276,17 @@ var controllers = {
                     nightdiff: 0,
                   });  
                 }
+              }
+              else {
+                records.push({ 
+                  _id: data._id,
+                  empName: data.lastName + ", " + data.firstName, 
+                  dayswork: 0, 
+                  hourswork: 0, 
+                  hourstardy: 0, 
+                  overtime: 0,
+                  nightdiff: 0,
+                });   
               } 
             }
             else {
@@ -2670,5 +2681,17 @@ var controllers = {
       });
     }
   },
+/*  archived_many_users: async function (req, res) {
+    try {
+      const breaklist = await User.updateMany({ store: "PPRE Corporation" }, { isArchived: true }).exec();
+      
+      console.log('Archived successfully:');
+
+    } catch (err) {
+      console.error('Error retrieving breaklist:', err);
+  
+      return res.status(500).json({ success: false, msg: "Internal Server Error" });
+    }
+  },*/
 }
 module.exports = controllers;
