@@ -2212,7 +2212,6 @@ var controllers = {
                   const totalMinutesTimeOutDifference = (hoursTimeOutDifference * 60) + minutesTimeOutDifference;
                   let totalUndertimeHours = Math.round(totalMinutesTimeOutDifference / 60)
                   if(timeOutTimeOnly2 > timeOutTimeOnly1){
-                    console.log(schedulesFound[0].totalHours)
                     totalUndertimeHours += 1
                   }
                   if (timeOnly2 < timeOnly1) {
@@ -2305,18 +2304,18 @@ var controllers = {
         const uniqueData = {};
         records.forEach(entry => {
             const empId = entry._id;
-            if (parseInt(entry.hourswork, 10) >= 1) {
+            if (parseFloat(entry.hourswork) >= 1) {
               entry.dayswork += 1
             }
             if (uniqueData[empId]) {
-              uniqueData[empId].hourswork += parseFloat(entry.hourswork).toFixed(2);
+              uniqueData[empId].hourswork += parseFloat(entry.hourswork);
               uniqueData[empId].hourstardy += parseInt(entry.hourstardy, 10);
               uniqueData[empId].dayswork += parseInt(entry.dayswork, 10);
             } else {
               // Convert hourswork to int before storing
               uniqueData[empId] = {
                 ...entry,
-                hourswork: parseFloat(entry.hourswork).toFixed(2),
+                hourswork: parseFloat(entry.hourswork),
                 hourstardy: parseInt(entry.hourstardy, 10),
                 dayswork: parseInt(entry.dayswork, 10),
               }; 
