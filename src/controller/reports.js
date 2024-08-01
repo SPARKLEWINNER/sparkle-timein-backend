@@ -2210,7 +2210,7 @@ var controllers = {
                   let hoursTimeOutDifference = Math.floor(timeOutDifferenceMilliseconds / (1000 * 60 * 60));
                   const minutesTimeOutDifference = Math.floor((timeOutDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
                   const totalMinutesTimeOutDifference = (hoursTimeOutDifference * 60) + minutesTimeOutDifference;
-                  let totalUndertimeHours = Math.round(totalMinutesTimeOutDifference / 60)
+                  let totalUndertimeHours = Math.floor(totalMinutesTimeOutDifference / 60)
                   if(timeOutTimeOnly2 > timeOutTimeOnly1){
                     totalUndertimeHours += 1
                   }
