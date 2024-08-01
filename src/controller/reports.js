@@ -1483,12 +1483,10 @@ var controllers = {
           let hoursTimeOutDifference = Math.floor(timeOutDifferenceMilliseconds / (1000 * 60 * 60));
           const minutesTimeOutDifference = Math.floor((timeOutDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
           const totalMinutesTimeOutDifference = (hoursTimeOutDifference * 60) + minutesTimeOutDifference;
-          const totalUndertimeHours = Math.round(totalMinutesTimeOutDifference / 60)
-          console.log(parsedDateTimeOut1)
-          console.log(parsedDateTimeOut2)
-          /*if(totalMinutesTimeOutDifference === 59){
-            hoursTimeOutDifference += 1
-          }*/
+          let totalUndertimeHours = Math.round(totalMinutesTimeOutDifference / 60)
+          if(timeOutTimeOnly2 > timeOutTimeOnly1){
+            totalUndertimeHours += 1
+          }
           if (timeOnly2 < timeOnly1) {
             if (dateTimeOut2 > dateTimeOut1) {
               records.push({
@@ -2212,10 +2210,11 @@ var controllers = {
                   let hoursTimeOutDifference = Math.floor(timeOutDifferenceMilliseconds / (1000 * 60 * 60));
                   const minutesTimeOutDifference = Math.floor((timeOutDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
                   const totalMinutesTimeOutDifference = (hoursTimeOutDifference * 60) + minutesTimeOutDifference;
-                  const totalUndertimeHours = Math.round(totalMinutesTimeOutDifference / 60)
-                 /* if(totalMinutesTimeOutDifference === 59){
-                    hoursTimeOutDifference += 1
-                  }*/
+                  let totalUndertimeHours = Math.round(totalMinutesTimeOutDifference / 60)
+                  if(timeOutTimeOnly2 > timeOutTimeOnly1){
+                    console.log(schedulesFound[0].totalHours)
+                    totalUndertimeHours += 1
+                  }
                   if (timeOnly2 < timeOnly1) {
                     if (moment(dateTimeOut2).utc().format() > moment(dateTimeOut1).utc().format()) {
                       records.push({ 
@@ -2310,14 +2309,14 @@ var controllers = {
               entry.dayswork += 1
             }
             if (uniqueData[empId]) {
-              uniqueData[empId].hourswork += parseInt(entry.hourswork, 10);
+              uniqueData[empId].hourswork += parseFloat(entry.hourswork).toFixed(2);
               uniqueData[empId].hourstardy += parseInt(entry.hourstardy, 10);
               uniqueData[empId].dayswork += parseInt(entry.dayswork, 10);
             } else {
               // Convert hourswork to int before storing
               uniqueData[empId] = {
                 ...entry,
-                hourswork: parseInt(entry.hourswork, 10),
+                hourswork: parseFloat(entry.hourswork).toFixed(2),
                 hourstardy: parseInt(entry.hourstardy, 10),
                 dayswork: parseInt(entry.dayswork, 10),
               }; 
