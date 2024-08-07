@@ -2021,6 +2021,7 @@ var controllers = {
         if (results.length > 0) {
           results.forEach(result => {
             records.push({
+              _id: result._id,
               emp: data.displayName,
               position: result.position,
               date: result.date,
@@ -2033,6 +2034,7 @@ var controllers = {
           });
         } else {
           records.push({
+            _id: results._id,
             emp: data.displayName,
             position: null,
             date: new Date(date),
@@ -2691,5 +2693,21 @@ var controllers = {
       return res.status(500).json({ success: false, msg: "Internal Server Error" });
     }
   },*/
+  delete_schedule: async function (req, res) {
+    const { id } = req.params;
+    if (!id)
+      res
+        .status(400)
+        .json({ success: false, msg: `Missing Request parameters.` });
+    try {
+      const schedule = await Payroll.deleteOne({ _id: id }).lean().exec(); 
+      return res.status(200).json({
+        success: true,
+        msg: "Delete successfull",
+      });  
+    } catch (err) {
+      return res.status(500).json({ success: false, msg: "Internal Server Error" });
+    }
+   },
 }
 module.exports = controllers;
