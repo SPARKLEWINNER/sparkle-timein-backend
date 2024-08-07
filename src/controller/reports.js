@@ -136,7 +136,7 @@ var controllers = {
           "store": emp_name.company,
           "date": formattedDate,
         }
-        if (status === 'time-in') {
+/*        if (status === 'time-in') {
           // if time in and should create another session
           result = await Reports.create(reports);
           const response = await fetch('https://payroll-live.sevenstarjasem.com/payroll/public/api/attendance', {
@@ -155,7 +155,7 @@ var controllers = {
             return res.json(result);  
           }
           return res.json(result);
-        }
+        }*/
 
         let last_record =
           record_last.record.length >= 1
@@ -206,7 +206,7 @@ var controllers = {
           "date": formattedDate,
         }
         result = await Reports.create(reports);
-        const response = await fetch('https://payroll-live.sevenstarjasem.com/payroll/public/api/attendance', {
+/*        const response = await fetch('https://payroll-live.sevenstarjasem.com/payroll/public/api/attendance', {
           method: 'post',
           body: JSON.stringify(body),
           headers: {'Content-Type': 'application/json'}
@@ -217,7 +217,7 @@ var controllers = {
             success: false,
             msg: "Connection to payroll error",
           });  
-        }
+        }*/
       }
 
       if (!result) {
@@ -234,7 +234,7 @@ var controllers = {
         "store": emp_name.company,
         "date": record_last_date,
       }
-      const response = await fetch('https://payroll-live.sevenstarjasem.com/payroll/public/api/attendance', {
+/*      const response = await fetch('https://payroll-live.sevenstarjasem.com/payroll/public/api/attendance', {
         method: 'post',
         body: JSON.stringify(body),
         headers: {'Content-Type': 'application/json'}
@@ -247,8 +247,8 @@ var controllers = {
       }
       else {
         res.json(result);  
-      } 
-/*      res.json(result);*/
+      } */
+      res.json(result);
     } catch (err) {
       await logError(err, "Reports", req.body, id, "POST");
       return res.status(400).json({
@@ -1326,7 +1326,7 @@ var controllers = {
         "time_out": to,
         "date": date
     }
-    const response = await fetch('https://payroll-live.sevenstarjasem.com/payroll/public/api/schedule', {
+    /*const response = await fetch('https://payroll-live.sevenstarjasem.com/payroll/public/api/schedule', {
       method: 'post',
       body: JSON.stringify(body),
       headers: {'Content-Type': 'application/json'}
@@ -1339,7 +1339,7 @@ var controllers = {
         success: false,
         msg: `Something went wrong please contact your IT administrator`,
       });
-    }
+    }*/
     
   },
   get_schedule: async function(req, res) {
