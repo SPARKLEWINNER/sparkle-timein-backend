@@ -1729,15 +1729,19 @@ var controllers = {
     }
   },
   payslip_gateway: async function(req, res) {
-    const { id } = req.params;
+    const { id, store } = req.body;
     let record = {};
 
     try {
-      const response = await fetch(`https://payroll-live.sevenstarjasem.com/payroll/public/api/getPayrollInfo/${id}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
+      const response = await fetch(`https://payroll-live.sevenstarjasem.com/payroll/public/api/getPayrollInfoV2/${id}`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          store: store
+        })
       });
-
       if (!response.ok) {
         // Handle non-200 responses
         return res.status(response.status).json({
@@ -1748,7 +1752,6 @@ var controllers = {
       }
 
       record = await response.json();
-
       if (record.success) {
         return res.status(200).json({
           success: true,
