@@ -51,6 +51,10 @@ const data = {
         type: Number,
         default: 0,
     },
+    restday: {
+        type: Number,
+        default: 0,
+    },
 };
 
 const breaklistInfoSchema = new Schema(data, { timestamps: true });

@@ -2259,6 +2259,7 @@ var controllers = {
                         hourstardy: totalMinutesDifference, 
                         overtime: 0,
                         nightdiff: 0,
+                        restday: 0
                       });
                     }
                     else {
@@ -2270,6 +2271,7 @@ var controllers = {
                         hourstardy: totalMinutesDifference, 
                         overtime: 0,
                         nightdiff: 0,
+                        restday: 0
                       });
                     }
                   } else {
@@ -2282,6 +2284,7 @@ var controllers = {
                         hourstardy: 0, 
                         overtime: 0,
                         nightdiff: 0, 
+                        restday: 0
                       });
                     }
                     else {
@@ -2293,6 +2296,7 @@ var controllers = {
                         hourstardy: 0, 
                         overtime: 0,
                         nightdiff: 0,
+                        restday: 0
                       });  
                     }
                     
@@ -2307,6 +2311,7 @@ var controllers = {
                     hourstardy: 0, 
                     overtime: 0,
                     nightdiff: 0,
+                    restday: 0
                   });  
                 }
               }
@@ -2319,6 +2324,7 @@ var controllers = {
                   hourstardy: 0, 
                   overtime: 0,
                   nightdiff: 0,
+                  restday: 0
                 });   
               } 
             }
@@ -2331,7 +2337,7 @@ var controllers = {
                 hourstardy: 0, 
                 overtime: 0,
                 nightdiff: 0,
-                undertime: 0 
+                restday: 0 
               });
             }
           }))
@@ -2523,7 +2529,6 @@ var controllers = {
     
         const promises = employees.map(async (doc) => {
         const { _id, empName, ...rest } = doc;
-
         // Create new Breaklist document
         const info = new Breaklistinfo({
           store: store,
