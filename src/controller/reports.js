@@ -1472,7 +1472,7 @@ var controllers = {
             dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');
           }
           else {
-            dateTimeOut1 = new Date(combinedDate2);
+            dateTimeOut1 = new Date(reportsArray[0].record[0]);
             dateTimeOut2 = new Date(dateTimeOut2.getTime() + 24 * 60 * 60 * 1000);
           }
           const timeDifferenceMilliseconds = Math.abs(dateTime2 - dateTime1);
@@ -2250,7 +2250,7 @@ var controllers = {
                     totalUndertimeHours += 1
                   }
                   if (timeOnly2 < timeOnly1) {
-                    if (moment(dateTimeOut2).utc().format() > moment(dateTimeOut1).utc().format()) {
+                    if (dateTimeOut2 > dateTimeOut1) {
                       records.push({ 
                         _id: data._id,
                         empName: data.lastName + ", " + data.firstName, 
@@ -2348,15 +2348,17 @@ var controllers = {
             if (parseFloat(entry.hourswork) >= 1) {
               entry.dayswork += 1
             }
+            else {
+              entry.hourswork = 0;
+            }
             if (uniqueData[empId]) {
               uniqueData[empId].hourswork += parseFloat(entry.hourswork);
               uniqueData[empId].hourstardy += parseInt(entry.hourstardy, 10);
               uniqueData[empId].dayswork += parseInt(entry.dayswork, 10);
             } else {
-              // Convert hourswork to int before storing
               uniqueData[empId] = {
                 ...entry,
-                hourswork: parseFloat(entry.hourswork),
+                hourswork: entry.hourswork,
                 hourstardy: parseInt(entry.hourstardy, 10),
                 dayswork: parseInt(entry.dayswork, 10),
               }; 
