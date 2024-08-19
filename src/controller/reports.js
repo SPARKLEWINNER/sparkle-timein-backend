@@ -2358,7 +2358,7 @@ var controllers = {
             } else {
               uniqueData[empId] = {
                 ...entry,
-                hourswork: entry.hourswork,
+                hourswork: parseFloat(entry.hourswork),
                 hourstardy: parseInt(entry.hourstardy, 10),
                 dayswork: parseInt(entry.dayswork, 10),
               }; 
