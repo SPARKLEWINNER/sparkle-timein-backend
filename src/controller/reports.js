@@ -156,39 +156,41 @@ var controllers = {
           }
           return res.json(result);
         }
+        else {
+          let last_record =
+            record_last.record.length >= 1
+              ? record_last.record.slice(-1).pop()
+              : record_last.record[0];
 
-        let last_record =
-          record_last.record.length >= 1
-            ? record_last.record.slice(-1).pop()
-            : record_last.record[0];
+          if (last_record.status === status)
+            return res.status(400).json({
+              success: false,
+              msg: `Unable to ${status} again`,
+            });
+          let newReports = {
+            dateTime: now,
+            status: status,
+            month: month,
+            day: day,
+            year: year,
+            time: time,
+            date: date,
+            location: location,
+            address: address,
+            ip: "Test"
+          };
 
-        if (last_record.status === status)
-          return res.status(400).json({
-            success: false,
-            msg: `Unable to ${status} again`,
-          });
-        let newReports = {
-          dateTime: now,
-          status: status,
-          month: month,
-          day: day,
-          year: year,
-          time: time,
-          date: date,
-          location: location,
-          address: address,
-          ip: "Test"
-        };
-
-        let update = {
-          $set: { status: status },
-          $push: { record: newReports },
-        };
-        result = 
-        await Reports.findOneAndUpdate(
-          { _id: mongoose.Types.ObjectId(previous) },
-           update
-        );
+          let update = {
+            $set: { status: status },
+            $push: { record: newReports },
+          };
+          result = 
+          await Reports.findOneAndUpdate(
+            { _id: mongoose.Types.ObjectId(previous) },
+             update
+          );  
+        }
+        
         // await Reports.findOneAndUpdate(
         //   { date: new Date(previous), uid: mongoose.Types.ObjectId(id) },
         //   update,
