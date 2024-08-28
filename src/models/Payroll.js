@@ -43,6 +43,18 @@ const data = {
         type: String,
         required: true,
     },
+    otHours: {
+        type: Number,
+        required: true,    
+    },
+    nightdiff: {
+        type: Number,
+        required: false,    
+    },
+    restday: {
+        type: Number,
+        required: false,    
+    },
     createdAt: {
         type: Date,
     },

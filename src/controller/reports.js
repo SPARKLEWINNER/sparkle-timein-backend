@@ -1308,7 +1308,7 @@ var controllers = {
     res.json(record)
   },
   post_schedule: async function(req, res) {
-    const { uid, from, to, date, name, company, totalHours, breakMin, position } = req.body;
+    const { uid, from, to, date, name, company, totalHours, breakMin, position, ot, nightdiff, rd } = req.body;
     if (!uid || !from || !to || !date || !name || !company || !totalHours || !position) {
       return res.status(400).json({
         success: false,
@@ -1318,7 +1318,7 @@ var controllers = {
     const [month, day, year] = date.split('/');
     const formattedDate = new Date(Date.UTC(year, month - 1, day));
     let update = {
-      $set: { from: from, to: to, name: name, company: company, totalHours: totalHours, breakMin: breakMin, position: position},
+      $set: { from: from, to: to, name: name, company: company, totalHours: totalHours, breakMin: breakMin, position: position, otHours: ot, nightdiff: nightdiff, restday: rd},
     };
     result = await Payroll.updateOne( { uid: uid, date: formattedDate }, update, {upsert: true} ).lean().exec()
     const body = {
@@ -2063,6 +2063,9 @@ var controllers = {
               startShift: result.from,
               endShift: result.to,
               totalHours: result.totalHours,
+              otHours: result.otHours,
+              nightdiff: result.nightdiff,
+              restday: result.restday,
               timeIn: 0,
               timeOut: 0
             });
@@ -2075,7 +2078,10 @@ var controllers = {
             date: new Date(date),
             startShift: null,
             endShift: null,
-            totalHours: null
+            totalHours: null,
+            otHours: result.otHours,
+            nightdiff: result.nightdiff,
+            restday: result.restday,
           });
         }
       });
@@ -2259,9 +2265,9 @@ var controllers = {
                         dayswork: 0, 
                         hourswork: schedulesFound[0].totalHours - totalUndertimeHours, 
                         hourstardy: totalMinutesDifference, 
-                        overtime: 0,
-                        nightdiff: 0,
-                        restday: 0
+                        overtime: schedulesFound[0].otHours,
+                        nightdiff: schedulesFound[0].nightdiff,
+                        restday: schedulesFound[0].restday
                       });
                     }
                     else {
@@ -2271,9 +2277,9 @@ var controllers = {
                         dayswork: 0, 
                         hourswork: schedulesFound[0].totalHours, 
                         hourstardy: totalMinutesDifference, 
-                        overtime: 0,
-                        nightdiff: 0,
-                        restday: 0
+                        overtime: schedulesFound[0].otHours,
+                        nightdiff: schedulesFound[0].nightdiff,
+                        restday: schedulesFound[0].restday
                       });
                     }
                   } else {
@@ -2284,9 +2290,9 @@ var controllers = {
                         dayswork: 0, 
                         hourswork: schedulesFound[0].totalHours - totalUndertimeHours, 
                         hourstardy: 0, 
-                        overtime: 0,
-                        nightdiff: 0, 
-                        restday: 0
+                        overtime: schedulesFound[0].otHours,
+                        nightdiff: schedulesFound[0].nightdiff, 
+                        restday: schedulesFound[0].restday
                       });
                     }
                     else {
@@ -2296,9 +2302,9 @@ var controllers = {
                         dayswork: 0, 
                         hourswork: schedulesFound[0].totalHours, 
                         hourstardy: 0, 
-                        overtime: 0,
-                        nightdiff: 0,
-                        restday: 0
+                        overtime: schedulesFound[0].otHours,
+                        nightdiff: schedulesFound[0].nightdiff,
+                        restday: schedulesFound[0].restday
                       });  
                     }
                     
@@ -2357,12 +2363,18 @@ var controllers = {
               uniqueData[empId].hourswork += parseFloat(entry.hourswork);
               uniqueData[empId].hourstardy += parseInt(entry.hourstardy, 10);
               uniqueData[empId].dayswork += parseInt(entry.dayswork, 10);
+              uniqueData[empId].overtime += parseInt(entry.overtime, 10);
+              uniqueData[empId].nightdiff += parseInt(entry.nightdiff, 10);
+              uniqueData[empId].restday += parseInt(entry.restday, 10);
             } else {
               uniqueData[empId] = {
                 ...entry,
                 hourswork: parseFloat(entry.hourswork),
                 hourstardy: parseInt(entry.hourstardy, 10),
                 dayswork: parseInt(entry.dayswork, 10),
+                overtime: parseInt(entry.overtime, 10),
+                nightdiff: parseInt(entry.nightdiff, 10),
+                restday: parseInt(entry.restday, 10),
               }; 
 
             }
