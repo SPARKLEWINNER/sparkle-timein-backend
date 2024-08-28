@@ -2079,9 +2079,9 @@ var controllers = {
             startShift: null,
             endShift: null,
             totalHours: null,
-            otHours: result.otHours,
-            nightdiff: result.nightdiff,
-            restday: result.restday,
+            otHours: 0,
+            nightdiff: 0,
+            restday: 0,
           });
         }
       });
