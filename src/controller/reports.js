@@ -2317,9 +2317,9 @@ var controllers = {
                     dayswork: 0, 
                     hourswork: 0, 
                     hourstardy: 0, 
-                    overtime: 0,
-                    nightdiff: 0,
-                    restday: 0
+                    overtime: schedulesFound[0].otHours,
+                    nightdiff: schedulesFound[0].nightdiff,
+                    restday: schedulesFound[0].restday
                   });  
                 }
               }
@@ -2330,9 +2330,9 @@ var controllers = {
                   dayswork: 0, 
                   hourswork: 0, 
                   hourstardy: 0, 
-                  overtime: 0,
-                  nightdiff: 0,
-                  restday: 0
+                  overtime: schedulesFound[0].otHours,
+                  nightdiff: schedulesFound[0].nightdiff,
+                  restday: schedulesFound[0].restday
                 });   
               } 
             }
@@ -2358,6 +2358,15 @@ var controllers = {
             }
             else {
               entry.hourswork = 0;
+            }
+            if (!entry.overtime) {
+              entry.overtime = 0
+            }
+            if (!entry.nightdiff) {
+              entry.nightdiff = 0
+            }
+            if (!entry.restday) {
+              entry.restday = 0
             }
             if (uniqueData[empId]) {
               uniqueData[empId].hourswork += parseFloat(entry.hourswork);
