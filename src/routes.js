@@ -11,6 +11,8 @@ var billing = require("./controller/billing");
 var videoTutorial = require("./controller/videoTutorial");
 var UploadController = require('./services/upload')
 var AnnouncementUploadController = require('./services/timein-upload')
+var fcmTokenController = require('./controller/fcm')
+const {messaging} = require('./services/firebase');
 
 module.exports = function (app) {
   app.route("/").get(api.get_app_info);
@@ -183,6 +185,38 @@ app
   app.route('/api/store/branch/:id').get(auth.require_sign_in, auth.is_store_authenticated, stores.get_users_branch)
 
   app.route('/api/store/user').post(/*auth.require_sign_in, auth.is_store_authenticated,*/ stores.get_users_store)
+
+  // ========================== FCM ================================ // 
+
+  app.route("/api/users/fcm/:id").get(auth.require_sign_in, fcmTokenController.get_active_fcm_token)
+
+  app.route("/api/users/fcm/:id/register").post(auth.require_sign_in, fcmTokenController.register_fcm_token)
+
+  app.route("/api/users/fcm/:id/unregister").delete(auth.require_sign_in, fcmTokenController.unregister_fcm_token)
+
+  app.post('/api/send-fcm', async (req, res) => {
+    const { token, title, body } = req.body;
+  
+    if (!token || !title || !body) {
+      return res.status(400).send('Missing parameters');
+    }
+  
+    try {
+      const message = {
+        notification: {
+          title,
+          body
+        },
+        token
+      };
+  
+      const response = await messaging.send(message);
+      res.status(200).send(`Message sent successfully: ${response}`);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      res.status(500).send('Failed to send message');
+    }
+  });
 
   // ========================== Admin ================================ // 
 

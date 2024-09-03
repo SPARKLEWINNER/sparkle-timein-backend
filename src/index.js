@@ -15,6 +15,7 @@ const moment = require('moment-timezone');
 var mysql = require('mysql');
 require("dotenv").config();
 require("./services/passport")(passport);
+require("./services/notif")
 
 // Connect to the database
 mongoose
