@@ -2771,6 +2771,44 @@ var controllers = {
     } catch (err) {
       return res.status(500).json({ success: false, msg: "Internal Server Error" });
     }
-   },
+  },
+  edit_schedule: async function(req, res) {
+    const { id, ot, rd, nightdiff } = req.body;
+    try {
+      let schedule = await Payroll.findOne({ _id: id })
+        .lean()
+        .exec();
+      if (!schedule) {
+        return res.status(400).json({
+          success: false,
+          msg: "No such schedule",
+        });
+      }
+      else {
+        let update = {
+          $set: { otHours: ot, restday: rd, nightdiff: nightdiff },
+        };
+        result = 
+        await Payroll.findOneAndUpdate(
+          { _id: id },
+           update
+        );
+
+        if (result) {
+          return res.status(200).json({
+            success: true,
+            msg: "Update successfull",
+          });  
+        }
+      }
+    }
+    catch (err) {
+      console.log(err);
+      return res.status(400).json({
+        success: false,
+        msg: err,
+      });
+    }
+  },
 }
 module.exports = controllers;

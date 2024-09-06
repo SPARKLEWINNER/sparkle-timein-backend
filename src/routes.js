@@ -313,4 +313,5 @@ app
   app.route("/api/delete/breaklist").post(reports.delete_breaklist);
   app.route("/api/approve/breaklist").post(reports.post_approve_breaklist);
   app.route("/api/delete/schedule/:id").get(reports.delete_schedule);
+  app.route("/api/edit/schedule").post(reports.edit_schedule);
 };
