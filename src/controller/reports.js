@@ -181,7 +181,7 @@ var controllers = {
           };
 
           let update = {
-            $set: { status: status },
+            $set: { status: status, updatedAt: now },
             $push: { record: newReports },
           };
           result = 
@@ -1500,8 +1500,9 @@ var controllers = {
                 timeOut: timeOut,
                 hourswork: data.totalHours - totalUndertimeHours,
                 hoursTardy: totalMinutesDifference,
-                overtime: 0,
-                nightdiff: 0
+                overtime: data.otHours,
+                nightdiff: data.nightdiff,
+                rd: data.restday
               })
             }
             else {
@@ -1514,8 +1515,9 @@ var controllers = {
                 timeOut: timeOut,
                 hourswork: data.totalHours,
                 hoursTardy: totalMinutesDifference,
-                overtime: 0,
-                nightdiff: 0
+                overtime: data.otHours,
+                nightdiff: data.nightdiff,
+                rd: data.restday
               })
             }
           }
@@ -1530,8 +1532,9 @@ var controllers = {
                 timeOut: timeOut,
                 hourswork: data.totalHours - totalUndertimeHours,
                 hoursTardy: 0,
-                overtime: 0,
-                nightdiff: 0
+                overtime: data.otHours,
+                nightdiff: data.nightdiff,
+                rd: data.restday
               })
             }
             else {
@@ -1544,8 +1547,9 @@ var controllers = {
                 timeOut: timeOut,
                 hourswork: data.totalHours,
                 hoursTardy: 0,
-                overtime: 0,
-                nightdiff: 0
+                overtime: data.otHours,
+                nightdiff: data.nightdiff,
+                rd: data.restday
               })
             } 
           }
@@ -1560,8 +1564,9 @@ var controllers = {
             timeOut: 0,
             hourswork: 0,
             hoursTardy: 0,
-            overtime: 0,
-            nightdiff: 0
+            overtime: data.otHours,
+            nightdiff: data.nightdiff,
+            rd: data.restday
           })
         }
       }
@@ -1576,7 +1581,8 @@ var controllers = {
           hourswork: 0,
           hoursTardy: 0,
           overtime: 0,
-          nightdiff: 0
+          nightdiff: 0,
+          rd: 0
         })
       }
     }))
