@@ -1100,39 +1100,48 @@ var controllers = {
     }
   },
   get_reports_store: async function (req, res) {
-    const { store, date } = req.params;
-    let records = [];
-    if (!store || !date)
-      res
-        .status(404)
-        .json({ success: false, msg: `Invalid Request parameters.` });
+    const { store } = req.body;
+    const { date } = req.params;
+
+    if (!store || !date) {
+        return res.status(404).json({ success: false, msg: `Invalid Request parameters.` });
+    }
+
     try {
-      let employees = await User.find({ company: store, role: 0, isArchived: false}, { _id: 1, displayName: 1 })
-        .lean()
-        .exec();
-      if (!employees) {
-        return res.status(200).json({
-          success: true,
-          msg: "No registered employees",
-        });
-      }
-      let counter = 0
-      employees.map(async (data) => {
-        const report = await Reports.find({ "$and": [{ uid: data._id }, { date: date }] }).sort({ date: -1 })
-          .lean()
-          .exec();
-        if (report.length > 0) {
-          counter = counter + 1
+        // Find employees that match the criteria
+        let employees = await User.find({ company: store, role: 0, isArchived: false }, { _id: 1, displayName: 1 }).lean().exec();
+
+        if (!employees || employees.length === 0) {
+            return res.status(200).json({
+                success: true,
+                msg: "No registered employees",
+            });
         }
-        records.push({ Employee: data, Records: report, count: counter})
-      });
-      
-      let reportsv2 = await Reports.findOne({}).lean().exec()
-      return res.json(records);
+
+        // Initialize a counter for employees with reports
+        let employeesWithReportsCount = 0;
+
+        // Fetch reports for all employees in parallel using Promise.all
+        let records = await Promise.all(employees.map(async (data) => {
+            const report = await Reports.find({ uid: data._id, date }).sort({ date: -1 }).lean().exec();
+
+            // If the employee has at least one report, increment the counter
+            if (report.length > 0) {
+                employeesWithReportsCount++;
+            }
+
+            return { Employee: data, Records: report, hasReports: report.length > 0 };
+        }));
+
+        // Add the count of employees with reports to the final response
+        return res.json({
+            success: true,
+            count: employeesWithReportsCount,
+            records: records
+        });
     } catch (err) {
-      await logError(err, "Reports.get_reports_store", null, store, "GET");
-      res.status(400).json({ success: false, msg: err });
-      throw new createError.InternalServerError(err);
+        await logError(err, "Reports.get_reports_store", null, store, "GET");
+        return res.status(400).json({ success: false, msg: err.message });
     }
   },
   get_store_personnel: async function (req, res) {

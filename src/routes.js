@@ -127,8 +127,8 @@ module.exports = function (app) {
     ); 
 
   app
-    .route("/api/store/records/:store/:date")
-    .get(
+    .route("/api/store/records/:date")
+    .post(
 /*      auth.require_sign_in,
       auth.is_store_authenticated,*/
       reports.get_reports_store
