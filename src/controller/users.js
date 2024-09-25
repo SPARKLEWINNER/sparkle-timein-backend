@@ -164,6 +164,39 @@ var controllers = {
               success: false,
               msg: `Unable to update account ${id}`,
             });
+          const response = await fetch(`https://payroll-live.7star.com.ph/public/api/updateStoreName`, {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              old_store_name: prev,
+              new_store_name: company
+            })
+          });
+          if (!response.ok) {
+            // Handle non-200 responses
+            return res.status(response.status).json({
+              success: false,
+              message: 'Error fetching payroll info',
+              error: await response.text() // Get error message from the response
+            });
+          }
+
+          record = await response.json();
+          if (record.success) {
+            return res.status(200).json({
+              success: true,
+              message: 'Record fetched successfully',
+              record
+            });
+          } else {
+            return res.status(400).json({
+              success: false,
+              message: 'Failed to fetch record',
+              record
+            });
+          }
           res.json(result);
         } catch (err) {
           await logError(err, "User.company_update", null, id, "PATCH");
