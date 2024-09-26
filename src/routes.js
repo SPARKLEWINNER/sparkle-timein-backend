@@ -348,4 +348,6 @@ app
   app.route("/api/approve/breaklist").post(reports.post_approve_breaklist);
   app.route("/api/delete/schedule/:id").get(reports.delete_schedule);
   app.route("/api/edit/schedule").post(reports.edit_schedule);
+  app.route("/api/new/stores").get(reports.get_new_store_account);
+  app.route("/api/approve/store/:id").get(reports.approve_new_store_account);
 };

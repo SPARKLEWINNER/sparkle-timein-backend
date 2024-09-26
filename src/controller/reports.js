@@ -8,7 +8,8 @@ const Payroll = require("../models/Payroll");
 const Checklist = require("../models/Checklist");
 const Breaklistinfo = require("../models/Breaklistinfo");
 const Breaklist = require("../models/Breaklist");
-
+const nodemailer = require("nodemailer");
+const {emailAccountVerifiedHTML} = require("../helpers/accountActivate");
 const Coc = require("../models/Coc");
 const Tokens = require("../models/Tokens");
 const logError = require("../services/logger");
@@ -105,6 +106,7 @@ var controllers = {
         date: date,
         status: status,
         createdAt: now,
+        updatedAt: now,
         record: {
           dateTime: now,
           status: status,
@@ -2815,6 +2817,98 @@ var controllers = {
             msg: "Update successfull",
           });  
         }
+      }
+    }
+    catch (err) {
+      console.log(err);
+      return res.status(400).json({
+        success: false,
+        msg: err,
+      });
+    }
+  },
+  get_new_store_account: async function(req, res) {
+    try {
+      let stores = await User.find({
+        role: 1,
+        isArchived: true,
+        createdAt: { $gt: new Date('2024-09-26') }
+      })
+      .lean()
+      .exec();
+      if (!stores) {
+        return res.status(400).json({
+          success: false,
+          msg: "No stores found",
+        });
+      }
+      else {
+        return res.status(200).json({
+          success: true,
+          data: stores
+        });  
+      }
+    }
+    catch (err) {
+      console.log(err);
+      return res.status(400).json({
+        success: false,
+        msg: err,
+      });
+    }
+  },
+  approve_new_store_account: async function(req, res) {
+    const { id } = req.params
+    try {
+      let user = await User.findOneAndUpdate(
+        {
+          _id: id,
+          isArchived: true,
+          role: 1,
+        },
+        {
+          $set: { isArchived: false }
+        },
+        { new: true }
+      )
+        .lean()
+        .exec();
+      if (!user) {
+        return res.status(400).json({
+          success: false,
+          msg: "No user found",
+        });
+      }
+      else {
+        let transporter = nodemailer.createTransport({
+           host: process.env.SES_HOST,
+           port: 587,
+           secure: false,
+           auth: {
+             user: process.env.SES_USER,
+             pass: process.env.SES_PASS,
+           },
+         });
+        let mailOptions = {
+          from: 'no-reply@sparkles.com.ph',
+          to: user.email,
+          subject: 'Account activated',
+          html: emailAccountVerifiedHTML()
+        };
+        transporter.sendMail(mailOptions, function(error, info){
+          if (error) {
+            return res.status(400).json({
+              success: false,
+              msg: error,
+            });
+          } else {
+            return res.status(200).json({
+              success: true,
+              msg: "Store account activated."
+            });
+          }
+        });
+  
       }
     }
     catch (err) {

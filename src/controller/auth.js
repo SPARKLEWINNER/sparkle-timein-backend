@@ -187,6 +187,7 @@ var controllers = {
         role: 1, // store registration
         isOnBoarded: true,
         isVerified: true,
+        isArchived: true
       };
 
       let new_user = new User(_params);
