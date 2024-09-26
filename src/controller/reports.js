@@ -2890,7 +2890,7 @@ var controllers = {
            },
          });
         let mailOptions = {
-          from: 'no-reply@sparkles.com.ph',
+          from: 'no-reply@sparkletimekeeping.com',
           to: user.email,
           subject: 'Account activated',
           html: emailAccountVerifiedHTML()

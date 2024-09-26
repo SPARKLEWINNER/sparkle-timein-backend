@@ -25,7 +25,7 @@ exports.emailVerificationHTML = ({ verificationToken = "" }) => {
                       </tr>
                       <tr>
                           <td style="text-align:center;">
-                            <a href="sparkles.com.ph" title="logo" target="_blank">
+                            <a href="sparkletimekeeping.com" title="logo" target="_blank">
                               <img width="200" src="https://www.sparkles.com.ph/static/sparkle_logo_white-1c6a7b75f399e53f0fb6f0f4217540ef.png" title="logo" alt="logo">
                             </a>
                           </td>
@@ -62,7 +62,7 @@ exports.emailVerificationHTML = ({ verificationToken = "" }) => {
                       </tr>
                       <tr>
                           <td style="text-align:center;">
-                              <p style="font-size:14px; color:rgba(69, 80, 86, 0.7411764705882353); line-height:18px; margin:0 0 0;">&copy; <strong>sparkles.com.ph</strong></p>
+                              <p style="font-size:14px; color:rgba(69, 80, 86, 0.7411764705882353); line-height:18px; margin:0 0 0;">&copy; <strong>sparkletimekeeping.com</strong></p>
                           </td>
                       </tr>
                       <tr>
