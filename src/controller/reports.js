@@ -2832,6 +2832,7 @@ var controllers = {
       let stores = await User.find({
         role: 1,
         isArchived: true,
+        isVerified: true,
         createdAt: { $gt: new Date('2024-09-26') }
       })
       .lean()
@@ -2864,6 +2865,7 @@ var controllers = {
         {
           _id: id,
           isArchived: true,
+          isVerified: true,
           role: 1,
         },
         {
@@ -2909,6 +2911,44 @@ var controllers = {
           }
         });
   
+      }
+    }
+    catch (err) {
+      console.log(err);
+      return res.status(400).json({
+        success: false,
+        msg: err,
+      });
+    }
+  },
+  decline_new_store_account: async function(req, res) {
+    const { id } = req.params
+    try {
+      let user = await User.findOneAndUpdate(
+        {
+          _id: id,
+          isArchived: true,
+          isVerified: true,
+          role: 1,
+        },
+        {
+          $set: { isVerified: false }
+        },
+        { new: true }
+      )
+        .lean()
+        .exec();
+      if (!user) {
+        return res.status(400).json({
+          success: false,
+          msg: "No user found",
+        });
+      }
+      else {
+        return res.status(200).json({
+          success: true,
+          msg: "Store account activation declined."
+        });
       }
     }
     catch (err) {
