@@ -5,6 +5,7 @@ const User = require("../models/Users");
 const logError = require("../services/logger");
 const nodemailer = require("nodemailer");
 const {emailVerificationHTML} = require("../helpers/timeAdjustMailFormat");
+const {breaklistVerificationHTML} = require("../helpers/generateBreaklist");
 
 var controllers = {
   get_user: async function (req, res) {
@@ -307,6 +308,7 @@ var controllers = {
 
   get_users_store: async function (req, res) {
     const { company } = req.body
+    let mailOptions = {}
     try {
       const result = await User.find({ role: 1, company: company }).lean().exec();
       if (!result) {
@@ -329,8 +331,7 @@ var controllers = {
 
   timeAdjustmentSendOtp: async function (req, res){
     try{
-      const {email} = req.body
-      console.log(email)
+      const {email, breaklist} = req.body
         if(!email){
           return res.status(400).json({
             success: false,
@@ -354,15 +355,27 @@ var controllers = {
               pass: process.env.SES_PASS, // generated ethereal password
             },
           });
-
-          let mailOptions = {
-            from: 'no-reply@sparkles.com.ph',
-            to: email,
-            subject: 'Forgot Password',
-            html: emailVerificationHTML({
-              verificationToken: token,
-            })
-          };
+          if(breaklist) {
+            mailOptions = {
+              from: 'no-reply@sparkletimekeeping.com',
+              to: email,
+              subject: 'Breaklist OTP',
+              html: breaklistVerificationHTML({
+                verificationToken: token,
+              })
+            }; 
+          }
+          else {
+            mailOptions = {
+              from: 'no-reply@sparkletimekeeping.com',
+              to: email,
+              subject: 'Forgot Password',
+              html: emailVerificationHTML({
+                verificationToken: token,
+              })
+            };  
+          }
+          
           transporter.sendMail(mailOptions, function(error, info){
             if (error) {
               return res.status(400).json({
