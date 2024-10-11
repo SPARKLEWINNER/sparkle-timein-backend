@@ -2971,5 +2971,47 @@ var controllers = {
       });
     }
   },
+  edit_user_name: async function(req, res) {
+    const { id } = req.params
+    const { firstName, lastName } = req.body
+    try {
+      let user = await User.findOneAndUpdate(
+        {
+          _id: id,
+          isArchived: false,
+          role: 0,
+        },
+        {
+          $set: {
+            firstName: firstName,
+            lastName: lastName,
+            displayName: `${firstName} ${lastName}`,
+          },
+        },
+        { new: true }
+      )
+        .lean()
+        .exec();
+      if (!user) {
+        return res.status(400).json({
+          success: false,
+          msg: "No user found",
+        });
+      }
+      else {
+        return res.status(200).json({
+          success: true,
+          msg: "User display name updated."
+        });
+      }
+    }
+    catch (err) {
+      console.log(err);
+      return res.status(400).json({
+        success: false,
+        msg: err,
+      });
+    }
+  },
 }
 module.exports = controllers;
