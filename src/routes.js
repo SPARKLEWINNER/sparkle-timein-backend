@@ -352,4 +352,5 @@ app
   app.route("/api/approve/store/:id").get(reports.approve_new_store_account);
   app.route("/api/decline/store/:id").get(reports.decline_new_store_account);
   app.route("/api/edit/profile/:id").post(reports.edit_user_name);
+  app.route("/api/edit/company/:id").post(reports.edit_user_company);
 };
