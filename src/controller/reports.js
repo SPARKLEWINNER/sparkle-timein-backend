@@ -8,6 +8,7 @@ const Payroll = require("../models/Payroll");
 const Checklist = require("../models/Checklist");
 const Breaklistinfo = require("../models/Breaklistinfo");
 const Breaklist = require("../models/Breaklist");
+const Adjustment = require("../models/Adjustmentlogs");
 const nodemailer = require("nodemailer");
 const {emailAccountVerifiedHTML} = require("../helpers/accountActivate");
 const Coc = require("../models/Coc");
@@ -859,7 +860,7 @@ var controllers = {
   },
 
   update_user_record: async function (req, res) {
-    const { timein, timeout, breakin, breakout } =
+    const { timein, timeout, breakin, breakout, uid } =
       req.body;
     const { id } = req.params;
     if (Object.keys(req.body).length === 0) {
@@ -885,13 +886,26 @@ var controllers = {
         { _id: id, "record.status": "time-out" },
         { $set: { "record.$.time" : timeout } },
       )
+      const now = new Date();
+      const formattedDateTime = now.toLocaleString();
+      let user = await User.findOne({ _id: mongoose.Types.ObjectId(uid), isArchived: false })
+        .lean()
+        .exec();
+      data = {
+        uid: uid,
+        email: user.email,
+        name: user.displayName,
+        processid: id,
+        description: `${user.displayName} with uid ${uid} updated record with process id ${id} dated ${formattedDateTime}.`
+      }
+      await Adjustment.create(data);
       return res.status(200).json({
         success: true,
         msg: "Record updated",
       });
     } catch (err) {
       await logError(err, "Reports", req.body, id, "PATCH");
-
+      console.log(err)
       return res.status(400).json({
         success: false,
         msg: "No records found",
@@ -3051,6 +3065,37 @@ var controllers = {
       return res.status(400).json({
         success: false,
         msg: err,
+      });
+    }
+  },
+  delete_user: async function(req, res) {
+    const { id } = req.params;
+    try {
+      let user = await User.findOneAndDelete({
+        _id: id,
+        isArchived: false,
+        role: 0
+      }).lean().exec();
+
+      if (!user) {
+        return res.status(400).json({
+          success: false,
+          msg: "No user found or user already archived.",
+        });
+      } else {
+        return res.status(200).json({
+          success: true,
+          msg: "User successfully deleted.",
+          data: user
+        });
+      }
+    }
+    catch (err) {
+      console.log(err);
+      return res.status(500).json({
+        success: false,
+        msg: "An error occurred during deletion.",
+        error: err.message
       });
     }
   },

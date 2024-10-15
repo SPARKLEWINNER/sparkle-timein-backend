@@ -194,7 +194,10 @@ var controllers = {
               .status(400)
               .json({ success: false, msg: `Unable to update details ${user_id}` });
 
-          return res.json(result);
+          return res.status(200).json({
+            success: true,
+            msg: "User deleted."
+          });
         });
       });
     } catch (err) {
