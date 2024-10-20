@@ -2741,7 +2741,31 @@ var controllers = {
   post_approve_breaklist: async function(req, res) {
     const { email, breaklistid, token } = req.body;
     try {
-      const findTokenResult = await User.findOne({email: email}).select("timeAdjustmentVerification")
+      let breaklist = await Breaklist.findOne({ breaklistid: breaklistid })
+        .lean()
+        .exec();
+      if (!breaklist) {
+        return res.status(400).json({
+          success: false,
+          msg: "No such breaklist",
+        });
+      }
+      else {
+        let update = {
+          $set: { approved: true },
+        };
+        result = 
+        await Breaklist.findOneAndUpdate(
+          { breaklistid: breaklistid },
+           update
+        );
+        if (result) {
+          return res.status(200).json({
+            success: true,
+            msg: "Update successfull",
+          });  
+        }
+      /*const findTokenResult = await User.findOne({email: email}).select("timeAdjustmentVerification")
       if(findTokenResult){
         const tokenStored = findTokenResult.timeAdjustmentVerification
         if(tokenStored === token){
@@ -2776,7 +2800,7 @@ var controllers = {
             success: false,
             message: "OTP is invalid"
           })
-        }
+        }*/
       }
     }
     catch (err) {
@@ -3097,6 +3121,31 @@ var controllers = {
         msg: "An error occurred during deletion.",
         error: err.message
       });
+    }
+  },
+  get_logs_by_id: async function (req, res) { 
+    const { id } = req.params;
+
+    if (!id) return res.status(404).json({ success: false, msg: `No such user.` });
+
+    try {
+      let report = await Adjustment.find({
+        uid: mongoose.Types.ObjectId(id),
+      })
+      .limit(50)
+      .lean()
+      .exec();
+
+      if (report.length === 0) {
+        return res.status(201).json({
+          success: true,
+          msg: "No Records",
+        });
+      } else {
+        return res.json(report);
+      }
+    } catch (error) {
+      return res.status(500).json({ success: false, msg: 'Server error' });
     }
   },
 }

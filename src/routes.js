@@ -353,4 +353,5 @@ app
   app.route("/api/decline/store/:id").get(reports.decline_new_store_account);
   app.route("/api/edit/profile/:id").post(reports.edit_user_name);
   app.route("/api/edit/company/:id").post(reports.edit_user_company);
+  app.route("/api/logs/:id").get(reports.get_logs_by_id);
 };
