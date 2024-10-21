@@ -148,8 +148,8 @@ var controllers = {
     res.json({ message: "Sign out success" });
   },
   store_sign_up: async function (req, res) {
-    let { email, firstName, lastName, phone, company, password } = req.body;
-
+    let { email, firstName, lastName, phone, company, password, role } = req.body;
+    let _params
     if (!email || !firstName || !lastName || !phone || !company || !password)
       return res.status(400).json({
         success: false,
@@ -174,22 +174,40 @@ var controllers = {
       });
 
     try {
-      let _params = {
-        firstName: firstName,
-        lastName: lastName,
-        displayName: `${firstName} ${lastName}`,
-        email: email,
-        company: company,
-        phone: phone,
-        verificationCode: code,
-        createdAt: now.toISOString(),
-        password: password,
-        role: 1, // store registration
-        isOnBoarded: true,
-        isVerified: true,
-        isArchived: true
-      };
-
+      if(role) {
+        _params = {
+          firstName: firstName,
+          lastName: lastName,
+          displayName: `${firstName} ${lastName}`,
+          email: email,
+          company: company,
+          phone: phone,
+          verificationCode: code,
+          createdAt: now.toISOString(),
+          password: password,
+          role: role,
+          isOnBoarded: true,
+          isVerified: true,
+          isArchived: true
+        };  
+      }
+      else {
+        _params = {
+          firstName: firstName,
+          lastName: lastName,
+          displayName: `${firstName} ${lastName}`,
+          email: email,
+          company: company,
+          phone: phone,
+          verificationCode: code,
+          createdAt: now.toISOString(),
+          password: password,
+          role: 1, // store registration
+          isOnBoarded: true,
+          isVerified: true,
+          isArchived: true
+        }; 
+      }
       let new_user = new User(_params);
       try {
         let result = await User.create(new_user);
