@@ -1964,11 +1964,11 @@ var controllers = {
   },
   update_email: async function(req, res) {
     const {id, email} = req.body;
-    const user = await User.findOne({ _id: id , isArchived: false }).lean().exec();
-    if (!user) {
+    const user = await User.findOne({ email: email , isArchived: false }).lean().exec();
+    if (user) {
       return res.status(400).json({
         success: false,
-        msg: "No user found",
+        msg: "Email already in use",
       });
     }
     else {
