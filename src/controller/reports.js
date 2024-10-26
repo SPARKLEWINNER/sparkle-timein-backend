@@ -11,6 +11,7 @@ const Breaklist = require("../models/Breaklist");
 const Adjustment = require("../models/Adjustmentlogs");
 const nodemailer = require("nodemailer");
 const {emailAccountVerifiedHTML} = require("../helpers/accountActivate");
+const {emailAccountActivationFailHTML} = require("../helpers/accountActivationDecline");
 const Coc = require("../models/Coc");
 const Tokens = require("../models/Tokens");
 const logError = require("../services/logger");
@@ -2885,6 +2886,7 @@ var controllers = {
         isVerified: true,
         createdAt: { $gt: new Date('2024-09-26') }
       })
+      .sort({ createdAt: -1 })
       .lean()
       .exec();
       if (!stores) {
@@ -2972,36 +2974,56 @@ var controllers = {
     }
   },
   decline_new_store_account: async function(req, res) {
-    const { id } = req.params
+    const { id } = req.params;
     try {
-      let user = await User.findOneAndUpdate(
-        {
-          _id: id,
-          isArchived: true,
-          isVerified: true,
-          role: 1,
-        },
-        {
-          $set: { isVerified: false }
-        },
-        { new: true }
-      )
-        .lean()
-        .exec();
+      // Find and delete the user with the specified conditions
+      let user = await User.findOneAndDelete({
+        _id: id,
+        isArchived: true,
+        isVerified: true,
+        role: 1,
+      }).lean();
+
       if (!user) {
         return res.status(400).json({
           success: false,
           msg: "No user found",
         });
-      }
-      else {
-        return res.status(200).json({
-          success: true,
-          msg: "Store account activation declined."
+      } else {
+        // Set up nodemailer transporter for email notification
+        let transporter = nodemailer.createTransport({
+          host: process.env.SES_HOST,
+          port: 587,
+          secure: false,
+          auth: {
+            user: process.env.SES_USER,
+            pass: process.env.SES_PASS,
+          },
+        });
+
+        let mailOptions = {
+          from: 'no-reply@sparkletimekeeping.com',
+          to: user.email,
+          subject: 'Account activation unsuccessful',
+          html: emailAccountVerifiedHTML(),
+        };
+
+        // Send email
+        transporter.sendMail(mailOptions, function(error, info) {
+          if (error) {
+            return res.status(400).json({
+              success: false,
+              msg: error,
+            });
+          } else {
+            return res.status(200).json({
+              success: true,
+              msg: "Store account activation declined and user notified via email.",
+            });
+          }
         });
       }
-    }
-    catch (err) {
+    } catch (err) {
       console.log(err);
       return res.status(400).json({
         success: false,
