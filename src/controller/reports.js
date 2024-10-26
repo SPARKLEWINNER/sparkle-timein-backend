@@ -2882,7 +2882,7 @@ var controllers = {
   get_new_store_account: async function(req, res) {
     try {
       let stores = await User.find({
-        role: 1,
+        role: { $lte: 3 },
         isArchived: true,
         isVerified: true,
         createdAt: { $gt: new Date('2024-09-26') }
@@ -3173,7 +3173,7 @@ var controllers = {
   },
   register_store: async function (req, res) { 
     const { uid, storeid } = req.body;
-    
+
     if (!storeid) return res.status(404).json({ success: false, msg: `No such user.` });
 
     try {
