@@ -3,6 +3,7 @@ const createError = require("http-errors");
 const mongoose = require("mongoose");
 const axios = require("axios");
 const User = require("../models/Users");
+const Group = require("../models/Group");
 const Reports = require("../models/Reports");
 const Payroll = require("../models/Payroll");
 const Checklist = require("../models/Checklist");
@@ -3167,6 +3168,85 @@ var controllers = {
         return res.json(report);
       }
     } catch (error) {
+      return res.status(500).json({ success: false, msg: 'Server error' });
+    }
+  },
+  register_store: async function (req, res) { 
+    const { uid, storeid } = req.body;
+    
+    if (!storeid) return res.status(404).json({ success: false, msg: `No such user.` });
+
+    try {
+      let report = await User.findOne({
+        _id: mongoose.Types.ObjectId(storeid),
+      })
+      .lean()
+      .exec();
+      if (report.length === 0) {
+        return res.status(201).json({
+          success: true,
+          msg: "No Records",
+        });
+      } else {
+        let update = {
+          $push: { store: report.company },
+        };
+
+        try {
+          result = await Group.findOneAndUpdate(
+            { groupid: uid },
+            update,
+            { upsert: true, new: true }
+          )
+          .then((updatedDocument) => {
+            return res.status(200).json({
+              success: true,
+              msg: "Success",
+            });
+          })
+          .catch((error) => {
+            return res.status(400).json({
+              success: false,
+              msg: error,
+            });
+          });
+        } catch (error) {
+          return res.status(400).json({
+            success: false,
+            msg: error,
+          });
+        }
+
+      }
+    } catch (error) {
+      console.log(error)
+      return res.status(500).json({ success: false, msg: 'Server error' });
+    }
+  },
+  get_group_store: async function (req, res) { 
+    const { id } = req.params;
+
+    if (!id) return res.status(404).json({ success: false, msg: `No such user.` });
+
+    try {
+      let report = await Group.findOne({
+        groupid: mongoose.Types.ObjectId(id),
+      })
+      .lean()
+      .exec();
+      if (!report) {
+        return res.status(201).json({
+          success: true,
+          msg: "No Records",
+        });
+      } else {
+        return res.status(200).json({
+          success: true,
+          report,
+        });
+      }
+    } catch (error) {
+      console.log(error)
       return res.status(500).json({ success: false, msg: 'Server error' });
     }
   },

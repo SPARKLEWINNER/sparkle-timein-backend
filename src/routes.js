@@ -354,4 +354,6 @@ app
   app.route("/api/edit/profile/:id").post(reports.edit_user_name);
   app.route("/api/edit/company/:id").post(reports.edit_user_company);
   app.route("/api/logs/:id").get(reports.get_logs_by_id);
+  app.route("/api/register/store").post(reports.register_store);
+  app.route("/api/group/store/:id").get(reports.get_group_store);
 };
