@@ -65,6 +65,7 @@ const checkFiveMinutesAfter = () => {
   console.log('Checking 5 minutes after every hour');
   cron.schedule('05 * * * *', async () => {
   // cron.schedule('*/5 * * * * *', async () => {
+
     try {
       const result = await checkTimeForSubscribedUsers();
       if (result) {
@@ -86,7 +87,7 @@ const checkFiveMinutesAfter = () => {
             console.log('message: ', message)
             console.log('schedule time', scheduleTime.getTime())
             console.log('current time', currentTime.getTime())
-            if(scheduleTime.getTime() === currentTime.getTime() && currentTime > new Date(to)){
+            if(scheduleTime.getTime() === currentTime.getTime()){
               console.log('executed to remind')
               sendNotification(fcmToken, message);
             }
@@ -96,6 +97,8 @@ const checkFiveMinutesAfter = () => {
     } catch (e) {
       console.error('Error checking time for user:', e);
     }
+  }, {
+    timezone: "Asia/Manila"  // Set the timezone to Philippine time
   });
 }
 checkFiveMinutesAfter();
@@ -123,7 +126,7 @@ const checkFiveMinutesBefore = () => {
             console.log('message: ', message)
             console.log('schedule time', scheduleTime.getTime())
             console.log('current time', currentTime.getTime())
-            if(scheduleTime.getTime() === currentTime.getTime() && currentTime < scheduleTime){
+            if(scheduleTime.getTime() === currentTime.getTime()){
               console.log('executed to remind')
               sendNotification(fcmToken, message);
             }
@@ -133,6 +136,8 @@ const checkFiveMinutesBefore = () => {
     } catch (e) {
       console.error('Error checking time for user:', e);
     }
+  }, {
+    timezone: "Asia/Manila"  // Set the timezone to Philippine time
   });
 }
 checkFiveMinutesBefore();
