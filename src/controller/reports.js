@@ -2919,7 +2919,7 @@ var controllers = {
           _id: id,
           isArchived: true,
           isVerified: true,
-          role: 1,
+          role: { $lte: 3 },
         },
         {
           $set: { isArchived: false }
@@ -2982,7 +2982,7 @@ var controllers = {
         _id: id,
         isArchived: true,
         isVerified: true,
-        role: 1,
+        role: { $lte: 3 },
       }).lean();
 
       if (!user) {
@@ -3006,7 +3006,7 @@ var controllers = {
           from: 'no-reply@sparkletimekeeping.com',
           to: user.email,
           subject: 'Account activation unsuccessful',
-          html: emailAccountVerifiedHTML(),
+          html: emailAccountActivationFailHTML(),
         };
 
         // Send email

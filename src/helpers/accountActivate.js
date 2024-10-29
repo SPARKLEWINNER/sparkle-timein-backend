@@ -42,11 +42,11 @@ exports.emailAccountVerifiedHTML = () => {
                                   </tr>
                                   <tr>
                                       <td style="padding:0 35px;">
-                                          <h1 style="color:#1e1e2d; font-weight:500; margin:0;font-size:32px;font-family:'Rubik',sans-serif;">Account activation unsuccessful!</h1>
+                                          <h1 style="color:#1e1e2d; font-weight:500; margin:0;font-size:32px;font-family:'Rubik',sans-serif;">Account activated!</h1>
                                           <span
                                               style="display:inline-block; vertical-align:middle; margin:29px 0 26px; border-bottom:1px solid #cecece; width:100px;"></span>
                                           <br>
-                                          <h1 style="color:#1e1e2d; font-weight:500; margin:0;font-size:32px;font-family:'Rubik',sans-serif;">Sorry! Your account activation has been unsuccessful</h1>	  
+                                          <h1 style="color:#1e1e2d; font-weight:500; margin:0;font-size:32px;font-family:'Rubik',sans-serif;">Congratulations! Your account has been successfully activated</h1>	  
                                         </td>
                                   </tr>
                                   <tr>
