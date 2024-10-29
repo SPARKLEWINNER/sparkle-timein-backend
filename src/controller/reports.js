@@ -3189,7 +3189,7 @@ var controllers = {
         });
       } else {
         let update = {
-          $push: { store: report.company },
+          $addToSet: { store: report.company },
         };
 
         try {
