@@ -1380,7 +1380,7 @@ var controllers = {
         msg: `Missing fields`,
       });
     }
-    const record = await Payroll.find({uid: mongoose.Types.ObjectId(id)}).sort({date: 1})
+    const record = await Payroll.find({uid: mongoose.Types.ObjectId(id)}).sort({date: -1})
       .lean()
       .exec();
     res.json(record)
