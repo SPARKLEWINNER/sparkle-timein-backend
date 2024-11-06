@@ -2220,7 +2220,9 @@ var controllers = {
                     date.setSeconds(0);
                     date.setMilliseconds(0);
                     let timestamp = date.getTime();
-                    timeIn = `${moment(timestamp).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
+                    timeIn = timestamp
+                        ? `${moment(timestamp).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
+                        : null;
                   }
                   else {
                     timeIn = `${moment(reportsFound[0].record[0].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`   
@@ -2233,7 +2235,9 @@ var controllers = {
                     date.setSeconds(0);
                     date.setMilliseconds(0);
                     let timestamp2 = date.getTime();
-                    timeOut = `${moment(timestamp2).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
+                    timeOut = timestamp2
+                        ? `${moment(timestamp2).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
+                        : null;
                   }
                   else {
                     timeOut = `${moment(reportsFound[0].record[reportsLength - 1].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`   
