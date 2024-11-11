@@ -356,4 +356,6 @@ app
   app.route("/api/logs/:id").get(reports.get_logs_by_id);
   app.route("/api/register/store").post(reports.register_store);
   app.route("/api/group/store/:id").get(reports.get_group_store);
+  app.route("/api/user/store").post(stores.get_users_bystore);
+  app.route("/api/archiveduser/store").post(stores.get_archivedusers_bystore);
 };
