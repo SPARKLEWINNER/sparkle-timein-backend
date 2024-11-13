@@ -358,4 +358,6 @@ app
   app.route("/api/group/store/:id").get(reports.get_group_store);
   app.route("/api/user/store").post(stores.get_users_bystore);
   app.route("/api/archiveduser/store").post(stores.get_archivedusers_bystore);
+  app.route("/api/schedule/store").post(reports.get_schedule_all_v2_bystore);
+  app.route("/api/report/store").post(reports.get_reports_rangev2_bystore);
 };

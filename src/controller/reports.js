@@ -90,6 +90,11 @@ var controllers = {
       .lean()
       .exec();
 
+    await User.findOneAndUpdate(
+      { _id: mongoose.Types.ObjectId(id) },
+      { $set: { updatedAt: now } }
+    );
+
     if (!user) return res.status(400).json({
       success: false,
       msg: "No such users",
@@ -1127,7 +1132,7 @@ var controllers = {
 
     try {
         // Find employees that match the criteria
-        let employees = await User.find({ company: store, role: 0, isArchived: false }, { _id: 1, displayName: 1 }).lean().exec();
+        let employees = await User.find({ company: store, role: 0, isArchived: false }, { _id: 1, displayName: 1, firstName: 1, lastName: 1 }).lean().exec();
 
         if (!employees || employees.length === 0) {
             return res.status(200).json({
@@ -3252,6 +3257,173 @@ var controllers = {
     } catch (error) {
       console.log(error)
       return res.status(500).json({ success: false, msg: 'Server error' });
+    }
+  },
+
+  get_schedule_all_v2_bystore: async function (req, res) {
+
+    const { store, date } = req.body;
+    var dates = []
+    if (!store || !date )
+      res
+        .status(404)
+        .json({ success: false, msg: `Invalid Request parameters.` });
+    try {
+      let employees = await User.find({$and: [{company: store, role: 0, isArchived: false}]}, { displayName: 1, lastName: 1, firstName: 1})
+        .lean()
+        .exec();
+      if (!employees) {
+        return res.status(200).json({
+          success: true,
+          msg: "No registered employees",
+        });
+      }
+      const [month, day, year] = date.split('/');
+      const formattedDate = new Date(Date.UTC(year, month - 1, day));
+      let records = []
+      const oldDate = new Date(date);
+      oldDate.setUTCHours(16, 0, 0, 0); // Set hours to 16:00:00.000 UTC
+      const newDateString = oldDate.toISOString().replace("Z", "+00:00");
+      const promises = employees.map(async (data) => {
+        const results = await Payroll.find({
+          uid: data._id, 
+          date: new Date(formattedDate)
+        })
+        .sort({ from: 1 })
+        .lean()
+        .exec();
+
+        if (results.length > 0) {
+          results.forEach(result => {
+            records.push({
+              _id: result._id,
+              emp: data.displayName,
+              position: result.position,
+              date: result.date,
+              startShift: result.from,
+              endShift: result.to,
+              totalHours: result.totalHours,
+              otHours: result.otHours,
+              nightdiff: result.nightdiff,
+              restday: result.restday,
+              timeIn: 0,
+              timeOut: 0
+            });
+          });
+        } else {
+          records.push({
+            _id: results._id,
+            emp: data.displayName,
+            position: null,
+            date: new Date(date),
+            startShift: null,
+            endShift: null,
+            totalHours: null,
+            otHours: 0,
+            nightdiff: 0,
+            restday: 0,
+          });
+        }
+      });
+
+      await Promise.all(promises);
+      let filteredRecords = records
+        .filter(record => record.startShift !== null)
+        .sort((a, b) => {
+          // First compare by startShift
+          const startShiftComparison = a.startShift.localeCompare(b.startShift);
+          if (startShiftComparison !== 0) {
+            return startShiftComparison;
+          }
+          // If startShift is the same, compare by name
+          return a.emp.localeCompare(b.emp);
+        });
+        return res.status(200).json({
+          success: true,
+          filteredRecords,
+        })
+    } catch (err) {
+      await logError(err, "Reports", null, id, "GET");
+      res.status(400).json({ success: false, msg: err });
+      throw new createError.InternalServerError(err);
+    }
+  },
+
+  get_reports_rangev2_bystore: async function (req, res) {
+
+    const { store, startDate, endDate } = req.body;
+    var dates = []
+    for (var d = new Date(startDate); d <= new Date(endDate); d.setDate(d.getDate() + 1)) {
+      dates.push(moment(d).format('YYYY-MM-DD'))
+    }
+    if (!store || !startDate || !endDate )
+      res
+        .status(404)
+        .json({ success: false, msg: `Invalid Request parameters.` });
+    try {
+      let employees = await User.find({$and: [{company: store, role: 0, isArchived: false}]}, { displayName: 1, lastName: 1, firstName: 1})
+        .lean()
+        .exec();
+      let count = employees.length 
+      if (!employees) {
+        return res.status(200).json({
+          success: true,
+          msg: "No registered employees",
+        });
+      }
+      let records = []
+      let d = []
+      let finalReports = []
+      let reports = []
+/*      employees.map(async data => {
+        console.log(data)
+        let result = await Reports.find({uid: data._id}).lean().exec()
+        records.push({Employee: data, reports: result, count: count })
+      })*/
+
+      employees.map(data => {
+       dates.map(date => {
+          const result = Reports.find({$and: [{uid: data._id}, {date: date}]}).lean().exec()
+          d.push({date: date})  
+        })
+      })
+
+      employees.map(async data => {
+       dates.map(async date => {
+          const result = await Reports.find({$and: [{uid: data._id}, {date: date}]}).lean().exec()
+          records.push({Employee: data, date: date, reports:result, count: count})  
+        })
+      })
+
+
+      let reportsv2 = await Reports.findOne({}).lean().exec()
+/*      dates.map(date => {
+        console.log(date)
+        const filterResult = records.filter((data, key) => {
+          console.log(data.reports[0])
+          if (data.reports !== null) {
+            if (moment(data.reports.date).format('YYYY-MM-DD') === moment(date).format('YYYY-MM-DD')) {
+              finalReports.push(filterResult)   
+            }  
+          }
+        })
+      })*/
+
+/*      records.sort(function(a,b){
+        return new Date(a.date) - new Date(b.date);
+      });  */
+
+
+      records.sort(function(a, b){
+          if(a.Employee.lastName < b.Employee.lastName) { return -1; }
+          if(a.Employee.lastName > b.Employee.lastName) { return 1; }
+          return 0;
+      })
+      return res.json({data: records, l: d.length}); 
+    } catch (err) {
+      await logError(err, "Reports", null, id, "GET");
+      res.status(400).json({ success: false, msg: err });
+      throw new createError.InternalServerError(err);
     }
   },
 }
