@@ -235,7 +235,7 @@ app
 
   app.route("/api/v2/stores").get(auth.require_sign_in, auth.is_store_authenticated, stores.get_store_lists); // get all users role : 1
 
-  app.route("/api/otp/time-adjustment").post( auth.require_sign_in, auth.is_store_authenticated,stores.timeAdjustmentSendOtp)
+  app.route("/api/otp/time-adjustment").post( /*auth.require_sign_in, auth.is_store_authenticated,*/stores.timeAdjustmentSendOtp)
   
   app.route("/api/otp/verification").post(auth.require_sign_in, auth.is_store_authenticated,stores.timeAdjustmentVerification)
 
