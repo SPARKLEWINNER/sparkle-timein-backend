@@ -237,7 +237,7 @@ app
 
   app.route("/api/otp/time-adjustment").post( /*auth.require_sign_in, auth.is_store_authenticated,*/stores.timeAdjustmentSendOtp)
   
-  app.route("/api/otp/verification").post(auth.require_sign_in, auth.is_store_authenticated,stores.timeAdjustmentVerification)
+  app.route("/api/otp/verification").post(/*auth.require_sign_in, auth.is_store_authenticated,*/stores.timeAdjustmentVerification)
 
   // Subscription
   app.route('/api/v2/subscriptions/:id').get(auth.require_sign_in, auth.is_admin_authenticated, subscription.get_subscription)
