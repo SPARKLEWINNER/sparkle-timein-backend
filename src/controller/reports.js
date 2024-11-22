@@ -24,6 +24,7 @@ const Announcement = require("../models/announcements");
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken"); // to generate signed token
 const jwt_decode = require('jwt-decode')
+
 const maxAge = 3 * 24 * 60 * 60;
 const create_token = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: maxAge });

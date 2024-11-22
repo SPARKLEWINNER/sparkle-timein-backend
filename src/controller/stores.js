@@ -6,6 +6,7 @@ const logError = require("../services/logger");
 const nodemailer = require("nodemailer");
 const {emailVerificationHTML} = require("../helpers/timeAdjustMailFormat");
 const {breaklistVerificationHTML} = require("../helpers/generateBreaklist");
+const axios = require("axios");
 
 var controllers = {
   get_user: async function (req, res) {
@@ -332,6 +333,7 @@ var controllers = {
     }
   },
 
+
   timeAdjustmentSendOtp: async function (req, res){
     try{
       const {email, breaklist} = req.body
@@ -347,7 +349,29 @@ var controllers = {
           {$set:{timeAdjustmentVerification: token}},
           {new: true}
         )
+        const sendEmail = async (email) => {
+          try {
+            const response = await axios.post(
+              'https://api.resend.com/emails',
+              {
+                from: 'onboarding@resend.dev',
+                to: 'edrugonzales@gmail.com',
+                subject: 'Hello World',
+                html: '<p>Congrats on sending your <strong>first email</strong>!</p>',
+              },
+              {
+                headers: {
+                  Authorization: 'Bearer re_f3pBiG92_CrrsS9uzy7WuuZZerFVxRwrs',
+                  'Content-Type': 'application/json',
+                },
+              }
+            );
 
+            console.log('Email sent successfully:', response.data);
+          } catch (error) {
+            console.error('Error sending email:', error.response?.data || error.message);
+          }
+        };
         if(storeTokenResult){
           let transporter = nodemailer.createTransport({
             host: process.env.SES_HOST,
@@ -367,6 +391,24 @@ var controllers = {
                 verificationToken: token,
               })
             }; 
+            const response = await axios.post(
+              'https://api.resend.com/emails',
+              {
+                from: 'onboarding@resend.dev',
+                to: email,
+                subject: 'Breaklist OTP',
+                html: breaklistVerificationHTML({
+                  verificationToken: token,
+                }),
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${process.env.RESEND_KEY}`,
+                  'Content-Type': 'application/json',
+                },
+              }
+            );
+
           }
           else {
             mailOptions = {
@@ -377,6 +419,23 @@ var controllers = {
                 verificationToken: token,
               })
             };  
+            const response = await axios.post(
+              'https://api.resend.com/emails',
+              {
+                from: 'Time adjustment OTP <no-reply@sparkletimekeeping.com>',
+                to: email,
+                subject: 'Forgot Password',
+                html: emailVerificationHTML({
+                  verificationToken: token,
+                }),
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${process.env.RESEND_KEY}`,
+                  'Content-Type': 'application/json',
+                },
+              }
+            );
           }
           
           transporter.sendMail(mailOptions, function(error, info){
@@ -392,6 +451,8 @@ var controllers = {
               });
             }
           });
+
+
         }
     }catch(error){
       console.log(error)
