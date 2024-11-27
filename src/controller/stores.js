@@ -366,8 +366,6 @@ var controllers = {
                 },
               }
             );
-
-            console.log('Email sent successfully:', response.data);
           } catch (error) {
             console.error('Error sending email:', error.response?.data || error.message);
           }
@@ -394,7 +392,7 @@ var controllers = {
             const response = await axios.post(
               'https://api.resend.com/emails',
               {
-                from: 'onboarding@resend.dev',
+                from: 'no-reply@sparkletimekeeping.com',
                 to: email,
                 subject: 'Breaklist OTP',
                 html: breaklistVerificationHTML({
@@ -424,7 +422,7 @@ var controllers = {
               {
                 from: 'Time adjustment OTP <no-reply@sparkletimekeeping.com>',
                 to: email,
-                subject: 'Forgot Password',
+                subject: 'Sparkletimekeeping OTP',
                 html: emailVerificationHTML({
                   verificationToken: token,
                 }),
