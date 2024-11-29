@@ -2653,6 +2653,26 @@ var controllers = {
     }
   },
 
+  get_store_breaklist_pending: async function (req, res) {
+    const {store} = req.body;
+
+    try {
+      const breaklist = await Breaklist.find({ store: store, approved: false }).sort({ createdAt: -1 }).exec();
+      
+      console.log('Breaklist retrieved successfully:');
+  
+      return res.status(200).json({
+        success: true,
+        data: breaklist
+      });
+
+    } catch (err) {
+      console.error('Error retrieving breaklist:', err);
+  
+      return res.status(500).json({ success: false, msg: "Internal Server Error" });
+    }
+  },
+
   get_store_breaklist_approved: async function (req, res) {
     const {  payroll } = req.body;
   
@@ -3427,5 +3447,45 @@ var controllers = {
       throw new createError.InternalServerError(err);
     }
   },
+
+  updateBreaklist: async function (req, res) {
+    const {id, updateData} = req.body;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        msg: `Record not found ${id}`,
+      });
+    }
+    const updateResults = await Promise.all( 
+      updatedData.map(async (data) => {
+        const { breaklistid, ...updateFields } = data;
+        if (!breaklistid) {
+          return { breaklistid: null, status: 'failed', error: 'breaklistid is missing' };
+        }
+        try {
+          const updatedBreaklist = await Breaklist.findOneAndUpdate(
+            { breaklistid },        
+            updateFields,             
+            { new: true }             
+          );
+
+          if (!updatedBreaklist) {
+            return { breaklistid, status: 'failed', error: 'Breaklist not found' };
+          }
+
+          return { breaklistid, status: 'success', data: updatedBreaklist };
+        } catch (error) {
+          return { breaklistid, status: 'failed', error: error.message };
+        }
+
+      })
+    )
+    res.status(200).send({
+      message: 'Update completed',
+    });
+  },
+
+
 }
 module.exports = controllers;

@@ -15,6 +15,9 @@ var fcmTokenController = require('./controller/fcm')
 const {messaging} = require('./services/firebase');
 
 module.exports = function (app) {
+  app.get('/health', (req, res) => {
+    res.status(200).json({status: 'ok', timestamp: new Date()})
+  })
   app.route("/").get(api.get_app_info);
   app.route("/api/users").get(auth.require_sign_in, user.get_users);
   app.route("/api/user/:id").get(auth.require_sign_in, user.get_user);
@@ -342,6 +345,7 @@ app
   app.route("/api/reports/breaklist").post(reports.get_reports_for_breaklist);
   app.route("/api/save/breaklist").post(reports.post_save_breaklist);
   app.route("/api/list/breaklist").post(reports.get_store_breaklist);
+  app.route("/api/list/breaklist/pending").post(reports.get_store_breaklist_pending);
   app.route("/api/list/breaklistapproved").post(reports.get_store_breaklist_approved);
   app.route("/api/breaklistinfo").post(reports.get_breaklistinfo);
   app.route("/api/delete/breaklist").post(reports.delete_breaklist);
@@ -360,4 +364,5 @@ app
   app.route("/api/archiveduser/store").post(stores.get_archivedusers_bystore);
   app.route("/api/schedule/store").post(reports.get_schedule_all_v2_bystore);
   app.route("/api/report/store").post(reports.get_reports_rangev2_bystore);
+  app.route("/api/update/breaklist").post(reports.updateBreaklist);
 };
