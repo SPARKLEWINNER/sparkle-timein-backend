@@ -52,6 +52,8 @@ const server = app.listen(port, () => {
   console.log(`Listening on port ${port}`);
 });
 
+server.setTimeout(60000);
+
 // const io = require('./socket').init(server);
 const io = require("socket.io")(server, {
   cors: { origin: "*" },
