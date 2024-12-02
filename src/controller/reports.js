@@ -2617,7 +2617,7 @@ var controllers = {
       await data.save();
       }
 
-      console.log(`${results} Breaklist documents were inserted`);
+      /*console.log(`${results} Breaklist documents were inserted`);*/
 
       return res.status(200).json({
         success: true,
@@ -2700,8 +2700,8 @@ var controllers = {
       const totalBreaklist = allBreaklists.length;
       const totalApproved = approvedBreaklists.length;
   
-      console.log(detailedBreaklist, 'Breaklist retrieved successfully:');
-  
+      /*console.log(detailedBreaklist, 'Breaklist retrieved successfully:');
+  */
       return res.status(200).json({
         success: true,
         data: detailedBreaklist,
@@ -3282,94 +3282,72 @@ var controllers = {
   },
 
   get_schedule_all_v2_bystore: async function (req, res) {
-
     const { store, date } = req.body;
-    var dates = []
-    if (!store || !date )
-      res
-        .status(404)
-        .json({ success: false, msg: `Invalid Request parameters.` });
+
+    if (!store || !date) {
+      return res.status(400).json({ success: false, msg: `Invalid Request parameters.` });
+    }
+
     try {
-      let employees = await User.find({$and: [{company: store, role: 0, isArchived: false}]}, { displayName: 1, lastName: 1, firstName: 1})
-        .lean()
-        .exec();
-      if (!employees) {
-        return res.status(200).json({
-          success: true,
-          msg: "No registered employees",
-        });
-      }
       const [month, day, year] = date.split('/');
       const formattedDate = new Date(Date.UTC(year, month - 1, day));
-      let records = []
-      const oldDate = new Date(date);
-      oldDate.setUTCHours(16, 0, 0, 0); // Set hours to 16:00:00.000 UTC
-      const newDateString = oldDate.toISOString().replace("Z", "+00:00");
-      const promises = employees.map(async (data) => {
-        const results = await Payroll.find({
-          uid: data._id, 
-          date: new Date(formattedDate)
-        })
+
+      const results = await Payroll.find({
+        company: store,
+        date: formattedDate,
+      })
         .sort({ from: 1 })
         .lean()
         .exec();
+      const records = results.map((result) => ({
+        _id: result._id,
+        emp: result.name || "Unknown",
+        position: result.position || "Unassigned",
+        date: result.date,
+        startShift: result.from,
+        endShift: result.to,
+        totalHours: result.totalHours,
+        otHours: result.otHours || 0,
+        nightdiff: result.nightdiff || 0,
+        restday: result.restday || 0,
+        timeIn: 0,
+        timeOut: 0,
+      }));
 
-        if (results.length > 0) {
-          results.forEach(result => {
-            records.push({
-              _id: result._id,
-              emp: data.displayName,
-              position: result.position,
-              date: result.date,
-              startShift: result.from,
-              endShift: result.to,
-              totalHours: result.totalHours,
-              otHours: result.otHours,
-              nightdiff: result.nightdiff,
-              restday: result.restday,
-              timeIn: 0,
-              timeOut: 0
-            });
-          });
-        } else {
-          records.push({
-            _id: results._id,
-            emp: data.displayName,
-            position: null,
-            date: new Date(date),
-            startShift: null,
-            endShift: null,
-            totalHours: null,
-            otHours: 0,
-            nightdiff: 0,
-            restday: 0,
-          });
-        }
-      });
-
-      await Promise.all(promises);
-      let filteredRecords = records
-        .filter(record => record.startShift !== null)
-        .sort((a, b) => {
-          // First compare by startShift
-          const startShiftComparison = a.startShift.localeCompare(b.startShift);
-          if (startShiftComparison !== 0) {
-            return startShiftComparison;
-          }
-          // If startShift is the same, compare by name
-          return a.emp.localeCompare(b.emp);
+      if (records.length === 0) {
+        records.push({
+          _id: null,
+          emp: "No Employee Found",
+          position: null,
+          date: formattedDate,
+          startShift: null,
+          endShift: null,
+          totalHours: null,
+          otHours: 0,
+          nightdiff: 0,
+          restday: 0,
+          timeIn: 0,
+          timeOut: 0,
         });
-        return res.status(200).json({
-          success: true,
-          filteredRecords,
-        })
+      }
+
+      const filteredRecords = records
+        .filter((record) => record.startShift !== null)
+        .sort((a, b) => {
+          // Compare by startShift
+          const shiftComparison = a.startShift.localeCompare(b.startShift);
+          return shiftComparison !== 0 ? shiftComparison : a.emp.localeCompare(b.emp);
+        });
+
+      return res.status(200).json({
+        success: true,
+        filteredRecords,
+      });
     } catch (err) {
-      await logError(err, "Reports", null, id, "GET");
-      res.status(400).json({ success: false, msg: err });
-      throw new createError.InternalServerError(err);
+      await logError(err, "Reports", null, null, "GET");
+      res.status(500).json({ success: false, msg: "Internal Server Error", error: err.message });
     }
   },
-
   get_reports_rangev2_bystore: async function (req, res) {
 
     const { store, startDate, endDate } = req.body;
@@ -3449,43 +3427,65 @@ var controllers = {
   },
 
   updateBreaklist: async function (req, res) {
-    const {id, updateData} = req.body;
+    const { updatedData } = req.body;
 
-    if (!id) {
-      return res.status(400).json({
-        success: false,
-        msg: `Record not found ${id}`,
+    if (!Array.isArray(updatedData) || updatedData.length === 0) {
+      return res.status(400).send({
+        message: 'Invalid input: updatedData must be a non-empty array.',
       });
     }
-    const updateResults = await Promise.all( 
-      updatedData.map(async (data) => {
-        const { breaklistid, ...updateFields } = data;
-        if (!breaklistid) {
-          return { breaklistid: null, status: 'failed', error: 'breaklistid is missing' };
-        }
-        try {
-          const updatedBreaklist = await Breaklist.findOneAndUpdate(
-            { breaklistid },        
-            updateFields,             
-            { new: true }             
-          );
 
-          if (!updatedBreaklist) {
-            return { breaklistid, status: 'failed', error: 'Breaklist not found' };
+    try {
+      // Perform updates concurrently
+      const updateResults = await Promise.all(
+        updatedData.map(async (data) => {
+          const { breaklistid, ...updateFields } = data;
+
+          // Validate breaklistid
+          if (!breaklistid) {
+            return { breaklistid: null, status: 'failed', error: 'breaklistid is missing' };
           }
 
-          return { breaklistid, status: 'success', data: updatedBreaklist };
-        } catch (error) {
-          return { breaklistid, status: 'failed', error: error.message };
-        }
+          try {
+            console.log(updateFields.overtime)
+            // Update record
+            const updatedBreaklist = await Breaklistinfo.findOneAndUpdate(
+              { 
+                breaklistid: breaklistid,
+                employeeid: updateFields.employeeid,
+              }, // Find record by ID
+              {
+                overtime: updateFields.overtime,
+                nightdiff: updateFields.nightdiff,
+                restday: updateFields.restday,
+              }, // Fields to update
+              { new: true } // Return the updated document
+            );
 
-      })
-    )
-    res.status(200).send({
-      message: 'Update completed',
-    });
+            if (!updatedBreaklist) {
+              return { breaklistid, status: 'failed', error: 'Breaklist not found' };
+            }
+
+            return { breaklistid, status: 'success', data: updatedBreaklist };
+          } catch (error) {
+            return { breaklistid, status: 'failed', error: error.message };
+          }
+        })
+      );
+
+      // Send detailed results in the response
+      res.status(200).send({
+        message: 'Update completed',
+        results: updateResults, // Include details of each update operation
+      });
+    } catch (error) {
+      // Catch unexpected errors
+      res.status(500).send({
+        message: 'An error occurred during the update process.',
+        error: error.message,
+      });
+    }
   },
-
 
 }
 module.exports = controllers;
