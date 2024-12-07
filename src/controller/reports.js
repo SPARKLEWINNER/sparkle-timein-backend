@@ -15,6 +15,7 @@ const {emailAccountVerifiedHTML} = require("../helpers/accountActivate");
 const {emailAccountActivationFailHTML} = require("../helpers/accountActivationDecline");
 const Coc = require("../models/Coc");
 const Tokens = require("../models/Tokens");
+const Holidays = require("../models/Holidays");
 const logError = require("../services/logger");
 const mailer = require("../services/mailer");
 const moment = require('moment-timezone');
@@ -2209,6 +2210,8 @@ var controllers = {
             let schedulesFound = await Payroll.find({uid: data._id, date: date}).lean().exec()
             let timeIn
             let timeOut
+            let legalHoliday = 0
+            let specialHoliday = 0
             if (schedulesFound.length > 0) {
               let reportsFound = await Reports.find({uid: schedulesFound[0].uid, date: schedulesFound[0].date}).lean().exec()
               if (reportsFound.length > 0) {
@@ -2300,8 +2303,17 @@ var controllers = {
                   if(dateTimeOut2 > dateTimeOut1){
                     totalUndertimeHours += 1
                   }
+                  const formattedHolidayDate = moment(schedulesFound[0].date).format("YYYY-MM-DD");
+                  let holidayFound = await Holidays.findOne({date: formattedHolidayDate}).lean().exec()
+                  if(holidayFound && holidayFound.type !== "Special Holiday") {
+                    legalHoliday += 8
+                  }
                   if (timeOnly2 < timeOnly1) {
+
                     if (dateTimeOut2 > dateTimeOut1) {
+                      if(holidayFound && holidayFound.type === "Special Holiday") {
+                        specialHoliday = schedulesFound[0].totalHours - totalUndertimeHours
+                      }
                       records.push({ 
                         _id: data._id,
                         empName: data.lastName + ", " + data.firstName, 
@@ -2310,10 +2322,15 @@ var controllers = {
                         hourstardy: totalMinutesDifference, 
                         overtime: schedulesFound[0].otHours,
                         nightdiff: schedulesFound[0].nightdiff,
-                        restday: schedulesFound[0].restday
+                        restday: schedulesFound[0].restday,
+                        legalholiday: legalHoliday,
+                        specialholiday: specialHoliday
                       });
                     }
                     else {
+                      if(holidayFound && holidayFound.type === "Special Holiday") {
+                        specialHoliday = schedulesFound[0].totalHours
+                      }
                       records.push({ 
                         _id: data._id,
                         empName: data.lastName + ", " + data.firstName, 
@@ -2322,11 +2339,17 @@ var controllers = {
                         hourstardy: totalMinutesDifference, 
                         overtime: schedulesFound[0].otHours,
                         nightdiff: schedulesFound[0].nightdiff,
-                        restday: schedulesFound[0].restday
+                        restday: schedulesFound[0].restday,
+                        legalholiday: legalHoliday,
+                        specialholiday: specialHoliday
                       });
                     }
                   } else {
+
                     if (moment(dateTimeOut2).utc().format() > moment(dateTimeOut1).utc().format()) {
+                      if(holidayFound && holidayFound.type === "Special Holiday") {
+                        specialHoliday = schedulesFound[0].totalHours
+                      }
                       records.push({ 
                         _id: data._id,
                         empName: data.lastName + ", " + data.firstName, 
@@ -2335,10 +2358,15 @@ var controllers = {
                         hourstardy: 0, 
                         overtime: schedulesFound[0].otHours,
                         nightdiff: schedulesFound[0].nightdiff, 
-                        restday: schedulesFound[0].restday
+                        restday: schedulesFound[0].restday,
+                        legalholiday: legalHoliday,
+                        specialholiday: specialHoliday
                       });
                     }
                     else {
+                      if(holidayFound && holidayFound.type === "Special Holiday") {
+                        specialHoliday = schedulesFound[0].totalHours
+                      }
                       records.push({ 
                         _id: data._id,
                         empName: data.lastName + ", " + data.firstName, 
@@ -2347,7 +2375,9 @@ var controllers = {
                         hourstardy: 0, 
                         overtime: schedulesFound[0].otHours,
                         nightdiff: schedulesFound[0].nightdiff,
-                        restday: schedulesFound[0].restday
+                        restday: schedulesFound[0].restday,
+                        legalholiday: legalHoliday,
+                        specialholiday: specialHoliday
                       });  
                     }
                     
@@ -2362,7 +2392,9 @@ var controllers = {
                     hourstardy: 0, 
                     overtime: schedulesFound[0].otHours,
                     nightdiff: schedulesFound[0].nightdiff,
-                    restday: schedulesFound[0].restday
+                    restday: schedulesFound[0].restday,
+                    legalholiday: legalHoliday,
+                    specialholiday: 0
                   });  
                 }
               }
@@ -2375,7 +2407,9 @@ var controllers = {
                   hourstardy: 0, 
                   overtime: schedulesFound[0].otHours,
                   nightdiff: schedulesFound[0].nightdiff,
-                  restday: schedulesFound[0].restday
+                  restday: schedulesFound[0].restday,
+                  legalholiday: legalHoliday,
+                  specialholiday: 0
                 });   
               } 
             }
@@ -2411,6 +2445,12 @@ var controllers = {
             if (!entry.restday) {
               entry.restday = 0
             }
+            if (!entry.legalholiday) {
+              entry.legalholiday = 0
+            }
+            if (!entry.specialholiday) {
+              entry.specialholiday = 0
+            }
             if (uniqueData[empId]) {
               uniqueData[empId].hourswork += parseFloat(entry.hourswork);
               uniqueData[empId].hourstardy += parseInt(entry.hourstardy, 10);
@@ -2418,6 +2458,8 @@ var controllers = {
               uniqueData[empId].overtime += parseInt(entry.overtime, 10);
               uniqueData[empId].nightdiff += parseInt(entry.nightdiff, 10);
               uniqueData[empId].restday += parseInt(entry.restday, 10);
+              uniqueData[empId].legalholiday += parseInt(entry.legalholiday, 10);
+              uniqueData[empId].specialholiday += parseInt(entry.specialholiday, 10);
             } else {
               uniqueData[empId] = {
                 ...entry,
@@ -2427,6 +2469,8 @@ var controllers = {
                 overtime: parseInt(entry.overtime, 10),
                 nightdiff: parseInt(entry.nightdiff, 10),
                 restday: parseInt(entry.restday, 10),
+                legalholiday: parseInt(entry.legalholiday, 10),
+                specialholiday: parseInt(entry.specialholiday, 10),
               }; 
 
             }
@@ -2771,9 +2815,9 @@ var controllers = {
     }
   },
   post_approve_breaklist: async function(req, res) {
-    const { email, breaklistid, token } = req.body;
+    const { email, breaklistid, token, approver } = req.body;
     try {
-      let breaklist = await Breaklist.findOne({ breaklistid: breaklistid })
+      /*let breaklist = await Breaklist.findOne({ breaklistid: breaklistid })
         .lean()
         .exec();
       if (!breaklist) {
@@ -2784,7 +2828,7 @@ var controllers = {
       }
       else {
         let update = {
-          $set: { approved: true },
+          $set: { approved: true, approvedby:  },
         };
         result = 
         await Breaklist.findOneAndUpdate(
@@ -2796,8 +2840,8 @@ var controllers = {
             success: true,
             msg: "Update successfull",
           });  
-        }
-      /*const findTokenResult = await User.findOne({email: email}).select("timeAdjustmentVerification")
+        }*/
+      const findTokenResult = await User.findOne({email: email}).select("timeAdjustmentVerification")
       if(findTokenResult){
         const tokenStored = findTokenResult.timeAdjustmentVerification
         if(tokenStored === token){
@@ -2812,7 +2856,7 @@ var controllers = {
           }
           else {
             let update = {
-              $set: { approved: true },
+              $set: { approved: true, approvedby: approver },
             };
             result = 
             await Breaklist.findOneAndUpdate(
@@ -2832,7 +2876,7 @@ var controllers = {
             success: false,
             message: "OTP is invalid"
           })
-        }*/
+        }
       }
     }
     catch (err) {
@@ -3486,6 +3530,33 @@ var controllers = {
       });
     }
   },
+  post_holiday: async function (req, res) { 
+      const { holiday, type, date } = req.body;
+
+      if (!date) return res.status(400).json({ success: false, msg: `Date is required.` });
+
+      try {
+        let existingHoliday = await Holidays.findOne({ date }).lean().exec();
+        if (existingHoliday) {
+          return res.status(200).json({
+            success: true,
+            msg: "Date already saved.",
+          });
+        } 
+        const newHoliday = new Holidays({ holiday, type, date });
+        await newHoliday.save();
+        return res.status(201).json({
+          success: true,
+          msg: "Holiday saved successfully.",
+        });
+      } catch (error) {
+        return res.status(500).json({ 
+          success: false, 
+          msg: 'Server error', 
+          error: error.message 
+        });
+      }
+    },
 
 }
 module.exports = controllers;

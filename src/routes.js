@@ -365,4 +365,5 @@ app
   app.route("/api/schedule/store").post(reports.get_schedule_all_v2_bystore);
   app.route("/api/report/store").post(reports.get_reports_rangev2_bystore);
   app.route("/api/update/breaklist").post(reports.updateBreaklist);
+  app.route("/api/holiday").post(reports.post_holiday);
 };
