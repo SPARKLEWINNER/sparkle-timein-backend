@@ -1396,6 +1396,8 @@ var controllers = {
     const { id, from, to } = req.body;
     let records = []
     let personnelName
+    let legalHoliday = 0
+    let specialHoliday = 0
     if (!id) {
       return res.status(400).json({
         success: false,
@@ -1523,6 +1525,11 @@ var controllers = {
           if(dateTimeOut2 > dateTimeOut1){
             totalUndertimeHours += 1
           }
+          const formattedHolidayDate = moment(data.date).format("YYYY-MM-DD");
+          let holidayFound = await Holidays.findOne({date: formattedHolidayDate}).lean().exec()
+          if(holidayFound && holidayFound.type !== "Special Holiday") {
+            legalHoliday += 8
+          }
           if (timeOnly2 < timeOnly1) {
             if (dateTimeOut2 > dateTimeOut1) {
               records.push({
@@ -1536,7 +1543,9 @@ var controllers = {
                 hoursTardy: totalMinutesDifference,
                 overtime: data.otHours,
                 nightdiff: data.nightdiff,
-                rd: data.restday
+                rd: data.restday,
+                legalholiday: legalHoliday,
+                specialholiday: specialHoliday
               })
             }
             else {
@@ -1551,7 +1560,9 @@ var controllers = {
                 hoursTardy: totalMinutesDifference,
                 overtime: data.otHours,
                 nightdiff: data.nightdiff,
-                rd: data.restday
+                rd: data.restday,
+                legalholiday: legalHoliday,
+                specialholiday: specialHoliday
               })
             }
           }
@@ -1568,7 +1579,9 @@ var controllers = {
                 hoursTardy: 0,
                 overtime: data.otHours,
                 nightdiff: data.nightdiff,
-                rd: data.restday
+                rd: data.restday,
+                legalholiday: legalHoliday,
+                specialholiday: specialHoliday
               })
             }
             else {
@@ -1583,7 +1596,9 @@ var controllers = {
                 hoursTardy: 0,
                 overtime: data.otHours,
                 nightdiff: data.nightdiff,
-                rd: data.restday
+                rd: data.restday,
+                legalholiday: legalHoliday,
+                specialholiday: specialHoliday
               })
             } 
           }
@@ -1600,7 +1615,9 @@ var controllers = {
             hoursTardy: 0,
             overtime: data.otHours,
             nightdiff: data.nightdiff,
-            rd: data.restday
+            rd: data.restday,
+            legalholiday: legalHoliday,
+            specialholiday: 0
           })
         }
       }
@@ -1616,7 +1633,9 @@ var controllers = {
           hoursTardy: 0,
           overtime: 0,
           nightdiff: 0,
-          rd: 0
+          rd: 0,
+          legalholiday: 0,
+          specialholiday: 0
         })
       }
     }))
