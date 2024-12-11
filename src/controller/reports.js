@@ -1527,11 +1527,20 @@ var controllers = {
           }
           const formattedHolidayDate = moment(data.date).format("YYYY-MM-DD");
           let holidayFound = await Holidays.findOne({date: formattedHolidayDate}).lean().exec()
-          if(holidayFound && holidayFound.type !== "Special Holiday") {
-            legalHoliday += 8
-          }
           if (timeOnly2 < timeOnly1) {
             if (dateTimeOut2 > dateTimeOut1) {
+              if(holidayFound && holidayFound.type != "Special Holiday") {
+                legalHoliday = 8
+              }
+              else {
+                legalHoliday = 0
+              }
+              if(holidayFound && holidayFound.type == "Special Holiday") {
+                specialHoliday = data.totalHours - totalUndertimeHours
+              }
+              else {
+                specialHoliday = 0
+              }
               records.push({
                 _id: id,
                 date: date,
@@ -1549,6 +1558,18 @@ var controllers = {
               })
             }
             else {
+              if(holidayFound && holidayFound.type != "Special Holiday") {
+                legalHoliday = 8
+              }
+              else {
+                legalHoliday = 0
+              }
+              if(holidayFound && holidayFound.type == "Special Holiday") {
+                specialHoliday = data.totalHours - totalUndertimeHours
+              }
+              else {
+                specialHoliday = 0
+              }
               records.push({
                 _id: id,
                 date: date,
@@ -1567,7 +1588,20 @@ var controllers = {
             }
           }
           else {
+
             if (dateTimeOut2 > dateTimeOut1) {
+              if(holidayFound && holidayFound.type != "Special Holiday") {
+                legalHoliday = 8
+              }
+              else {
+                legalHoliday = 0
+              }
+              if(holidayFound && holidayFound.type == "Special Holiday") {
+                specialHoliday = data.totalHours - totalUndertimeHours
+              }
+              else {
+                specialHoliday = 0
+              }
               records.push({
                 _id: id,
                 date: date,
@@ -1585,6 +1619,18 @@ var controllers = {
               })
             }
             else {
+              if(holidayFound && holidayFound.type != "Special Holiday") {
+                legalHoliday = 8
+              }
+              else {
+                legalHoliday = 0
+              }
+              if(holidayFound && holidayFound.type == "Special Holiday") {
+                specialHoliday = data.totalHours - totalUndertimeHours
+              }
+              else {
+                specialHoliday = 0
+              }
               records.push({
                 _id: id,
                 date: date,
@@ -3510,7 +3556,6 @@ var controllers = {
           }
 
           try {
-            console.log(updateFields.overtime)
             // Update record
             const updatedBreaklist = await Breaklistinfo.findOneAndUpdate(
               { 

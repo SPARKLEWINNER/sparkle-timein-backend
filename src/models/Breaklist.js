@@ -29,7 +29,6 @@ const data = {
     },
     approvedby: {
         type: String,
-        required: true,
     },
     employeecount: {
         type: Number,
