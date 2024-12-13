@@ -334,131 +334,87 @@ var controllers = {
   },
 
 
-  timeAdjustmentSendOtp: async function (req, res){
-    try{
-      const {email, breaklist} = req.body
-        if(!email){
-          return res.status(400).json({
-            success: false,
-            message: "Email is required"
-          })
-        }
-        const token = Math.trunc(Math.random() * 999999)
-        const storeTokenResult = await User.findOneAndUpdate(
-          {email: email},
-          {$set:{timeAdjustmentVerification: token}},
-          {new: true}
-        )
-        const sendEmail = async (email) => {
-          try {
-            const response = await axios.post(
-              'https://api.resend.com/emails',
-              {
-                from: 'onboarding@resend.dev',
-                to: 'edrugonzales@gmail.com',
-                subject: 'Hello World',
-                html: '<p>Congrats on sending your <strong>first email</strong>!</p>',
-              },
-              {
-                headers: {
-                  Authorization: 'Bearer re_f3pBiG92_CrrsS9uzy7WuuZZerFVxRwrs',
-                  'Content-Type': 'application/json',
-                },
-              }
-            );
-          } catch (error) {
-            console.error('Error sending email:', error.response?.data || error.message);
-          }
-        };
-        if(storeTokenResult){
-          let transporter = nodemailer.createTransport({
-            host: process.env.SES_HOST,
-            port: 587,
-            secure: false, // true for 465, false for other ports
-            auth: {
-              user: process.env.SES_USER, // generated ethereal user
-              pass: process.env.SES_PASS, // generated ethereal password
+  timeAdjustmentSendOtp: async function (req, res) {
+    try {
+      const { email, breaklist } = req.body;
+
+      if (!email) {
+        return res.status(400).json({
+          success: false,
+          message: "Email is required",
+        });
+      }
+
+      const token = Math.trunc(Math.random() * 999999);
+
+      // Update the user's token
+      const storeTokenResult = await User.findOneAndUpdate(
+        { email },
+        { $set: { timeAdjustmentVerification: token } },
+        { new: true }
+      );
+
+      if (!storeTokenResult) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
+
+      // Create transporter for nodemailer (optional if Resend is used)
+      const transporter = nodemailer.createTransport({
+        host: process.env.SES_HOST,
+        port: 587,
+        secure: false,
+        auth: {
+          user: process.env.SES_USER,
+          pass: process.env.SES_PASS,
+        },
+      });
+
+      // Send email via Resend API
+      const sendEmail = async (subject, htmlTemplate) => {
+        try {
+          await axios.post(
+            'https://api.resend.com/emails',
+            {
+              from: 'no-reply@sparkletimekeeping.com',
+              to: email,
+              subject,
+              html: htmlTemplate,
             },
-          });
-          if(breaklist) {
-            mailOptions = {
-              from: 'no-reply@sparkletimekeeping.com',
-              to: email,
-              subject: 'Breaklist OTP',
-              html: breaklistVerificationHTML({
-                verificationToken: token,
-              })
-            }; 
-            const response = await axios.post(
-              'https://api.resend.com/emails',
-              {
-                from: 'no-reply@sparkletimekeeping.com',
-                to: email,
-                subject: 'Breaklist OTP',
-                html: breaklistVerificationHTML({
-                  verificationToken: token,
-                }),
+            {
+              headers: {
+                Authorization: `Bearer ${process.env.RESEND_KEY}`,
+                'Content-Type': 'application/json',
               },
-              {
-                headers: {
-                  Authorization: `Bearer ${process.env.RESEND_KEY}`,
-                  'Content-Type': 'application/json',
-                },
-              }
-            );
-
-          }
-          else {
-            mailOptions = {
-              from: 'no-reply@sparkletimekeeping.com',
-              to: email,
-              subject: 'Forgot Password',
-              html: emailVerificationHTML({
-                verificationToken: token,
-              })
-            };  
-            const response = await axios.post(
-              'https://api.resend.com/emails',
-              {
-                from: 'Time adjustment OTP <no-reply@sparkletimekeeping.com>',
-                to: email,
-                subject: 'Sparkletimekeeping OTP',
-                html: emailVerificationHTML({
-                  verificationToken: token,
-                }),
-              },
-              {
-                headers: {
-                  Authorization: `Bearer ${process.env.RESEND_KEY}`,
-                  'Content-Type': 'application/json',
-                },
-              }
-            );
-          }
-          
-          transporter.sendMail(mailOptions, function(error, info){
-            if (error) {
-              return res.status(400).json({
-                success: false,
-                msg: error,
-              });
-            } else {
-              return res.status(200).json({
-                success: true,
-                msg: "Success",
-              });
             }
-          });
-
-
+          );
+        } catch (error) {
+          console.error("Error sending email:", error);
+          throw new Error("Failed to send email");
         }
-    }catch(error){
-      console.log(error)
+      };
+
+      const subject = breaklist ? 'Breaklist OTP' : 'Sparkletimekeeping OTP';
+      const htmlTemplate = breaklist
+        ? breaklistVerificationHTML({ verificationToken: token })
+        : emailVerificationHTML({ verificationToken: token });
+
+      await sendEmail(subject, htmlTemplate);
+
+      return res.status(200).json({
+        success: true,
+        message: "OTP sent successfully",
+      });
+
+    } catch (error) {
+      console.error("Error in timeAdjustmentSendOtp:", error);
       return res.status(500).json({
         success: false,
         message: "Internal server error",
-        body: error
-      })
+        error: error.message,
+      });
     }
   },
 
