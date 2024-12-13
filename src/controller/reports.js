@@ -2937,7 +2937,7 @@ var controllers = {
           }  
         }
         else {
-          return res.status(400).json({
+          return res.status(200).json({
             success: false,
             message: "OTP is invalid"
           })
