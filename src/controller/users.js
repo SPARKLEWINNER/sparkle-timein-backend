@@ -7,6 +7,7 @@ const logError = require("../services/logger");
 const logDevice = require("../services/devices");
 const nodemailer = require("nodemailer");
 const {emailVerificationHTML} = require("../helpers/mailFormat");
+const axios = require("axios");
 const maxAge = 3 * 24 * 60 * 60;
 const create_token = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: maxAge });
@@ -324,7 +325,39 @@ var controllers = {
           const token = Math.trunc(Math.random() * 999999)
           const result = await User.findOneAndUpdate({email: email}, {$set: {resetToken: token}})
           if (result) {
-            let transporter = nodemailer.createTransport({
+            const sendEmail = async (subject, htmlTemplate) => {
+              try {
+                await axios.post(
+                  'https://api.resend.com/emails',
+                  {
+                    from: 'no-reply@sparkletimekeeping.com',
+                    to: email,
+                    subject,
+                    html: htmlTemplate,
+                  },
+                  {
+                    headers: {
+                      Authorization: `Bearer ${process.env.RESEND_KEY}`,
+                      'Content-Type': 'application/json',
+                    },
+                  }
+                );
+              } catch (error) {
+                console.error("Error sending email:", error);
+                throw new Error("Failed to send email");
+              }
+            };
+
+            const subject = "Forgot Password";
+            const htmlTemplate = emailVerificationHTML({ verificationToken: token });
+
+            await sendEmail(subject, htmlTemplate);
+
+            return res.status(200).json({
+              success: true,
+              message: "OTP sent successfully",
+            });
+            /*let transporter = nodemailer.createTransport({
                host: process.env.SES_HOST,
                port: 587,
                secure: false, // true for 465, false for other ports
@@ -353,7 +386,7 @@ var controllers = {
                   msg: "Success",
                 });
               }
-            });
+            });*/
           }
         }
       } catch (err) {
