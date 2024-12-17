@@ -3130,8 +3130,12 @@ var controllers = {
           msg: "No user found",
         });
       } else {
+        return res.status(200).json({
+          success: true,
+          msg: "Store account activation declined.",
+        });
         // Set up nodemailer transporter for email notification
-        let transporter = nodemailer.createTransport({
+/*        let transporter = nodemailer.createTransport({
           host: process.env.SES_HOST,
           port: 587,
           secure: false,
@@ -3161,10 +3165,9 @@ var controllers = {
               msg: "Store account activation declined and user notified via email.",
             });
           }
-        });
+        });*/
       }
     } catch (err) {
-      console.log(err);
       return res.status(400).json({
         success: false,
         msg: err,
