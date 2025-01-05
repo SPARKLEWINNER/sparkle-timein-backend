@@ -1525,8 +1525,10 @@ var controllers = {
           if(dateTimeOut2 > dateTimeOut1){
             totalUndertimeHours += 1
           }
-          const formattedHolidayDate = moment(data.date).format("YYYY-MM-DD");
-          let holidayFound = await Holidays.findOne({date: formattedHolidayDate}).lean().exec()
+          const formattedHolidayDate = moment(data.date).format("MM-DD"); // Extract month and day
+          let holidayFound = await Holidays.findOne({
+            date: { $regex: `-${formattedHolidayDate}$` } // Regex to match MM-DD format
+          }).lean().exec();
           if (timeOnly2 < timeOnly1) {
             if (dateTimeOut2 > dateTimeOut1) {
               if(holidayFound && holidayFound.type != "Special Holiday") {
@@ -2368,10 +2370,13 @@ var controllers = {
                   if(dateTimeOut2 > dateTimeOut1){
                     totalUndertimeHours += 1
                   }
-                  const formattedHolidayDate = moment(schedulesFound[0].date).format("YYYY-MM-DD");
-                  let holidayFound = await Holidays.findOne({date: formattedHolidayDate}).lean().exec()
-                  if(holidayFound && holidayFound.type !== "Special Holiday") {
-                    legalHoliday += 8
+                  const formattedHolidayDate = moment(schedulesFound[0].date).format("MM-DD");
+                  let holidayFound = await Holidays.findOne({
+                    date: { $regex: `-${formattedHolidayDate}$` }
+                  }).lean().exec();
+
+                  if (holidayFound && holidayFound.type !== "Special Holiday") {
+                    legalHoliday += 8;
                   }
                   if (timeOnly2 < timeOnly1) {
 
