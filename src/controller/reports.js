@@ -1955,10 +1955,10 @@ var controllers = {
     }
   },
   post_checklist: async function(req, res) {
-    const {store, checklists} = req.body;
+    const {store, checklists, status} = req.body;
     try {
       let update = {
-        $set: { checklists: checklists },
+        $set: { checklists: checklists, toggle: status },
       };
       result = await Checklist.updateOne( { store: store }, update, {upsert: true} ).lean().exec()
       return res.status(200).json({
