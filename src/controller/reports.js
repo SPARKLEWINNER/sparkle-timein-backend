@@ -2245,7 +2245,7 @@ var controllers = {
     try {
 
       const latestDateToDoc = await Breaklist.findOne({store: store}).sort({ dateto: -1 }).exec();
-      const earliestDateFromDoc = await Breaklist.findOne({store: store}).sort({ datefrom: 1 }).exec();
+      const earliestDateFromDoc = await Breaklist.findOne({store: store}).sort({ datefrom: -1 }).exec();
 
 
       if (latestDateToDoc && earliestDateFromDoc) {
@@ -2253,7 +2253,6 @@ var controllers = {
         const earliestDateFrom = moment(earliestDateFromDoc.datefrom).startOf('day');
         const fromDate = moment(from).startOf('day');
         const toDate = moment(to).startOf('day');
-      
         // Check if the dates are within the existing date range
         if (
           fromDate.isBetween(earliestDateFrom, latestDateTo, undefined, '[]') ||
