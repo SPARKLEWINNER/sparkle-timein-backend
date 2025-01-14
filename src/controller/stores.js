@@ -466,12 +466,12 @@ var controllers = {
 
   get_users_bystore: async function (req, res) {
     const { store } = req.body;
-    if (!store) res.status(404).json({ success: false, msg: `No such user.` });
+    if (!store) res.status(200).json({ success: false, msg: `No such user.` });
 
     try {
       const result = await User.find({ company: store, role:0, isArchived: false }).lean().exec();
       if (!result) {
-        res.status(400).json({
+        res.status(200).json({
           success: false,
           msg: "No such users",
         });
@@ -479,7 +479,6 @@ var controllers = {
       }
       return res.status(200).json(result);
     } catch (err) {
-      await logError(err, "Stores", null, id, "GET");
       res.status(400).json({
         success: false,
         msg: "No such users",

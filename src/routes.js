@@ -366,4 +366,5 @@ app
   app.route("/api/report/store").post(reports.get_reports_rangev2_bystore);
   app.route("/api/update/breaklist").post(reports.updateBreaklist);
   app.route("/api/holiday").post(reports.post_holiday);
+  app.route("/api/delete/store/group").post(reports.delete_store_in_group);
 };

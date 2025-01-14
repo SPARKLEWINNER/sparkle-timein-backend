@@ -3372,7 +3372,7 @@ var controllers = {
   get_group_store: async function (req, res) { 
     const { id } = req.params;
 
-    if (!id) return res.status(404).json({ success: false, msg: `No such user.` });
+    if (!id) return res.status(200).json({ success: false, msg: `No such user.` });
 
     try {
       let report = await Group.findOne({
@@ -3392,7 +3392,6 @@ var controllers = {
         });
       }
     } catch (error) {
-      console.log(error)
       return res.status(500).json({ success: false, msg: 'Server error' });
     }
   },
@@ -3536,7 +3535,6 @@ var controllers = {
       })
       return res.json({data: records, l: d.length}); 
     } catch (err) {
-      await logError(err, "Reports", null, id, "GET");
       res.status(400).json({ success: false, msg: err });
       throw new createError.InternalServerError(err);
     }
@@ -3628,6 +3626,30 @@ var controllers = {
         });
       }
     },
+    delete_store_in_group: async function (req, res) { 
+        const { store, id } = req.body;
+
+        if (!store || !id) return res.status(400).json({ success: false, msg: `Store is required.` });
+
+        try {
+          let deleteStore = await Group.updateMany(
+            { groupid: id },
+            { $pull: { store: store } }
+          );
+          if (deleteStore) {
+            return res.status(200).json({
+              success: true,
+              msg: "Success."
+            });
+          } 
+        } catch (error) {
+          return res.status(500).json({ 
+            success: false, 
+            msg: 'Server error', 
+            error: error.message 
+          });
+        }
+      },
 
 }
 module.exports = controllers;
