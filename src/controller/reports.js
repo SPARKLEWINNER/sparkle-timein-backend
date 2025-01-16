@@ -2793,9 +2793,9 @@ var controllers = {
       let allBreaklists;
   
       if (payroll === 2) {
-        allBreaklists = await Breaklist.find({ store: { $regex: /Inhouse/i } }).limit(50).exec();
+        allBreaklists = await Breaklist.find({ store: { $regex: /Inhouse/i } }).sort({createdAt: -1}).limit(50).exec();
       } else {
-        allBreaklists = await Breaklist.find({ store: { $not: { $regex: /Inhouse/i } } }).limit(50).exec();
+        allBreaklists = await Breaklist.find({ store: { $not: { $regex: /Inhouse/i } } }).sort({createdAt: -1}).limit(50).exec();
       }
   
       const approvedBreaklists = allBreaklists.filter(item => {
