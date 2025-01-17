@@ -1512,7 +1512,7 @@ var controllers = {
             dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');
           }
           else {
-            dateTimeOut1 = new Date(reportsArray[0].record[0]);
+            dateTimeOut1 = new Date(reportsArray[0].record[reportsLength - 1].dateTime);
             dateTimeOut2 = new Date(dateTimeOut2.getTime() + 24 * 60 * 60 * 1000);
           }
           const timeDifferenceMilliseconds = Math.abs(dateTime2 - dateTime1);
@@ -1524,7 +1524,7 @@ var controllers = {
           const minutesTimeOutDifference = Math.floor((timeOutDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
           const totalMinutesTimeOutDifference = (hoursTimeOutDifference * 60) + minutesTimeOutDifference;
           let totalUndertimeHours = Math.floor(totalMinutesTimeOutDifference / 60)
-          if(dateTimeOut2 > dateTimeOut1){
+          if(dateTimeOut2 > reportsArray[0].record[reportsLength - 1]){
             totalUndertimeHours += 1
           }
           const formattedHolidayDate = moment(data.date).format("MM-DD"); // Extract month and day
@@ -2356,7 +2356,7 @@ var controllers = {
                     dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');
                   }
                   else {
-                    dateTimeOut1 = new Date(reportsFound[0].record[0]);
+                    dateTimeOut1 = new Date(reportsFound[0].record[reportsFound[0].record.length - 1].dateTime);
                     dateTimeOut2 = new Date(dateTimeOut2.getTime() + 24 * 60 * 60 * 1000);
                   }
                   const timeDifferenceMilliseconds = Math.abs(dateTime2 - dateTime1);
@@ -2368,9 +2368,9 @@ var controllers = {
                   const minutesTimeOutDifference = Math.floor((timeOutDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
                   const totalMinutesTimeOutDifference = (hoursTimeOutDifference * 60) + minutesTimeOutDifference;
                   let totalUndertimeHours = Math.floor(totalMinutesTimeOutDifference / 60)
-                  if(dateTimeOut2 > dateTimeOut1){
+        /*          if(dateTimeOut2 > dateTimeOut1){
                     totalUndertimeHours += 1
-                  }
+                  }*/
                   const formattedHolidayDate = moment(schedulesFound[0].date).format("MM-DD");
                   let holidayFound = await Holidays.findOne({
                     date: { $regex: `-${formattedHolidayDate}$` }
@@ -2419,7 +2419,7 @@ var controllers = {
 
                     if (moment(dateTimeOut2).utc().format() > moment(dateTimeOut1).utc().format()) {
                       if(holidayFound && holidayFound.type === "Special Holiday") {
-                        specialHoliday = schedulesFound[0].totalHours
+                        specialHoliday = schedulesFound[0].totalHours - totalUndertimeHours
                       }
                       records.push({ 
                         _id: data._id,
@@ -2442,7 +2442,7 @@ var controllers = {
                         _id: data._id,
                         empName: data.lastName + ", " + data.firstName, 
                         dayswork: 0, 
-                        hourswork: schedulesFound[0].totalHours, 
+                        hourswork: schedulesFound[0].totalHours , 
                         hourstardy: 0, 
                         overtime: schedulesFound[0].otHours,
                         nightdiff: schedulesFound[0].nightdiff,
@@ -2523,7 +2523,6 @@ var controllers = {
               entry.specialholiday = 0
             }
             if (uniqueData[empId]) {
-
               uniqueData[empId].hourswork += parseFloat(entry.hourswork);
               uniqueData[empId].hourstardy += parseInt(entry.hourstardy, 10);
               uniqueData[empId].dayswork += parseInt(entry.dayswork, 10);
@@ -2549,6 +2548,7 @@ var controllers = {
         });
 
         records = Object.values(uniqueData);
+        console.log(records)
         records.sort(function(a, b){
             if(a.empName < b.empName) { return -1; }
             if(a.empName > b.empName) { return 1; }
