@@ -10,7 +10,7 @@
     "dev": "concurrently --kill-others \"npm run server\""
   },
   "engines": {
-    "node": "16.x"
+    "node": "18.x"
   },
   "dependencies": {
     "@sendgrid/mail": "^7.6.0",
@@ -64,5 +64,8 @@
   "devDependencies": {
     "concurrently": "^6.2.0",
     "nodemon": "^2.0.12"
+  },
+  "resolutions": {
+    "node-fetch/whatwg-url": "5.0.0"
   }
 }
