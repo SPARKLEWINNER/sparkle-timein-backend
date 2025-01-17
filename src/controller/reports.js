@@ -1450,7 +1450,9 @@ var controllers = {
             date.setSeconds(0);
             date.setMilliseconds(0);
             let timestamp2 = date.getTime();
-            timeOutStamp = `${moment(timestamp2).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
+            if (timestamp2) {
+              timeOutStamp = `${moment(timestamp2).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`  
+            }
           }
           else {
             timeOutStamp = `${moment(reportsArray[0].record[reportsLength - 1].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`   
