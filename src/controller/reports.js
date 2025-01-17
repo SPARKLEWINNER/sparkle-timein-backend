@@ -2459,7 +2459,7 @@ var controllers = {
                     _id: data._id,
                     empName: data.lastName + ", " + data.firstName, 
                     dayswork: 0, 
-                    hourswork: 0, 
+                    hourswork: schedulesFound[0].totalHours, 
                     hourstardy: 0, 
                     overtime: schedulesFound[0].otHours,
                     nightdiff: schedulesFound[0].nightdiff,
@@ -2523,6 +2523,7 @@ var controllers = {
               entry.specialholiday = 0
             }
             if (uniqueData[empId]) {
+
               uniqueData[empId].hourswork += parseFloat(entry.hourswork);
               uniqueData[empId].hourstardy += parseInt(entry.hourstardy, 10);
               uniqueData[empId].dayswork += parseInt(entry.dayswork, 10);
