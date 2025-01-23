@@ -1524,7 +1524,7 @@ var controllers = {
           const minutesTimeOutDifference = Math.floor((timeOutDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
           const totalMinutesTimeOutDifference = (hoursTimeOutDifference * 60) + minutesTimeOutDifference;
           let totalUndertimeHours = Math.floor(totalMinutesTimeOutDifference / 60)
-          if(dateTimeOut2 > reportsArray[0].record[reportsLength - 1]){
+          if(dateTimeOut2 > dateTimeOut1){
             totalUndertimeHours += 1
           }
           const formattedHolidayDate = moment(data.date).format("MM-DD"); // Extract month and day
@@ -2368,9 +2368,9 @@ var controllers = {
                   const minutesTimeOutDifference = Math.floor((timeOutDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
                   const totalMinutesTimeOutDifference = (hoursTimeOutDifference * 60) + minutesTimeOutDifference;
                   let totalUndertimeHours = Math.floor(totalMinutesTimeOutDifference / 60)
-        /*          if(dateTimeOut2 > dateTimeOut1){
+                  if(dateTimeOut2 > dateTimeOut1){
                     totalUndertimeHours += 1
-                  }*/
+                  }
                   const formattedHolidayDate = moment(schedulesFound[0].date).format("MM-DD");
                   let holidayFound = await Holidays.findOne({
                     date: { $regex: `-${formattedHolidayDate}$` }
@@ -2548,7 +2548,6 @@ var controllers = {
         });
 
         records = Object.values(uniqueData);
-        console.log(records)
         records.sort(function(a, b){
             if(a.empName < b.empName) { return -1; }
             if(a.empName > b.empName) { return 1; }
