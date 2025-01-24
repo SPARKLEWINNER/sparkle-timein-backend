@@ -2,6 +2,7 @@
 const {messaging} = require('./firebase');
 const FCMTOKEN = require('../models/Fcmtokens')
 const Schedule = require('../models/Schedule')
+const axios = require('axios');
 const cron = require('node-cron');
 const moment = require('moment-timezone');
 const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
@@ -64,33 +65,41 @@ const watchMultipleUsersEventTime = () => {
 const checkFiveMinutesAfter = () => {
   console.log('Checking 5 minutes after every hour');
   cron.schedule('05 * * * *', async () => {
-  // cron.schedule('*/5 * * * * *', async () => {
+  // cron.schedule('*/10 * * * * *', async () => {
 
     try {
       const result = await checkTimeForSubscribedUsers();
       if (result) {
-        result.forEach((data) => {
-          console.log('data: ', data)
-          const {fcmToken, schedule} = data
-          if (schedule) {
-            const {to} = schedule
-            const message = `Your time is past ${moment(to, 'HH:mm').format('hh:mm A')}, Please time out soon.`
-            const currentTime = now
-            currentTime.setSeconds(0)
-            currentTime.setMilliseconds(0)
-            const scheduleTime = new Date(`${moment(to, 'HH:mm').format('YYYY-MM-DD')}T${to}:00.000Z`);
-            scheduleTime.setMinutes(scheduleTime.getMinutes() + 5)
-            console.log('timezone: ', moment.tz.guess())
-            console.log('To: ', to)
-            console.log('scheduleTime: ', scheduleTime)
-            console.log('currentTime: ', currentTime)
-            console.log('message: ', message)
-            console.log('schedule time', scheduleTime.getTime())
-            console.log('current time', currentTime.getTime())
-            if(scheduleTime.getTime() === currentTime.getTime()){
-              console.log('executed to remind')
-              sendNotification(fcmToken, message);
+        result.forEach( async (data) => {
+          try {
+            console.log('data: ', data)
+            const {fcmToken, schedule} = data
+            if (schedule) {
+                const {to} = schedule
+                const message = `Your time is past ${moment(to, 'HH:mm').format('hh:mm A')}, Please time out soon.`
+                let currentTime = new Date(); // Local machine time
+                currentTime.setSeconds(0);
+                currentTime.setMilliseconds(0);
+                currentTime.setUTCHours(currentTime.getUTCHours() + 8);
+                // Convert to UTC format with required output format
+                const formattedDate = currentTime.toISOString();
+                console.log(formattedDate); // Output: 2024-10-31T17:05:00.000Z
+                const scheduleTime = new Date(`${moment(to, 'HH:mm').format('YYYY-MM-DD')}T${to}:00.000Z`);
+                scheduleTime.setMinutes(scheduleTime.getMinutes() + 5)
+                console.log('To: ', to)
+                console.log('scheduleTime: ', scheduleTime)
+                console.log('currentTime: ', formattedDate)
+                console.log('message: ', message)
+                console.log('schedule time', scheduleTime.getTime())
+                const currentTimeInMiliseconds = Date.parse(formattedDate);
+                console.log('current time', currentTimeInMiliseconds);
+                if(scheduleTime.getTime() === currentTimeInMiliseconds){
+                  console.log('executed to remind')
+                  sendNotification(fcmToken, message);
+                }
             }
+          } catch (error) {
+            console.error('Error checking time for user:', error);
           }
         })
       }
@@ -116,17 +125,21 @@ const checkFiveMinutesBefore = () => {
           if (schedule) {
             const {from} = schedule
             const message = `Your time ${moment(from, 'HH:mm', 'Asia/Manila').format('hh:mm A')} is nearing, Please time in soon.`
-            const currentTime = now
-            currentTime.setSeconds(0)
-            currentTime.setMilliseconds(0)
+            let currentTime = new Date(); // Local machine time
+            currentTime.setSeconds(0);
+            currentTime.setMilliseconds(0);
+            currentTime.setUTCHours(currentTime.getUTCHours() + 8);
+            // Convert to UTC format with required output format
+            const formattedDate = currentTime.toISOString();
             const scheduleTime = new Date(`${moment(from, 'HH:mm').format('YYYY-MM-DD')}T${from}:00.000Z`);
             scheduleTime.setMinutes(scheduleTime.getMinutes() - 5)
             console.log('scheduleTime: ', scheduleTime)
-            console.log('currentTime: ', currentTime)
+            console.log('currentTime: ', formattedDate)
             console.log('message: ', message)
+            const currentTimeInMiliseconds = Date.parse(formattedDate);
             console.log('schedule time', scheduleTime.getTime())
-            console.log('current time', currentTime.getTime())
-            if(scheduleTime.getTime() === currentTime.getTime()){
+            console.log('current time', currentTimeInMiliseconds)
+            if(scheduleTime.getTime() === currentTimeInMiliseconds){
               console.log('executed to remind')
               sendNotification(fcmToken, message);
             }
