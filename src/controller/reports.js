@@ -1450,6 +1450,7 @@ var controllers = {
             date.setSeconds(0);
             date.setMilliseconds(0);
             let timestamp2 = date.getTime();
+
             if (timestamp2) {
               timeOutStamp = `${moment(timestamp2).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`  
             }
@@ -1497,6 +1498,7 @@ var controllers = {
           const parsedDate1 = new Date(timeInStamp);
           const parsedDate2 = new Date(combinedDate);
           const parsedDateTimeOut1 = new Date(timeOutStamp);
+          console.log(parsedDateTimeOut1)
           const parsedDateTimeOut2 = new Date(combinedDate2);
           const timeOnly1 = `${parsedDate1.getUTCHours().toString().padStart(2, '0')}:${parsedDate1.getUTCMinutes().toString().padStart(2, '0')}:${parsedDate1.getUTCSeconds().toString().padStart(2, '0')}`;
           const timeOnly2 = `${parsedDate2.getUTCHours().toString().padStart(2, '0')}:${parsedDate2.getUTCMinutes().toString().padStart(2, '0')}:${parsedDate2.getUTCSeconds().toString().padStart(2, '0')}`;
@@ -1512,7 +1514,7 @@ var controllers = {
             dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');
           }
           else {
-            dateTimeOut1 = new Date(reportsArray[0].record[reportsLength - 1].dateTime);
+            dateTimeOut1 = new Date(dateTimeOut1);
             dateTimeOut2 = new Date(dateTimeOut2.getTime() + 24 * 60 * 60 * 1000);
           }
           const timeDifferenceMilliseconds = Math.abs(dateTime2 - dateTime1);
@@ -2356,7 +2358,7 @@ var controllers = {
                     dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');
                   }
                   else {
-                    dateTimeOut1 = new Date(reportsFound[0].record[reportsFound[0].record.length - 1].dateTime);
+                    dateTimeOut1 = new Date(dateTimeOut1);
                     dateTimeOut2 = new Date(dateTimeOut2.getTime() + 24 * 60 * 60 * 1000);
                   }
                   const timeDifferenceMilliseconds = Math.abs(dateTime2 - dateTime1);
