@@ -2791,15 +2791,20 @@ var controllers = {
   },
 
   get_store_breaklist_approved: async function (req, res) {
-    const {  payroll } = req.body;
+    const {  payroll, from, to } = req.body;
   
     try {
       let allBreaklists;
   
       if (payroll === 2) {
-        allBreaklists = await Breaklist.find({ store: { $regex: /Inhouse/i } }).sort({createdAt: -1}).limit(150).exec();
+        allBreaklists = await Breaklist.find({
+          store: { $regex: /Inhouse/i },
+          createdAt: { $gte: new Date(from), $lte: new Date(to) }
+        })
+        .sort({ createdAt: -1 })
+        .exec();
       } else {
-        allBreaklists = await Breaklist.find({ store: { $not: { $regex: /Inhouse/i } } }).sort({createdAt: -1}).limit(150).exec();
+        allBreaklists = await Breaklist.find({ store: { $not: { $regex: /Inhouse/i } }, createdAt: { $gte: new Date(from), $lte: new Date(to) } }).sort({createdAt: -1}).exec();
       }
   
       const approvedBreaklists = allBreaklists.filter(item => {
