@@ -353,7 +353,7 @@ var controllers = {
         { $set: { timeAdjustmentVerification: token } },
         { new: true }
       );
-
+      console.log(storeTokenResult.company)
       if (!storeTokenResult) {
         return res.status(404).json({
           success: false,
@@ -398,8 +398,8 @@ var controllers = {
 
       const subject = breaklist ? 'Breaklist OTP' : 'Sparkletimekeeping OTP';
       const htmlTemplate = breaklist
-        ? breaklistVerificationHTML({ verificationToken: token })
-        : emailVerificationHTML({ verificationToken: token });
+        ? breaklistVerificationHTML({ verificationToken: token, store: storeTokenResult.company })
+        : emailVerificationHTML({ verificationToken: token, store: storeTokenResult.company });
 
       await sendEmail(subject, htmlTemplate);
 

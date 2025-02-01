@@ -2358,7 +2358,7 @@ var controllers = {
                     dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');
                   }
                   else {
-                    dateTimeOut1 = new Date(dateTimeOut1);
+                    dateTimeOut1 = new Date(reportsFound[0].record[reportsFound[0].record.length - 1].dateTime);
                     dateTimeOut2 = new Date(dateTimeOut2.getTime() + 24 * 60 * 60 * 1000);
                   }
                   const timeDifferenceMilliseconds = Math.abs(dateTime2 - dateTime1);
