@@ -1498,7 +1498,6 @@ var controllers = {
           const parsedDate1 = new Date(timeInStamp);
           const parsedDate2 = new Date(combinedDate);
           const parsedDateTimeOut1 = new Date(timeOutStamp);
-          console.log(parsedDateTimeOut1)
           const parsedDateTimeOut2 = new Date(combinedDate2);
           const timeOnly1 = `${parsedDate1.getUTCHours().toString().padStart(2, '0')}:${parsedDate1.getUTCMinutes().toString().padStart(2, '0')}:${parsedDate1.getUTCSeconds().toString().padStart(2, '0')}`;
           const timeOnly2 = `${parsedDate2.getUTCHours().toString().padStart(2, '0')}:${parsedDate2.getUTCMinutes().toString().padStart(2, '0')}:${parsedDate2.getUTCSeconds().toString().padStart(2, '0')}`;
@@ -1535,13 +1534,14 @@ var controllers = {
           }).lean().exec();
           if (timeOnly2 < timeOnly1) {
             if (dateTimeOut2 > dateTimeOut1) {
-              if(holidayFound && holidayFound.type != "Special Holiday") {
+              if(holidayFound && holidayFound.type !== "Special Holiday") {
                 legalHoliday = 8
               }
               else {
                 legalHoliday = 0
               }
-              if(holidayFound && holidayFound.type == "Special Holiday") {
+              if(holidayFound && holidayFound.type === "Special Holiday") {
+                
                 specialHoliday = data.totalHours - totalUndertimeHours
               }
               else {
@@ -1564,13 +1564,14 @@ var controllers = {
               })
             }
             else {
-              if(holidayFound && holidayFound.type != "Special Holiday") {
+              if(holidayFound && holidayFound.type !== "Special Holiday") {
                 legalHoliday = 8
               }
               else {
                 legalHoliday = 0
               }
-              if(holidayFound && holidayFound.type == "Special Holiday") {
+              if(holidayFound && holidayFound.type === "Special Holiday") {
+
                 specialHoliday = data.totalHours - totalUndertimeHours
               }
               else {
@@ -1596,13 +1597,14 @@ var controllers = {
           else {
 
             if (dateTimeOut2 > dateTimeOut1) {
-              if(holidayFound && holidayFound.type != "Special Holiday") {
+              if(holidayFound && holidayFound.type !== "Special Holiday") {
                 legalHoliday = 8
               }
               else {
                 legalHoliday = 0
               }
-              if(holidayFound && holidayFound.type == "Special Holiday") {
+              if(holidayFound && holidayFound.type === "Special Holiday") {
+
                 specialHoliday = data.totalHours - totalUndertimeHours
               }
               else {
@@ -1625,14 +1627,15 @@ var controllers = {
               })
             }
             else {
-              if(holidayFound && holidayFound.type != "Special Holiday") {
+              if(holidayFound && holidayFound.type !== "Special Holiday") {
                 legalHoliday = 8
               }
               else {
                 legalHoliday = 0
               }
-              if(holidayFound && holidayFound.type == "Special Holiday") {
-                specialHoliday = data.totalHours - totalUndertimeHours
+              if(holidayFound && holidayFound.type === "Special Holiday") {
+
+                specialHoliday = data.totalHours
               }
               else {
                 specialHoliday = 0
@@ -2402,6 +2405,7 @@ var controllers = {
                     }
                     else {
                       if(holidayFound && holidayFound.type === "Special Holiday") {
+
                         specialHoliday = schedulesFound[0].totalHours
                       }
                       records.push({ 
@@ -2421,13 +2425,13 @@ var controllers = {
 
                     if (moment(dateTimeOut2).utc().format() > moment(dateTimeOut1).utc().format()) {
                       if(holidayFound && holidayFound.type === "Special Holiday") {
-                        specialHoliday = schedulesFound[0].totalHours - totalUndertimeHours
+                        specialHoliday = schedulesFound[0].totalHours
                       }
                       records.push({ 
                         _id: data._id,
                         empName: data.lastName + ", " + data.firstName, 
                         dayswork: 0, 
-                        hourswork: schedulesFound[0].totalHours - totalUndertimeHours, 
+                        hourswork: schedulesFound[0].totalHours, 
                         hourstardy: 0, 
                         overtime: schedulesFound[0].otHours,
                         nightdiff: schedulesFound[0].nightdiff, 
@@ -2444,7 +2448,7 @@ var controllers = {
                         _id: data._id,
                         empName: data.lastName + ", " + data.firstName, 
                         dayswork: 0, 
-                        hourswork: schedulesFound[0].totalHours , 
+                        hourswork: schedulesFound[0].totalHours, 
                         hourstardy: 0, 
                         overtime: schedulesFound[0].otHours,
                         nightdiff: schedulesFound[0].nightdiff,
@@ -2531,8 +2535,8 @@ var controllers = {
               uniqueData[empId].overtime += parseInt(entry.overtime, 10);
               uniqueData[empId].nightdiff += parseInt(entry.nightdiff, 10);
               uniqueData[empId].restday += parseInt(entry.restday, 10);
-              uniqueData[empId].legalholiday += parseInt(entry.legalholiday, 10);
-              uniqueData[empId].specialholiday += parseInt(entry.specialholiday, 10);
+              uniqueData[empId].legalholiday += parseFloat(entry.legalholiday);
+              uniqueData[empId].specialholiday += parseFloat(entry.specialholiday);
             } else {
               uniqueData[empId] = {
                 ...entry,
@@ -2542,8 +2546,8 @@ var controllers = {
                 overtime: parseInt(entry.overtime, 10),
                 nightdiff: parseInt(entry.nightdiff, 10),
                 restday: parseInt(entry.restday, 10),
-                legalholiday: parseInt(entry.legalholiday, 10),
-                specialholiday: parseInt(entry.specialholiday, 10),
+                legalholiday: parseFloat(entry.legalholiday),
+                specialholiday: parseFloat(entry.specialholiday),
               }; 
 
             }
