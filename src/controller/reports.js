@@ -2803,12 +2803,12 @@ var controllers = {
       if (payroll === 2) {
         allBreaklists = await Breaklist.find({
           store: { $regex: /Inhouse/i },
-          createdAt: { $gte: new Date(from), $lte: new Date(to) }
+          createdAt: { $gte: new Date(`${from}T00:00:00.000Z`), $lte: new Date(`${to}T23:59:59.999Z`) }
         })
         .sort({ createdAt: -1 })
         .exec();
       } else {
-        allBreaklists = await Breaklist.find({ store: { $not: { $regex: /Inhouse/i } }, createdAt: { $gte: new Date(from), $lte: new Date(to) } }).sort({createdAt: -1}).exec();
+        allBreaklists = await Breaklist.find({ store: { $not: { $regex: /Inhouse/i } }, createdAt: { $gte: new Date(`${from}T00:00:00.000Z`), $lte: new Date(`${to}T23:59:59.999Z`) } }).sort({createdAt: -1}).exec();
       }
   
       const approvedBreaklists = allBreaklists.filter(item => {
@@ -3613,56 +3613,77 @@ var controllers = {
     }
   },
   post_holiday: async function (req, res) { 
-      const { holiday, type, date } = req.body;
+    const { holiday, type, date } = req.body;
 
-      if (!date) return res.status(400).json({ success: false, msg: `Date is required.` });
+    if (!date) return res.status(400).json({ success: false, msg: `Date is required.` });
 
-      try {
-        let existingHoliday = await Holidays.findOne({ date }).lean().exec();
-        if (existingHoliday) {
-          return res.status(200).json({
-            success: true,
-            msg: "Date already saved.",
-          });
-        } 
-        const newHoliday = new Holidays({ holiday, type, date });
-        await newHoliday.save();
-        return res.status(201).json({
+    try {
+      let existingHoliday = await Holidays.findOne({ date }).lean().exec();
+      if (existingHoliday) {
+        return res.status(200).json({
           success: true,
-          msg: "Holiday saved successfully.",
+          msg: "Date already saved.",
         });
-      } catch (error) {
-        return res.status(500).json({ 
-          success: false, 
-          msg: 'Server error', 
-          error: error.message 
+      } 
+      const newHoliday = new Holidays({ holiday, type, date });
+      await newHoliday.save();
+      return res.status(201).json({
+        success: true,
+        msg: "Holiday saved successfully.",
+      });
+    } catch (error) {
+      return res.status(500).json({ 
+        success: false, 
+        msg: 'Server error', 
+        error: error.message 
+      });
+    }
+  },
+  delete_store_in_group: async function (req, res) { 
+    const { store, id } = req.body;
+
+    if (!store || !id) return res.status(400).json({ success: false, msg: `Store is required.` });
+
+    try {
+      let deleteStore = await Group.updateMany(
+        { groupid: id },
+        { $pull: { store: store } }
+      );
+      if (deleteStore) {
+        return res.status(200).json({
+          success: true,
+          msg: "Success."
         });
-      }
-    },
-    delete_store_in_group: async function (req, res) { 
-        const { store, id } = req.body;
-
-        if (!store || !id) return res.status(400).json({ success: false, msg: `Store is required.` });
-
-        try {
-          let deleteStore = await Group.updateMany(
-            { groupid: id },
-            { $pull: { store: store } }
-          );
-          if (deleteStore) {
-            return res.status(200).json({
-              success: true,
-              msg: "Success."
-            });
-          } 
-        } catch (error) {
-          return res.status(500).json({ 
-            success: false, 
-            msg: 'Server error', 
-            error: error.message 
-          });
-        }
-      },
+      } 
+    } catch (error) {
+      return res.status(500).json({ 
+        success: false, 
+        msg: 'Server error', 
+        error: error.message 
+      });
+    }
+  },
+  /*check_schedule_cron: async function (req, res) { 
+    try {
+      const 
+      let deleteStore = await Group.updateMany(
+        { groupid: id },
+        { $pull: { store: store } }
+      );
+      if (deleteStore) {
+        return res.status(200).json({
+          success: true,
+          msg: "Success."
+        });
+      } 
+    } catch (error) {
+      return res.status(500).json({ 
+        success: false, 
+        msg: 'Server error', 
+        error: error.message 
+      });
+    }
+  },*/
 
 }
 module.exports = controllers;

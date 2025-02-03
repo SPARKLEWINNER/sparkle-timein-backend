@@ -67,6 +67,7 @@ io.on("connection", (_socket) => {
 
 
 // Run cronjob
+
 /*cron.schedule('**6 * * * *', () => {
   fetch("https://api.heroku.com/apps/sparkle-time-keep/dynos", {
     method: 'DELETE',
