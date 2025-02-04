@@ -2258,7 +2258,7 @@ var controllers = {
       const earliestDateFromDoc = await Breaklist.findOne({store: store}).sort({ datefrom: -1 }).exec();
 
 
-      if (latestDateToDoc && earliestDateFromDoc) {
+/*      if (latestDateToDoc && earliestDateFromDoc) {
         const latestDateTo = moment(latestDateToDoc.dateto).startOf('day');
         const earliestDateFrom = moment(earliestDateFromDoc.datefrom).startOf('day');
         const fromDate = moment(from).startOf('day');
@@ -2273,7 +2273,7 @@ var controllers = {
             msg: "Invalid Dates. Breaklist date already submitted and saved.",
           });
         }
-      }
+      }*/
 
       let personnels = await User.find({company: store, role:0, isArchived: false})
       .lean()
@@ -2320,9 +2320,13 @@ var controllers = {
                     date.setSeconds(0);
                     date.setMilliseconds(0);
                     let timestamp2 = date.getTime();
-                    timeOut = timestamp2
+
+                    if (timestamp2) {
+                      timeOut = `${moment(timestamp2).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`  
+                    }
+/*                    timeOut = timestamp2
                         ? `${moment(timestamp2).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
-                        : null;
+                        : null;*/
                   }
                   else {
                     timeOut = `${moment(reportsFound[0].record[reportsLength - 1].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`   
@@ -2360,9 +2364,9 @@ var controllers = {
                   let dateTimeOut1 = new Date(parsedDateTimeOut1);
                   let dateTimeOut2 = new Date(parsedDateTimeOut2);
                   if (schedulesFound[0].from > schedulesFound[0].to) {
-                    dateTimeOut1 = new Date(reportsFound[0].record[reportsFound[0].record.length - 1].dateTime);
+                    dateTimeOut1 = new Date(dateTimeOut1);
                     dateTimeOut2 = new Date(dateTimeOut2.getTime() + 24 * 60 * 60 * 1000);
-/*                    dateTimeOut1 = new Date(referenceDate + timeOutTimeOnly1 + 'Z');
+                    /*dateTimeOut1 = new Date(referenceDate + timeOutTimeOnly1 + 'Z');
                     dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');*/
                   }
 /*                  else {
@@ -2381,6 +2385,7 @@ var controllers = {
                   if(dateTimeOut2 > dateTimeOut1){
                     totalUndertimeHours += 1
                   }
+
                   const formattedHolidayDate = moment(schedulesFound[0].date).format("MM-DD");
                   let holidayFound = await Holidays.findOne({
                     date: { $regex: `-${formattedHolidayDate}$` }
@@ -2391,10 +2396,12 @@ var controllers = {
                   }
                   if (timeOnly2 < timeOnly1) {
 
+                    
                     if (dateTimeOut2 > dateTimeOut1) {
                       if(holidayFound && holidayFound.type === "Special Holiday") {
                         specialHoliday = schedulesFound[0].totalHours - totalUndertimeHours
                       }
+
                       records.push({ 
                         _id: data._id,
                         empName: data.lastName + ", " + data.firstName, 
@@ -2427,7 +2434,6 @@ var controllers = {
                       });
                     }
                   } else {
-
                     if (moment(dateTimeOut2).utc().format() > moment(dateTimeOut1).utc().format()) {
                       if(holidayFound && holidayFound.type === "Special Holiday") {
                         specialHoliday = schedulesFound[0].totalHours
@@ -2436,7 +2442,7 @@ var controllers = {
                         _id: data._id,
                         empName: data.lastName + ", " + data.firstName, 
                         dayswork: 0, 
-                        hourswork: schedulesFound[0].totalHours, 
+                        hourswork: schedulesFound[0].totalHours - totalUndertimeHours, 
                         hourstardy: 0, 
                         overtime: schedulesFound[0].otHours,
                         nightdiff: schedulesFound[0].nightdiff, 
