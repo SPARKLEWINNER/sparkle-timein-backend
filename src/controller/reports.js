@@ -3404,6 +3404,9 @@ var controllers = {
           msg: "No Records",
         });
       } else {
+        if (report && report.store) {
+          report.store.sort((a, b) => a.localeCompare(b)); // Sort alphabetically
+        }
         return res.status(200).json({
           success: true,
           report,
