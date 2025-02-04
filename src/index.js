@@ -65,7 +65,9 @@ io.on("connection", (_socket) => {
 
 
 
-
+cron.schedule('*/5 * * * *', () => {
+  console.log("Hello world")
+});
 // Run cronjob
 
 /*cron.schedule('**6 * * * *', () => {

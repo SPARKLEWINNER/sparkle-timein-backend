@@ -1508,14 +1508,16 @@ var controllers = {
           const dateTime2 = new Date(referenceDate + timeOnly2 + 'Z');
           let dateTimeOut1 = new Date(parsedDateTimeOut1);
           let dateTimeOut2 = new Date(parsedDateTimeOut2);
-          if (data.from < data.to) {
-            dateTimeOut1 = new Date(referenceDate + timeOutTimeOnly1 + 'Z');
-            dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');
-          }
-          else {
+          if (data.from > data.to) {
             dateTimeOut1 = new Date(dateTimeOut1);
             dateTimeOut2 = new Date(dateTimeOut2.getTime() + 24 * 60 * 60 * 1000);
+/*            dateTimeOut1 = new Date(referenceDate + timeOutTimeOnly1 + 'Z');
+            dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');*/
           }
+/*          else {
+            dateTimeOut1 = new Date(dateTimeOut1);
+            dateTimeOut2 = new Date(dateTimeOut2.getTime() + 24 * 60 * 60 * 1000);
+          }*/
           const timeDifferenceMilliseconds = Math.abs(dateTime2 - dateTime1);
           const hoursDifference = Math.floor(timeDifferenceMilliseconds / (1000 * 60 * 60));
           const minutesDifference = Math.floor((timeDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
@@ -1572,7 +1574,7 @@ var controllers = {
               }
               if(holidayFound && holidayFound.type === "Special Holiday") {
 
-                specialHoliday = data.totalHours - totalUndertimeHours
+                specialHoliday = data.totalHours
               }
               else {
                 specialHoliday = 0
@@ -1595,7 +1597,6 @@ var controllers = {
             }
           }
           else {
-
             if (dateTimeOut2 > dateTimeOut1) {
               if(holidayFound && holidayFound.type !== "Special Holiday") {
                 legalHoliday = 8
@@ -1627,6 +1628,7 @@ var controllers = {
               })
             }
             else {
+
               if(holidayFound && holidayFound.type !== "Special Holiday") {
                 legalHoliday = 8
               }
@@ -1677,6 +1679,7 @@ var controllers = {
         }
       }
       else {
+        
         records.push({
           _id: id,
           date: date,
@@ -2356,14 +2359,16 @@ var controllers = {
                   let dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');*/
                   let dateTimeOut1 = new Date(parsedDateTimeOut1);
                   let dateTimeOut2 = new Date(parsedDateTimeOut2);
-                  if (schedulesFound[0].from < schedulesFound[0].to) {
-                    dateTimeOut1 = new Date(referenceDate + timeOutTimeOnly1 + 'Z');
-                    dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');
-                  }
-                  else {
+                  if (schedulesFound[0].from > schedulesFound[0].to) {
                     dateTimeOut1 = new Date(reportsFound[0].record[reportsFound[0].record.length - 1].dateTime);
                     dateTimeOut2 = new Date(dateTimeOut2.getTime() + 24 * 60 * 60 * 1000);
+/*                    dateTimeOut1 = new Date(referenceDate + timeOutTimeOnly1 + 'Z');
+                    dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');*/
                   }
+/*                  else {
+                    dateTimeOut1 = new Date(reportsFound[0].record[reportsFound[0].record.length - 1].dateTime);
+                    dateTimeOut2 = new Date(dateTimeOut2.getTime() + 24 * 60 * 60 * 1000);
+                  }*/
                   const timeDifferenceMilliseconds = Math.abs(dateTime2 - dateTime1);
                   const hoursDifference = Math.floor(timeDifferenceMilliseconds / (1000 * 60 * 60));
                   const minutesDifference = Math.floor((timeDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
@@ -3663,19 +3668,30 @@ var controllers = {
       });
     }
   },
-  /*check_schedule_cron: async function (req, res) { 
+  check_schedule_cron: async function (req, res) { 
     try {
-      const 
-      let deleteStore = await Group.updateMany(
-        { groupid: id },
-        { $pull: { store: store } }
-      );
-      if (deleteStore) {
-        return res.status(200).json({
-          success: true,
-          msg: "Success."
-        });
-      } 
+      const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
+      const inputDate = new Date(now);
+      inputDate.setUTCHours(0, 0, 0, 0);
+      const timeOnly = moment().tz('Asia/Manila').subtract(1, 'hour').format('HH:mm');
+      const records = await Payroll.find({
+        date: inputDate,
+        to: timeOnly.toString()
+      }).sort({ createdAt: -1 }).exec();
+      records.map(async data => {
+        const result = await Reports.findOne({
+          uid: data.uid,
+          date: inputDate
+        })
+        if(result.status !== "time-out"){
+          console.log("Send Text")
+        }
+      })
+      return res.status(200).json({
+        success: true,
+        data: records
+      });
+
     } catch (error) {
       return res.status(500).json({ 
         success: false, 
@@ -3683,7 +3699,8 @@ var controllers = {
         error: error.message 
       });
     }
-  },*/
+  },
+
 
 }
 module.exports = controllers;
