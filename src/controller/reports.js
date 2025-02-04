@@ -3405,10 +3405,10 @@ var controllers = {
         });
       } else {
         if (report && report.store) {
-          report.store.sort((a, b) => a.localeCompare(b)); // Sort alphabetically
+          report.store.sort((a, b) => a.localeCompare(b));
         }
         return res.status(200).json({
-          success: true,
+          success: "true",
           report,
         });
       }
