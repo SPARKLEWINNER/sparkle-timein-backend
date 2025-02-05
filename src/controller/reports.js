@@ -1508,16 +1508,14 @@ var controllers = {
           const dateTime2 = new Date(referenceDate + timeOnly2 + 'Z');
           let dateTimeOut1 = new Date(parsedDateTimeOut1);
           let dateTimeOut2 = new Date(parsedDateTimeOut2);
-          if (data.from > data.to) {
-            dateTimeOut1 = new Date(dateTimeOut1);
-            dateTimeOut2 = new Date(dateTimeOut2.getTime() + 24 * 60 * 60 * 1000);
-/*            dateTimeOut1 = new Date(referenceDate + timeOutTimeOnly1 + 'Z');
-            dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');*/
+          if (data.from < data.to) {
+            dateTimeOut1 = new Date(referenceDate + timeOutTimeOnly1 + 'Z');
+            dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');
           }
-/*          else {
+          else {
             dateTimeOut1 = new Date(dateTimeOut1);
             dateTimeOut2 = new Date(dateTimeOut2.getTime() + 24 * 60 * 60 * 1000);
-          }*/
+          }
           const timeDifferenceMilliseconds = Math.abs(dateTime2 - dateTime1);
           const hoursDifference = Math.floor(timeDifferenceMilliseconds / (1000 * 60 * 60));
           const minutesDifference = Math.floor((timeDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
@@ -2260,7 +2258,7 @@ var controllers = {
       const earliestDateFromDoc = await Breaklist.findOne({store: store}).sort({ datefrom: -1 }).exec();
 
 
-      if (latestDateToDoc && earliestDateFromDoc) {
+      /*if (latestDateToDoc && earliestDateFromDoc) {
         const latestDateTo = moment(latestDateToDoc.dateto).startOf('day');
         const earliestDateFrom = moment(earliestDateFromDoc.datefrom).startOf('day');
         const fromDate = moment(from).startOf('day');
@@ -2275,7 +2273,7 @@ var controllers = {
             msg: "Invalid Dates. Breaklist date already submitted and saved.",
           });
         }
-      }
+      }*/
 
       let personnels = await User.find({company: store, role:0, isArchived: false})
       .lean()
@@ -2365,16 +2363,14 @@ var controllers = {
                   let dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');*/
                   let dateTimeOut1 = new Date(parsedDateTimeOut1);
                   let dateTimeOut2 = new Date(parsedDateTimeOut2);
-                  if (schedulesFound[0].from > schedulesFound[0].to) {
-                    dateTimeOut1 = new Date(dateTimeOut1);
-                    dateTimeOut2 = new Date(dateTimeOut2.getTime() + 24 * 60 * 60 * 1000);
-                    /*dateTimeOut1 = new Date(referenceDate + timeOutTimeOnly1 + 'Z');
-                    dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');*/
+                  if (schedulesFound[0].from < schedulesFound[0].to) {
+                    dateTimeOut1 = new Date(referenceDate + timeOutTimeOnly1 + 'Z');
+                    dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');
                   }
-/*                  else {
+                  else {
                     dateTimeOut1 = new Date(reportsFound[0].record[reportsFound[0].record.length - 1].dateTime);
                     dateTimeOut2 = new Date(dateTimeOut2.getTime() + 24 * 60 * 60 * 1000);
-                  }*/
+                  }
                   const timeDifferenceMilliseconds = Math.abs(dateTime2 - dateTime1);
                   const hoursDifference = Math.floor(timeDifferenceMilliseconds / (1000 * 60 * 60));
                   const minutesDifference = Math.floor((timeDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
@@ -2384,7 +2380,7 @@ var controllers = {
                   const minutesTimeOutDifference = Math.floor((timeOutDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
                   const totalMinutesTimeOutDifference = (hoursTimeOutDifference * 60) + minutesTimeOutDifference;
                   let totalUndertimeHours = Math.floor(totalMinutesTimeOutDifference / 60)
-                  if(dateTimeOut2 > dateTimeOut1){
+                  if(dateTimeOut2 < dateTimeOut1){
                     totalUndertimeHours += 1
                   }
 
