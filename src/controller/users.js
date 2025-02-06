@@ -3,6 +3,7 @@ const createError = require("http-errors");
 const stringCapitalizeName = require("string-capitalize-name");
 const mongoose = require("mongoose");
 const User = require("../models/Users");
+const Feedback = require('../models/Feedback')
 const logError = require("../services/logger");
 const logDevice = require("../services/devices");
 const nodemailer = require("nodemailer");
@@ -12,6 +13,7 @@ const maxAge = 3 * 24 * 60 * 60;
 const create_token = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: maxAge });
 };
+
 
 var controllers = {
   get_user: async function (req, res) {
@@ -23,9 +25,17 @@ var controllers = {
         .lean()
         .exec();
       const store = await User.findOne({ company: result.company }).lean().exec(0);
+
+      const surveyAnswer = await Feedback.findOne({
+        userId: new mongoose.Types.ObjectId(id)
+      }).lean().exec()
+
+
       if (!result)
         res.status(201).json({ success: false, msg: `No such user.` });
-      res.json({ ...result, store_id: store._id });
+
+      let user = { ...result, store_id: store._id, survey_done: surveyAnswer ? true : false}
+      res.json(user);
     } catch (err) {
       await logError(err, "Users", null, id, "GET");
       res.status(400).json({ success: false, msg: err });
