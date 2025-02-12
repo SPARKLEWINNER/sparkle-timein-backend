@@ -3709,7 +3709,23 @@ var controllers = {
       });
     }
   },
+  get_schedule_specific: async function(req, res) {
+    const { id } = req.params;
 
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        msg: `Missing fields`,
+      });
+    }
+    const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
+    now.setUTCHours(0, 0, 0, 0);
+    const formattedDate = now.toISOString().replace("Z", "+00:00");
+    const record = await Payroll.find({uid: id, date: now}).sort({date: -1})
+      .lean()
+      .exec();
+    res.json(record)
+  },
 
 }
 module.exports = controllers;
