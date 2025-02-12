@@ -12,6 +12,7 @@ var videoTutorial = require("./controller/videoTutorial");
 var UploadController = require('./services/upload')
 var AnnouncementUploadController = require('./services/timein-upload')
 var fcmTokenController = require('./controller/fcm')
+var feedback = require('./controller/feedback')
 const {messaging} = require('./services/firebase');
 
 module.exports = function (app) {
@@ -21,6 +22,8 @@ module.exports = function (app) {
   app.route("/").get(api.get_app_info);
   app.route("/api/users").get(auth.require_sign_in, user.get_users);
   app.route("/api/user/:id").get(auth.require_sign_in, user.get_user);
+  app.route('/api/user/:id/feedback').post(auth.require_sign_in, feedback.post_save_feedback)
+
   app.route("/api/user/reset").post(user.set_reset_token);
   app.route("/api/user/verify").post(user.verify_reset_token);
 
@@ -326,6 +329,10 @@ app
 
   app.route("/api/edit-store").get(settings.restore_user);
 
+
+  app.route("/api/feedback").get(feedback.get_feedbacks)
+  app.route("/api/feedback/download").get(feedback.download_feedbacks)
+  app.route("/api/feedback/:star").get(feedback.get_feedbacks_by_ratings)
   // Video Tutorial
 
   app.route("/api/store/video").post(auth.require_sign_in, auth.is_store_authenticated,videoTutorial.addVideoTutorial);
