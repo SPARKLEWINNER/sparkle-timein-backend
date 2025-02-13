@@ -15,5 +15,7 @@ const data = {
     }
 };
 
+
+
 const breaklistSchema = new Schema(data, { timestamps: true });
 module.exports = mongoose.model('BreaklistRemark', breaklistSchema, collectionName);
