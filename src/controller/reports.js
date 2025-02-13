@@ -1423,10 +1423,13 @@ var controllers = {
 
     await Promise.all(record.map(async data => {
       let date = moment(data.date).utc().format('YYYY-MM-DD')
+     
       let reportsArray = await Reports.find({uid: mongoose.Types.ObjectId(id), date: date})
       .limit(1)
       .lean()
       .exec();
+
+       console.log(`looking for ${date}`, reportsArray)
 
       if (reportsArray.length > 0) {
         let timeInStamp
@@ -1538,6 +1541,8 @@ var controllers = {
           let holidayFound = await Holidays.findOne({
             date: { $regex: `-${formattedHolidayDate}$` } // Regex to match MM-DD format
           }).lean().exec();
+
+          console.log(`looking for ${id}-${date}-${timeIn}-${timeOut} `)
 
           let remarks = await BreaklistRemark.findOne({id: `${id}-${date}-${timeIn}-${timeOut}`}).lean().exec()
 
@@ -1671,7 +1676,9 @@ var controllers = {
             }
           }
         }
-        else {
+        else  {
+
+            let remarks = await BreaklistRemark.findOne({id: `${id}-${date}-${0}-${0}`}).lean().exec()
           records.push({
             _id: id,
             date: date,
@@ -1686,12 +1693,13 @@ var controllers = {
             rd: data.restday,
             legalholiday: legalHoliday,
             specialholiday: 0, 
-            remarks: ''
+            remarks: remarks?.remark
           })
         }
       }
       else {
 
+        let remarks = await BreaklistRemark.findOne({id: `${id}-${date}-${0}-${0}`}).lean().exec()
         records.push({
           _id: id,
           date: date,
@@ -1706,7 +1714,7 @@ var controllers = {
           rd: 0,
           legalholiday: 0,
           specialholiday: 0, 
-          remarks: ''
+          remarks: remarks?.remark 
         })
       }
     }))
