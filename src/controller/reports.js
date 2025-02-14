@@ -1344,12 +1344,12 @@ var controllers = {
   },
   post_schedule: async function(req, res) {
     const { uid, from, to, date, name, company, totalHours, breakMin, position, ot, nightdiff, rd } = req.body;
-    if (!uid || !from || !to || !date || !name || !company || !totalHours || !position) {
+/*    if (!uid || !from || !to || !date || !name || !company || !totalHours || !position) {
       return res.status(400).json({
         success: false,
         msg: `Missing fields`,
       });
-    }
+    }*/
     const [month, day, year] = date.split('/');
     const formattedDate = new Date(Date.UTC(year, month - 1, day));
     let update = {
@@ -3791,6 +3791,45 @@ var controllers = {
       .exec();
     res.json(record)
   },
+
+  get_schedule_specific_with_date: async function(req, res) {
+    const { id, date } = req.body;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        msg: `Missing fields`,
+      });
+    }
+    const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
+    now.setUTCHours(0, 0, 0, 0);
+    const formattedDate = now.toISOString().replace("Z", "+00:00");
+    const record = await Payroll.find({uid: id, date: date}).sort({date: -1})
+      .lean()
+      .exec();
+    res.json(record)
+  },
+
+    post_schedule_employee: async function(req, res) {
+      const { uid, date, ot, nightdiff } = req.body;
+      const [month, day, year] = date.split('/');
+      const formattedDate = new Date(Date.UTC(year, month - 1, day));
+      let update = {
+        $set: {  otHours: ot, nightdiff: nightdiff },
+      };
+      result = await Payroll.updateOne( { uid: uid, date: formattedDate }, update ).lean().exec()
+      if (result.nModified > 0) {
+        return res.json({
+          success: true,
+          msg: "Schedule updated successfully",
+        });
+      } else {
+        return res.status(404).json({
+          success: false,
+          msg: "No matching record found to update",
+        });
+      }
+    },
 
 }
 module.exports = controllers;
