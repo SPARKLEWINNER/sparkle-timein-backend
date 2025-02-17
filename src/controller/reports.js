@@ -1237,7 +1237,7 @@ var controllers = {
       "user.company": new RegExp(`${company}`, 'i'),
       "createdAt": {
           $gte: new Date(`${currentYear}-${month}-01`),
-          $lte: new Date(`${currentYear}-${month}-31`)
+          $lte: new Date(`${{cure}}-${month}-31`)
       }
     }).project({
       "user.company": 1,
@@ -2281,7 +2281,7 @@ var controllers = {
       const earliestDateFromDoc = await Breaklist.findOne({store: store}).sort({ datefrom: -1 }).exec();
 
 
-      if (latestDateToDoc && earliestDateFromDoc) {
+      /*if (latestDateToDoc && earliestDateFromDoc) {
         const latestDateTo = moment(latestDateToDoc.dateto).startOf('day');
         const earliestDateFrom = moment(earliestDateFromDoc.datefrom).startOf('day');
         const fromDate = moment(from).startOf('day');
@@ -2296,7 +2296,7 @@ var controllers = {
             msg: "Invalid Dates. Breaklist date already submitted and saved.",
           });
         }
-      }
+      }*/
 
       let personnels = await User.find({company: store, role:0, isArchived: false})
       .lean()
@@ -2403,7 +2403,7 @@ var controllers = {
                   const minutesTimeOutDifference = Math.floor((timeOutDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
                   const totalMinutesTimeOutDifference = (hoursTimeOutDifference * 60) + minutesTimeOutDifference;
                   let totalUndertimeHours = Math.floor(totalMinutesTimeOutDifference / 60)
-                  /*if(dateTimeOut2 > dateTimeOut1){
+             /*     if(dateTimeOut2 > dateTimeOut1){
                     totalUndertimeHours += 1
                   }*/
 
@@ -2419,6 +2419,7 @@ var controllers = {
 
 
                     if (dateTimeOut2 > dateTimeOut1) {
+
                       if(holidayFound && holidayFound.type === "Special Holiday") {
                         specialHoliday = schedulesFound[0].totalHours - totalUndertimeHours
                       }
@@ -2437,6 +2438,7 @@ var controllers = {
                       });
                     }
                     else {
+                      
                       if(holidayFound && holidayFound.type === "Special Holiday") {
 
                         specialHoliday = schedulesFound[0].totalHours
