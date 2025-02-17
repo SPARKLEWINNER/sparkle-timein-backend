@@ -2416,8 +2416,6 @@ var controllers = {
                     legalHoliday += 8;
                   }
                   if (timeOnly2 < timeOnly1) {
-
-
                     if (dateTimeOut2 > dateTimeOut1) {
 
                       if(holidayFound && holidayFound.type === "Special Holiday") {
@@ -2438,7 +2436,6 @@ var controllers = {
                       });
                     }
                     else {
-                      
                       if(holidayFound && holidayFound.type === "Special Holiday") {
 
                         specialHoliday = schedulesFound[0].totalHours
@@ -2457,7 +2454,7 @@ var controllers = {
                       });
                     }
                   } else {
-                    if (moment(dateTimeOut2).utc().format() > moment(dateTimeOut1).utc().format()) {
+                    if (dateTimeOut2 > dateTimeOut1) {
                       if(holidayFound && holidayFound.type === "Special Holiday") {
                         specialHoliday = schedulesFound[0].totalHours
                       }
@@ -2465,7 +2462,7 @@ var controllers = {
                         _id: data._id,
                         empName: data.lastName + ", " + data.firstName,
                         dayswork: 0,
-                        hourswork: schedulesFound[0].totalHours - totalUndertimeHours,
+                        hourswork: schedulesFound[0].totalHours,
                         hourstardy: 0,
                         overtime: schedulesFound[0].otHours,
                         nightdiff: schedulesFound[0].nightdiff,
