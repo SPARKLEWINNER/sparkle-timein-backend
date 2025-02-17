@@ -1534,15 +1534,15 @@ var controllers = {
           const minutesTimeOutDifference = Math.floor((timeOutDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
           const totalMinutesTimeOutDifference = (hoursTimeOutDifference * 60) + minutesTimeOutDifference;
           let totalUndertimeHours = Math.floor(totalMinutesTimeOutDifference / 60)
-          if(dateTimeOut2 > dateTimeOut1){
+  /*        if(dateTimeOut2 > dateTimeOut1){
             totalUndertimeHours += 1
-          }
+          }*/
           const formattedHolidayDate = moment(data.date).format("MM-DD"); // Extract month and day
           let holidayFound = await Holidays.findOne({
             date: { $regex: `-${formattedHolidayDate}$` } // Regex to match MM-DD format
           }).lean().exec();
 
-          console.log(`looking for ${id}-${date}-${timeIn}-${timeOut} `)
+          
 
           let remarks = await BreaklistRemark.findOne({id: `${id}-${date}-${timeIn}-${timeOut}`}).lean().exec()
 
@@ -2403,9 +2403,9 @@ var controllers = {
                   const minutesTimeOutDifference = Math.floor((timeOutDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
                   const totalMinutesTimeOutDifference = (hoursTimeOutDifference * 60) + minutesTimeOutDifference;
                   let totalUndertimeHours = Math.floor(totalMinutesTimeOutDifference / 60)
-                  if(dateTimeOut2 > dateTimeOut1){
+                  /*if(dateTimeOut2 > dateTimeOut1){
                     totalUndertimeHours += 1
-                  }
+                  }*/
 
                   const formattedHolidayDate = moment(schedulesFound[0].date).format("MM-DD");
                   let holidayFound = await Holidays.findOne({
