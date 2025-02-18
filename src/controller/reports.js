@@ -2462,7 +2462,7 @@ var controllers = {
                         _id: data._id,
                         empName: data.lastName + ", " + data.firstName,
                         dayswork: 0,
-                        hourswork: schedulesFound[0].totalHours,
+                        hourswork: schedulesFound[0].totalHours - totalUndertimeHours,
                         hourstardy: 0,
                         overtime: schedulesFound[0].otHours,
                         nightdiff: schedulesFound[0].nightdiff,
