@@ -53,7 +53,7 @@ module.exports = async function () {
         let filteredContactNumbers = contactNumbers.filter(({ ContactNumber }) => ContactNumber !== null)
         console.log(filteredContactNumbers)
 
-        //SMSService.send_sms(filteredContactNumbers, "Hey, you are still timed-in. Mind timing out?")
+        SMSService.send_sms(filteredContactNumbers, "Hey, you are still timed-in. Mind timing out?")
 
     } catch (error) {
         console.log("SMS NO TIMEOUTS ERR", error)
