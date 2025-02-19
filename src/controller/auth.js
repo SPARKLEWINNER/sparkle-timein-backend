@@ -327,7 +327,7 @@ var controllers = {
     }
   },
   phone_sign_in: async function (req, res) {
-    let { phone } = req.body;
+    let { phone, mpin } = req.body;
     let code = Math.floor(100000 + Math.random() * 900000);
     const numberFormat =
       String(phone).charAt(0) +
@@ -338,6 +338,7 @@ var controllers = {
     }
 
     const user = await User.find({ phone: phone, isArchived: false }).lean().exec();
+    const userAuth = new User(user[0]);
 
     if (user.length <= 0)
       return res
@@ -346,6 +347,16 @@ var controllers = {
 
     if (!user[0].isVerified || user[0].isVerified === "false") {
       await send_sms(phone, `Sparkle Time in verification code ${code}`);
+    }
+
+    if (user[0].mpin === '') return res
+    .status(400)
+    .json({ success: false, msg: `MPIN not set` });
+
+    if (!userAuth.mpinAuthenticate(mpin)) {
+      return res
+        .status(400)
+        .json({ success: false, msg: `Invalid MPIN` });
     }
 
     try {
@@ -367,6 +378,38 @@ var controllers = {
         .status(400)
         .json({ success: false, msg: `Unable to sign in using phone` });
     }
+  },
+  phone_check: async function (req, res) {
+    let { phone } = req.body;
+    const numberFormat =
+      String(phone).charAt(0) +
+      String(phone).charAt(1) +
+      String(phone).charAt(2);
+
+    if (numberFormat !== "+63") {
+      phone = "+63" + phone.substring(1);
+    }
+
+    const user = await User.findOne({ phone, isArchived: false }).lean().exec();
+    if(!user) {
+      return res.status(404).json({
+        success: false,
+        msg: "Invalid phone number",
+      });
+    } 
+    
+    if (!user.isVerified || user.isVerified === "false") {
+      await send_sms(phone, `Sparkle Time in verification code ${code}`);
+    }
+
+    if (user.mpin === '' || !user.mpin) return res
+    .status(400)
+    .json({ success: false, msg: `MPIN not yet set` });
+
+    res.status(200).json({
+      success: true,
+      msg: "Mobile no. found with MPIN",
+    });
   },
   phone_sign_up: async function (req, res) {
     let { phone, company } = req.body;
@@ -579,7 +622,33 @@ var controllers = {
         msg: "Unable to sign up",
       });
     }
-  }
+  },
+  auth_check: async function (req, res) {
+    let { email, pass } = req.body;
+
+    if (!email || !pass)
+      return res.status(400).json({
+        success: false,
+        msg: "Please provide required fields",
+      });
+
+    try {
+      let result = await User.login(email, pass);
+      if (!result) {
+        res.status(400).json({
+          success: false,
+          msg: "Unable to sign in",
+        });
+      }
+
+      res.status(200).json({ success: true, msg: "Authorized" });
+    } catch (err) {
+      res.status(400).json({
+        success: false,
+        msg: "Unable to authorize",
+      });
+    }
+  },
 };
 
 module.exports = controllers;

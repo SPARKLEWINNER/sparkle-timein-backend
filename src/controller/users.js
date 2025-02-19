@@ -431,6 +431,35 @@ var controllers = {
         });
       }
     },
+    set_mpin: async function (req, res) {
+      const { id, mpin } = req.body;
+
+      try {
+        await User.findOne({ _id: mongoose.Types.ObjectId(id) })
+          .then((user) => {
+            if (!user)
+              return res
+                .status(400)
+                .json({ success: false, msg: `User not found` });
+            user.mpin = user.encryptPassword(mpin);
+            user.save().then((result) => {
+              if (!result)
+                return res.status(400).json({
+                  success: false,
+                  msg: `Unable to set MPIN`,
+                });
+                
+                return res.status(200).json({
+                  success: true,
+                  msg: "Success",
+                })
+            });
+          })
+          .catch((err) => console.log(err));
+      } catch (err) {
+        console.log(err);
+      }
+    },
     update_user_new_password: async function (req, res) {
       const { email, password } = req.body;
       let id;
