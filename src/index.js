@@ -91,7 +91,7 @@ cron.schedule('*/5 * * * *', () => {
     });
 });*/
 
-/*function cronTimein (id, location) {
+function cronTimein (id, location) {
 
   const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
   const _previous = {}
@@ -169,7 +169,6 @@ cron.schedule('37 7 * * 1-6', () => {
     latitude: 14.685210776473351,
     longitude: 121.04094459783593,
   }
-  cronTimein("62bb925753f9b300378b6062", locationV1)
   cronTimein("63e247b452b472002d008ab1", locationV1)
 
 });
@@ -187,7 +186,7 @@ cron.schedule('07 19 * * 1-6', async () => {
   await cronTimeOut('63e247b452b472002d008ab1', locationV1)
 });
 
-cron.schedule('20 23 * * 1-6', async () => {
+/*cron.schedule('20 23 * * 1-6', async () => {
   const locationV1 = {
     latitude: 14.685210776473351,
     longitude: 121.04094459783593,
