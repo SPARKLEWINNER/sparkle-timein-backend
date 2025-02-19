@@ -2398,11 +2398,14 @@ var controllers = {
                   const hoursDifference = Math.floor(timeDifferenceMilliseconds / (1000 * 60 * 60));
                   const minutesDifference = Math.floor((timeDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
                   const totalMinutesDifference = (hoursDifference * 60) + minutesDifference;
-                  const timeOutDifferenceMilliseconds = Math.abs(dateTimeOut2 - dateTimeOut1);
-                  let hoursTimeOutDifference = Math.floor(timeOutDifferenceMilliseconds / (1000 * 60 * 60));
-                  const minutesTimeOutDifference = Math.floor((timeOutDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
-                  const totalMinutesTimeOutDifference = (hoursTimeOutDifference * 60) + minutesTimeOutDifference;
-                  let totalUndertimeHours = Math.floor(totalMinutesTimeOutDifference / 60)
+                  let totalUndertimeHours = 0
+                  if(dateTimeOut1 && dateTimeOut2 && dateTimeOut2 < dateTimeOut1) {
+                    const timeOutDifferenceMilliseconds = Math.abs(dateTimeOut2 - dateTimeOut1);
+                    let hoursTimeOutDifference = Math.floor(timeOutDifferenceMilliseconds / (1000 * 60 * 60));
+                    const minutesTimeOutDifference = Math.floor((timeOutDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
+                    const totalMinutesTimeOutDifference = (hoursTimeOutDifference * 60) + minutesTimeOutDifference;
+                    totalUndertimeHours = Math.floor(totalMinutesTimeOutDifference / 60)
+                  }
              /*     if(dateTimeOut2 > dateTimeOut1){
                     totalUndertimeHours += 1
                   }*/
@@ -2462,7 +2465,7 @@ var controllers = {
                         _id: data._id,
                         empName: data.lastName + ", " + data.firstName,
                         dayswork: 0,
-                        hourswork: schedulesFound[0].totalHours,
+                        hourswork: schedulesFound[0].totalHours - totalUndertimeHours,
                         hourstardy: 0,
                         overtime: schedulesFound[0].otHours,
                         nightdiff: schedulesFound[0].nightdiff,

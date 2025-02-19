@@ -23,14 +23,16 @@ module.exports = function (app) {
   app.route("/api/users").get(auth.require_sign_in, user.get_users);
   app.route("/api/user/:id").get(auth.require_sign_in, user.get_user);
   app.route('/api/user/:id/feedback').post(auth.require_sign_in, feedback.post_save_feedback)
-
   app.route("/api/user/reset").post(user.set_reset_token);
   app.route("/api/user/verify").post(user.verify_reset_token);
+  app.route("/api/set/MPIN").post(user.set_mpin);
+  app.route("/api/auth/check").post(auth.auth_check);
 
   app.route("/api/login").post(auth.sign_in);
   app.route("/api/employee/register").post(auth.sign_up);
   app.route("/api/store/register").post(auth.store_sign_up);
   app.route("/api/phone").post(auth.phone_sign_in);
+  app.route("/api/phone/check").post(auth.phone_check);
   app.route("/api/phone/signup").post(auth.phone_sign_up);
   app
     .route("/api/phone/verify/:id")

@@ -40,6 +40,10 @@ const data = {
     type: String,
     default: null,
   },
+  mpin: {
+    type: String,
+    default: '',
+  },
   verificationCode: {
     type: String,
     default: null,
@@ -106,6 +110,9 @@ userSchema
 userSchema.methods = {
   authenticate: function (plainText) {
     return this.encryptPassword(plainText) === this.hashed_password;
+  },
+  mpinAuthenticate: function (plainText) {
+    return this.encryptPassword(plainText) === this.mpin;
   },
   encryptPassword: function (password) {
     if (!password) return "";
