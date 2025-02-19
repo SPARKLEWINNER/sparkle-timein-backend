@@ -149,6 +149,8 @@ module.exports = function (app) {
     );
 
 
+  app.route('/api/record/check_timeouts').get(reports.check_schedule_cron)
+
   app.route("/api/record/:id").get(/*auth.require_sign_in, */reports.get_reports_by_id);
 
   app.route("/api/record/update/:id").patch(/*auth.require_sign_in, */reports.update_user_record);

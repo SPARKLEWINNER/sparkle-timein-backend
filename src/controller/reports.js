@@ -3680,32 +3680,65 @@ var controllers = {
   check_schedule_cron: async function (req, res) { 
     try {
       const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
-      const inputDate = new Date(now);
-      inputDate.setUTCHours(0, 0, 0, 0);
-      const timeOnly = moment().tz('Asia/Manila').subtract(1, 'hour').format('HH:mm');
-      const records = await Payroll.find({
-        date: inputDate,
-        to: timeOnly.toString()
-      }).sort({ createdAt: -1 }).exec();
-      records.map(async data => {
+      const currentDate = new Date(now);
+      currentDate.setUTCHours(0, 0, 0, 0);
+
+      const currentTime = moment().tz('Asia/Manila').subtract(1, 'hour').format('HH:mm');
+
+      let schedules =await Payroll.aggregate([
+        {
+          $match: {
+            date: currentDate,
+            to: currentTime.toString()
+          }
+        },
+        {
+          $addFields: {
+            convertedUserId: {
+              $toObjectId: "$uid"
+            }
+          }
+        }, 
+        {"$lookup": {
+            from: "users",
+            localField: "convertedUserId",
+            foreignField: "_id",
+            as: "user"
+          }
+        }
+       ])
+
+
+     
+       let contactNumbers = await Promise.all(schedules.map(async data => {
+  
         const result = await Reports.findOne({
           uid: data.uid,
-          date: inputDate
+          date: currentDate
         })
-        if(result.status !== "time-out"){
-          console.log("Send Text")
+  
+        if(result.status !== 'time-out'){
+          let contact = data?.user?.[0]?.phone || null
+          return {"ContactNumber": contact}
         }
-      })
+      }))
+
+  
+       let filteredContactNumbers = contactNumbers.filter(({ContactNumber}) => ContactNumber !== null)
+      console.log(filteredContactNumbers)
+     
+
+       SMSService.send_sms(filteredContactNumbers, "Hey, you are still timed-in. Mind timing out?")
+       
       return res.status(200).json({
         success: true,
-        data: records
       });
 
     } catch (error) {
-      return res.status(500).json({ 
-        success: false, 
-        msg: 'Server error', 
-        error: error.message 
+      return res.status(500).json({
+        success: false,
+        msg: 'Server error',
+        error: error.message
       });
     }
   },
