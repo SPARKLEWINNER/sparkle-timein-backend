@@ -73,7 +73,7 @@ io.on("connection", (_socket) => {
 
 
 
-cron.schedule('*/1 * * * *', async () => {
+cron.schedule('*/5 * * * *', async () => {
   sms_no_timeouts()
 });
 

@@ -9,6 +9,7 @@ const Payroll = require("../models/Payroll");
 const Checklist = require("../models/Checklist");
 const Breaklistinfo = require("../models/Breaklistinfo");
 const Breaklist = require("../models/Breaklist");
+const BreaklistRemark = require('../models/BreaklistRemark')
 const Adjustment = require("../models/Adjustmentlogs");
 const nodemailer = require("nodemailer");
 const {emailAccountVerifiedHTML} = require("../helpers/accountActivate");
@@ -161,10 +162,10 @@ var controllers = {
             return res.status(400).json({
               success: false,
               msg: "Connection to payroll error",
-            });  
+            });
           }
           else {
-            return res.json(result);  
+            return res.json(result);
           }
           return res.json(result);
         }
@@ -196,13 +197,13 @@ var controllers = {
             $set: { status: status, updatedAt: now },
             $push: { record: newReports },
           };
-          result = 
+          result =
           await Reports.findOneAndUpdate(
             { _id: mongoose.Types.ObjectId(previous) },
              update
-          );  
+          );
         }
-        
+
         // await Reports.findOneAndUpdate(
         //   { date: new Date(previous), uid: mongoose.Types.ObjectId(id) },
         //   update,
@@ -230,7 +231,7 @@ var controllers = {
           return res.status(400).json({
             success: false,
             msg: "Connection to payroll error",
-          });  
+          });
         }
       }
 
@@ -257,11 +258,11 @@ var controllers = {
         return res.status(400).json({
           success: false,
           msg: "Connection to payroll error",
-        });  
+        });
       }
       else {
-        res.json(result);  
-      } 
+        res.json(result);
+      }
       /*res.json(result);*/
     } catch (err) {
       await logError(err, "Reports", req.body, id, "POST");
@@ -495,7 +496,7 @@ var controllers = {
       let employees = await User.find({$and: [{company: user.company, role: 0, isArchived: false}]}, { displayName: 1, lastName: 1, firstName: 1})
         .lean()
         .exec();
-      let count = employees.length 
+      let count = employees.length
       if (!employees) {
         return res.status(200).json({
           success: true,
@@ -515,14 +516,14 @@ var controllers = {
       employees.map(data => {
        dates.map(date => {
           const result = Reports.find({$and: [{uid: data._id}, {date: date}]}).lean().exec()
-          d.push({date: date})  
+          d.push({date: date})
         })
       })
 
       employees.map(async data => {
        dates.map(async date => {
           const result = await Reports.find({$and: [{uid: data._id}, {date: date}]}).lean().exec()
-          records.push({Employee: data, date: date, reports:result, count: count})  
+          records.push({Employee: data, date: date, reports:result, count: count})
         })
       })
 
@@ -534,8 +535,8 @@ var controllers = {
           console.log(data.reports[0])
           if (data.reports !== null) {
             if (moment(data.reports.date).format('YYYY-MM-DD') === moment(date).format('YYYY-MM-DD')) {
-              finalReports.push(filterResult)   
-            }  
+              finalReports.push(filterResult)
+            }
           }
         })
       })*/
@@ -550,7 +551,7 @@ var controllers = {
           if(a.Employee.lastName > b.Employee.lastName) { return 1; }
           return 0;
       })
-      return res.json({data: records, l: d.length}); 
+      return res.json({data: records, l: d.length});
     } catch (err) {
       await logError(err, "Reports", null, id, "GET");
       res.status(400).json({ success: false, msg: err });
@@ -596,7 +597,7 @@ var controllers = {
             console.log(mailResponse)
           })
           return res.json({ success: true, msg: 'We will be sending a notification for the complete download link.' });
-        }  
+        }
       })
       .catch(err => {
         console.error(err)
@@ -755,7 +756,7 @@ var controllers = {
           $set: { status: status },
           $push: { record: newReports },
         };
-        result = 
+        result =
         await Reports.findOneAndUpdate(
           { _id: mongoose.Types.ObjectId(previous) },
            update
@@ -824,7 +825,7 @@ var controllers = {
           res.status(400).json({ success: false, msg: err });
           throw new createError.InternalServerError(err);
       }
-      
+
     }
   },
   get_reports_bydate: async function (req, res) {
@@ -923,7 +924,7 @@ var controllers = {
   },
 
   get_reports_by_id: async function (req, res) {
-    
+
     const { id } = req.params;
     if (!id) res.status(404).json({ success: false, msg: `No such user.` });
 
@@ -948,7 +949,7 @@ var controllers = {
       res.json([report]);
     }
 
-    
+
   },
   remove_record: async function (req, res) {
     const { id } = req.params;
@@ -970,15 +971,15 @@ var controllers = {
           return res.status(400).json({
             success: true,
             msg: "No record found",
-          }); 
+          });
         }
         else {
           return res.status(200).json({
             success: true,
             msg: "Record updated",
-          });  
+          });
         }
-        
+
       });
     } catch (err) {
       console.log(err);
@@ -1010,7 +1011,7 @@ var controllers = {
               .json({ success: false, msg: `Unable to remove record ${id}` });
         }
         else {
-          const updateStatus = await Reports.updateOne({ _id: mongoose.Types.ObjectId(id) }, {"status": newStatus}) 
+          const updateStatus = await Reports.updateOne({ _id: mongoose.Types.ObjectId(id) }, {"status": newStatus})
           .then((status) => {
             if (!status)
               return res
@@ -1066,15 +1067,15 @@ var controllers = {
         return res.status(200).json({
           success: true,
           msg: "Password validated",
-        });  
+        });
       }
       else {
         return res.status(400).json({
           success: false,
           msg: "Invalid password",
-        }); 
+        });
       }
-      
+
     } catch (err) {
       console.log(err);
       await logError(err, "Reports.generate_password", req.body, id, "GET");
@@ -1185,7 +1186,7 @@ var controllers = {
           success: true,
           msg: "No registered employees",
         });
-      }  
+      }
       let reportsv2 = await Reports.findOne({}).lean().exec()
       return res.json(stores);
     } catch (err) {
@@ -1221,7 +1222,7 @@ var controllers = {
     const { company, month } = req.body;
     const currentDate = new Date();
     const currentYear = currentDate.getFullYear();
-      /*let records = await User.find({"createdAt": {$gte: new Date('2022-10-17'), $lte: new Date('2022-10-24')}, 
+      /*let records = await User.find({"createdAt": {$gte: new Date('2022-10-17'), $lte: new Date('2022-10-24')},
   "company": new RegExp("syzygy", 'i')})*/
     let records = await Reports.aggregate([
       {
@@ -1236,7 +1237,7 @@ var controllers = {
       "user.company": new RegExp(`${company}`, 'i'),
       "createdAt": {
           $gte: new Date(`${currentYear}-${month}-01`),
-          $lte: new Date(`${currentYear}-${month}-31`)
+          $lte: new Date(`${{cure}}-${month}-31`)
       }
     }).project({
       "user.company": 1,
@@ -1274,7 +1275,7 @@ var controllers = {
     const coc = new Coc({
       company: company,
       link: link
-    }); 
+    });
     result = await Coc.updateOne({company: company}, {link: link}, {upsert: true}, function(err, doc) {
       if (err) return res.send(400, {error: err})
       return res.send({success: true, msg: 'Succesfully updated'})
@@ -1296,12 +1297,12 @@ var controllers = {
   },
 
   post_payroll_record: async function(req, res) {
-    const { uid, record, month } = req.body; 
+    const { uid, record, month } = req.body;
     const payroll = new Payroll({
       uid: uid,
       record: record,
       month: month
-    }); 
+    });
     let update = {
       $set: { month: month, record: record },
     };
@@ -1310,7 +1311,7 @@ var controllers = {
       return res.status(200).json({
         success: true,
         msg: `Record save`,
-      });  
+      });
     }
     else {
       return res.status(400).json({
@@ -1343,12 +1344,12 @@ var controllers = {
   },
   post_schedule: async function(req, res) {
     const { uid, from, to, date, name, company, totalHours, breakMin, position, ot, nightdiff, rd } = req.body;
-    if (!uid || !from || !to || !date || !name || !company || !totalHours || !position) {
+/*    if (!uid || !from || !to || !date || !name || !company || !totalHours || !position) {
       return res.status(400).json({
         success: false,
         msg: `Missing fields`,
       });
-    }
+    }*/
     const [month, day, year] = date.split('/');
     const formattedDate = new Date(Date.UTC(year, month - 1, day));
     let update = {
@@ -1368,7 +1369,7 @@ var controllers = {
       headers: {'Content-Type': 'application/json'}
     });
     if(response.status === 200) {
-      res.json(result)  
+      res.json(result)
     }
     else {
       return res.status(400).json({
@@ -1376,7 +1377,7 @@ var controllers = {
         msg: `Something went wrong please contact your IT administrator`,
       });
     }
-    
+
   },
   get_schedule: async function(req, res) {
     const { id } = req.params;
@@ -1392,7 +1393,7 @@ var controllers = {
       .exec();
     res.json(record)
   },
-  get_schedule_range: async function(req, res) {
+    get_schedule_range: async function(req, res) {
     const { id, from, to } = req.body;
     let records = []
     let personnelName
@@ -1412,16 +1413,24 @@ var controllers = {
     }
     let formattedDate = new Date(to);
     formattedDate.setDate(formattedDate.getDate() + 0);
+
+    //get the working hours of an employee
     const record = await Payroll.find({uid: mongoose.Types.ObjectId(id), date: {$gte: new Date(from), $lte: new Date(formattedDate) }}).sort({date: 1})
       .lean()
       .exec();
+
+
+
     await Promise.all(record.map(async data => {
       let date = moment(data.date).utc().format('YYYY-MM-DD')
+     
       let reportsArray = await Reports.find({uid: mongoose.Types.ObjectId(id), date: date})
       .limit(1)
       .lean()
       .exec();
-      
+
+       console.log(`looking for ${date}`, reportsArray)
+
       if (reportsArray.length > 0) {
         let timeInStamp
         let timeOutStamp
@@ -1440,7 +1449,7 @@ var controllers = {
             timeInStamp = `${moment(timestamp).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
           }
           else {
-            timeInStamp = `${moment(reportsArray[0].record[0].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z` 
+            timeInStamp = `${moment(reportsArray[0].record[0].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
           }
           if(typeof reportsArray[0].record[reportsLength - 1].time != "number") {
             let [hours, minutes] = reportsArray[0].record[reportsLength - 1].time.split(':').map(part => parseInt(part, 10));
@@ -1452,11 +1461,11 @@ var controllers = {
             let timestamp2 = date.getTime();
 
             if (timestamp2) {
-              timeOutStamp = `${moment(timestamp2).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`  
+              timeOutStamp = `${moment(timestamp2).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
             }
           }
           else {
-            timeOutStamp = `${moment(reportsArray[0].record[reportsLength - 1].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`   
+            timeOutStamp = `${moment(reportsArray[0].record[reportsLength - 1].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
           }
 /*          var dateStr = data.date;
           var timeStr = data.to.toString();
@@ -1525,13 +1534,18 @@ var controllers = {
           const minutesTimeOutDifference = Math.floor((timeOutDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
           const totalMinutesTimeOutDifference = (hoursTimeOutDifference * 60) + minutesTimeOutDifference;
           let totalUndertimeHours = Math.floor(totalMinutesTimeOutDifference / 60)
-          if(dateTimeOut2 > dateTimeOut1){
+  /*        if(dateTimeOut2 > dateTimeOut1){
             totalUndertimeHours += 1
-          }
+          }*/
           const formattedHolidayDate = moment(data.date).format("MM-DD"); // Extract month and day
           let holidayFound = await Holidays.findOne({
             date: { $regex: `-${formattedHolidayDate}$` } // Regex to match MM-DD format
           }).lean().exec();
+
+          
+
+          let remarks = await BreaklistRemark.findOne({id: `${id}-${date}-${timeIn}-${timeOut}`}).lean().exec()
+
           if (timeOnly2 < timeOnly1) {
             if (dateTimeOut2 > dateTimeOut1) {
               if(holidayFound && holidayFound.type !== "Special Holiday") {
@@ -1541,7 +1555,7 @@ var controllers = {
                 legalHoliday = 0
               }
               if(holidayFound && holidayFound.type === "Special Holiday") {
-                
+
                 specialHoliday = data.totalHours - totalUndertimeHours
               }
               else {
@@ -1560,7 +1574,8 @@ var controllers = {
                 nightdiff: data.nightdiff,
                 rd: data.restday,
                 legalholiday: legalHoliday,
-                specialholiday: specialHoliday
+                specialholiday: specialHoliday,
+                remarks: remarks?.remark
               })
             }
             else {
@@ -1590,7 +1605,8 @@ var controllers = {
                 nightdiff: data.nightdiff,
                 rd: data.restday,
                 legalholiday: legalHoliday,
-                specialholiday: specialHoliday
+                specialholiday: specialHoliday, 
+                remarks: remarks?.remark
               })
             }
           }
@@ -1622,7 +1638,8 @@ var controllers = {
                 nightdiff: data.nightdiff,
                 rd: data.restday,
                 legalholiday: legalHoliday,
-                specialholiday: specialHoliday
+                specialholiday: specialHoliday,
+                remarks: remarks?.remark
               })
             }
             else {
@@ -1653,12 +1670,15 @@ var controllers = {
                 nightdiff: data.nightdiff,
                 rd: data.restday,
                 legalholiday: legalHoliday,
-                specialholiday: specialHoliday
+                specialholiday: specialHoliday, 
+                remarks: remarks?.remark
               })
-            } 
+            }
           }
         }
-        else {
+        else  {
+
+            let remarks = await BreaklistRemark.findOne({id: `${id}-${date}-${0}-${0}`}).lean().exec()
           records.push({
             _id: id,
             date: date,
@@ -1672,12 +1692,14 @@ var controllers = {
             nightdiff: data.nightdiff,
             rd: data.restday,
             legalholiday: legalHoliday,
-            specialholiday: 0
+            specialholiday: 0, 
+            remarks: remarks?.remark
           })
         }
       }
       else {
-        
+
+        let remarks = await BreaklistRemark.findOne({id: `${id}-${date}-${0}-${0}`}).lean().exec()
         records.push({
           _id: id,
           date: date,
@@ -1691,7 +1713,8 @@ var controllers = {
           nightdiff: 0,
           rd: 0,
           legalholiday: 0,
-          specialholiday: 0
+          specialholiday: 0, 
+          remarks: remarks?.remark 
         })
       }
     }))
@@ -1852,7 +1875,7 @@ var controllers = {
     try {
       const response = await fetch(`https://payroll-live.sevenstarjasem.com/payroll/public/api/getPayrollInfoV2/${id}`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -1919,14 +1942,14 @@ var controllers = {
         return res.status(200).json({
           success: true,
           msg: "No record found",
-        });  
+        });
       }
       else {
         return res.status(200).json({
           success: true,
           msg: "Record updated",
-        }); 
-      }      
+        });
+      }
     }
     catch (err) {
       console.log(err);
@@ -1944,15 +1967,15 @@ var controllers = {
         return res.status(200).json({
           success: true,
           data: result,
-        });    
+        });
       }
       else {
         return res.status(200).json({
           success: true,
           data: "No records found",
-        });  
+        });
       }
-       
+
     }
     catch (err) {
       console.log(err);
@@ -1972,7 +1995,7 @@ var controllers = {
       return res.status(200).json({
         success: true,
         msg: "Success",
-      });   
+      });
     }
     catch (err) {
       console.log(err);
@@ -1990,15 +2013,15 @@ var controllers = {
         return res.status(200).json({
           success: true,
           msg: "No Records found",
-        });    
+        });
       }
       else {
         return res.status(200).json({
           success: true,
           msg: "Success",
-        });  
+        });
       }
-         
+
     }
     catch (err) {
       console.log(err);
@@ -2026,7 +2049,7 @@ var controllers = {
       return res.status(200).json({
         success: true,
         msg: "Success",
-      });  
+      });
     }
   },
   get_store: async function(req, res) {
@@ -2043,7 +2066,7 @@ var controllers = {
         success: true,
         msg: "Success",
         company: user.company
-      });  
+      });
     }
   },
   update_email: async function(req, res) {
@@ -2064,7 +2087,7 @@ var controllers = {
         return res.status(200).json({
           success: true,
           msg: "Success",
-        });   
+        });
       }
       catch (err) {
         return res.status(400).json({
@@ -2085,7 +2108,7 @@ var controllers = {
       phone = "+63" + phone.substring(1);
     }
     const user = await User.findOne({ phone: phone , isArchived: false }).lean().exec();
-    
+
     if (!user) {
       return res.status(400).json({
         success: false,
@@ -2113,17 +2136,17 @@ var controllers = {
           .exec();
           const token = create_token(user._id);
           res.cookie("jwt", token, { httpOnly: true, maxAge: maxAge * 1000 });
-          res.status(200).json({ ...user, token, store_id: store[0]._id });  
-        } 
+          res.status(200).json({ ...user, token, store_id: store[0]._id });
+        }
       } catch (err) {
           return res.status(400).json({
           success: false,
           msg: err,
         });
       }
-      
+
     }
-    
+
   },
   get_schedule_all_v2: async function (req, res) {
 
@@ -2161,7 +2184,7 @@ var controllers = {
       const newDateString = oldDate.toISOString().replace("Z", "+00:00");
       const promises = employees.map(async (data) => {
         const results = await Payroll.find({
-          uid: data._id, 
+          uid: data._id,
           date: new Date(formattedDate)
         })
         .sort({ from: 1 })
@@ -2258,7 +2281,7 @@ var controllers = {
       const earliestDateFromDoc = await Breaklist.findOne({store: store}).sort({ datefrom: -1 }).exec();
 
 
-      if (latestDateToDoc && earliestDateFromDoc) {
+      /*if (latestDateToDoc && earliestDateFromDoc) {
         const latestDateTo = moment(latestDateToDoc.dateto).startOf('day');
         const earliestDateFrom = moment(earliestDateFromDoc.datefrom).startOf('day');
         const fromDate = moment(from).startOf('day');
@@ -2273,7 +2296,7 @@ var controllers = {
             msg: "Invalid Dates. Breaklist date already submitted and saved.",
           });
         }
-      }
+      }*/
 
       let personnels = await User.find({company: store, role:0, isArchived: false})
       .lean()
@@ -2296,7 +2319,7 @@ var controllers = {
                 const hasTimeOut = reportsFound[0].record.some(entry => entry.status === 'time-out');
                 let reportsLength = reportsFound[0].record.length
                 if (hasTimeIn && hasTimeOut) {
-                    
+
                   if(typeof reportsFound[0].record[0].time != "number") {
                     let [hours, minutes] = reportsFound[0].record[0].time.split(':').map(part => parseInt(part, 10));
                     let date = new Date();
@@ -2310,7 +2333,7 @@ var controllers = {
                         : null;
                   }
                   else {
-                    timeIn = `${moment(reportsFound[0].record[0].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`   
+                    timeIn = `${moment(reportsFound[0].record[0].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
                   }
                   if(typeof reportsFound[0].record[reportsLength - 1].time != "number") {
                     let [hours, minutes] = reportsFound[0].record[reportsLength - 1].time.split(':').map(part => parseInt(part, 10));
@@ -2322,14 +2345,14 @@ var controllers = {
                     let timestamp2 = date.getTime();
 
                     if (timestamp2) {
-                      timeOut = `${moment(timestamp2).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`  
+                      timeOut = `${moment(timestamp2).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
                     }
 /*                    timeOut = timestamp2
                         ? `${moment(timestamp2).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
                         : null;*/
                   }
                   else {
-                    timeOut = `${moment(reportsFound[0].record[reportsLength - 1].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`   
+                    timeOut = `${moment(reportsFound[0].record[reportsLength - 1].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
                   }
                   const parsedDate = new Date(timeIn);
                   const [year, month, day] = [
@@ -2357,7 +2380,7 @@ var controllers = {
                   const timeOutTimeOnly2 = `${parsedDateTimeOut2.getUTCHours().toString().padStart(2, '0')}:${parsedDateTimeOut2.getUTCMinutes().toString().padStart(2, '0')}:${parsedDateTimeOut2.getUTCSeconds().toString().padStart(2, '0')}`;
                   const referenceDate = '1970-01-01T';
                   const dateTime1 = new Date(referenceDate + timeOnly1 + 'Z');
-                  const dateTime2 = new Date(referenceDate + timeOnly2 + 'Z'); 
+                  const dateTime2 = new Date(referenceDate + timeOnly2 + 'Z');
 
                   /*let dateTimeOut1 = new Date(referenceDate + timeOutTimeOnly1 + 'Z');
                   let dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');*/
@@ -2375,14 +2398,17 @@ var controllers = {
                   const hoursDifference = Math.floor(timeDifferenceMilliseconds / (1000 * 60 * 60));
                   const minutesDifference = Math.floor((timeDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
                   const totalMinutesDifference = (hoursDifference * 60) + minutesDifference;
-                  const timeOutDifferenceMilliseconds = Math.abs(dateTimeOut2 - dateTimeOut1);
-                  let hoursTimeOutDifference = Math.floor(timeOutDifferenceMilliseconds / (1000 * 60 * 60));
-                  const minutesTimeOutDifference = Math.floor((timeOutDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
-                  const totalMinutesTimeOutDifference = (hoursTimeOutDifference * 60) + minutesTimeOutDifference;
-                  let totalUndertimeHours = Math.floor(totalMinutesTimeOutDifference / 60)
-                  if(dateTimeOut2 < dateTimeOut1){
-                    totalUndertimeHours += 1
+                  let totalUndertimeHours = 0
+                  if(dateTimeOut1 && dateTimeOut2 && dateTimeOut2 < dateTimeOut1) {
+                    const timeOutDifferenceMilliseconds = Math.abs(dateTimeOut2 - dateTimeOut1);
+                    let hoursTimeOutDifference = Math.floor(timeOutDifferenceMilliseconds / (1000 * 60 * 60));
+                    const minutesTimeOutDifference = Math.floor((timeOutDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
+                    const totalMinutesTimeOutDifference = (hoursTimeOutDifference * 60) + minutesTimeOutDifference;
+                    totalUndertimeHours = Math.floor(totalMinutesTimeOutDifference / 60)
                   }
+             /*     if(dateTimeOut2 > dateTimeOut1){
+                    totalUndertimeHours += 1
+                  }*/
 
                   const formattedHolidayDate = moment(schedulesFound[0].date).format("MM-DD");
                   let holidayFound = await Holidays.findOne({
@@ -2393,19 +2419,18 @@ var controllers = {
                     legalHoliday += 8;
                   }
                   if (timeOnly2 < timeOnly1) {
-
-                    
                     if (dateTimeOut2 > dateTimeOut1) {
+
                       if(holidayFound && holidayFound.type === "Special Holiday") {
                         specialHoliday = schedulesFound[0].totalHours - totalUndertimeHours
                       }
 
-                      records.push({ 
+                      records.push({
                         _id: data._id,
-                        empName: data.lastName + ", " + data.firstName, 
-                        dayswork: 0, 
-                        hourswork: schedulesFound[0].totalHours - totalUndertimeHours, 
-                        hourstardy: totalMinutesDifference, 
+                        empName: data.lastName + ", " + data.firstName,
+                        dayswork: 0,
+                        hourswork: schedulesFound[0].totalHours - totalUndertimeHours,
+                        hourstardy: totalMinutesDifference,
                         overtime: schedulesFound[0].otHours,
                         nightdiff: schedulesFound[0].nightdiff,
                         restday: schedulesFound[0].restday,
@@ -2418,12 +2443,12 @@ var controllers = {
 
                         specialHoliday = schedulesFound[0].totalHours
                       }
-                      records.push({ 
+                      records.push({
                         _id: data._id,
-                        empName: data.lastName + ", " + data.firstName, 
-                        dayswork: 0, 
-                        hourswork: schedulesFound[0].totalHours, 
-                        hourstardy: totalMinutesDifference, 
+                        empName: data.lastName + ", " + data.firstName,
+                        dayswork: 0,
+                        hourswork: schedulesFound[0].totalHours,
+                        hourstardy: totalMinutesDifference,
                         overtime: schedulesFound[0].otHours,
                         nightdiff: schedulesFound[0].nightdiff,
                         restday: schedulesFound[0].restday,
@@ -2432,18 +2457,18 @@ var controllers = {
                       });
                     }
                   } else {
-                    if (moment(dateTimeOut2).utc().format() > moment(dateTimeOut1).utc().format()) {
+                    if (dateTimeOut2 > dateTimeOut1) {
                       if(holidayFound && holidayFound.type === "Special Holiday") {
                         specialHoliday = schedulesFound[0].totalHours
                       }
-                      records.push({ 
+                      records.push({
                         _id: data._id,
-                        empName: data.lastName + ", " + data.firstName, 
-                        dayswork: 0, 
-                        hourswork: schedulesFound[0].totalHours - totalUndertimeHours, 
-                        hourstardy: 0, 
+                        empName: data.lastName + ", " + data.firstName,
+                        dayswork: 0,
+                        hourswork: schedulesFound[0].totalHours - totalUndertimeHours,
+                        hourstardy: 0,
                         overtime: schedulesFound[0].otHours,
-                        nightdiff: schedulesFound[0].nightdiff, 
+                        nightdiff: schedulesFound[0].nightdiff,
                         restday: schedulesFound[0].restday,
                         legalholiday: legalHoliday,
                         specialholiday: specialHoliday
@@ -2453,62 +2478,62 @@ var controllers = {
                       if(holidayFound && holidayFound.type === "Special Holiday") {
                         specialHoliday = schedulesFound[0].totalHours
                       }
-                      records.push({ 
+                      records.push({
                         _id: data._id,
-                        empName: data.lastName + ", " + data.firstName, 
-                        dayswork: 0, 
-                        hourswork: schedulesFound[0].totalHours, 
-                        hourstardy: 0, 
+                        empName: data.lastName + ", " + data.firstName,
+                        dayswork: 0,
+                        hourswork: schedulesFound[0].totalHours,
+                        hourstardy: 0,
                         overtime: schedulesFound[0].otHours,
                         nightdiff: schedulesFound[0].nightdiff,
                         restday: schedulesFound[0].restday,
                         legalholiday: legalHoliday,
                         specialholiday: specialHoliday
-                      });  
+                      });
                     }
-                    
+
                   }
                 }
                 else {
-                  records.push({ 
+                  records.push({
                     _id: data._id,
-                    empName: data.lastName + ", " + data.firstName, 
-                    dayswork: 0, 
-                    hourswork: 0, 
-                    hourstardy: 0, 
+                    empName: data.lastName + ", " + data.firstName,
+                    dayswork: 0,
+                    hourswork: 0,
+                    hourstardy: 0,
                     overtime: schedulesFound[0].otHours,
                     nightdiff: schedulesFound[0].nightdiff,
                     restday: schedulesFound[0].restday,
                     legalholiday: legalHoliday,
                     specialholiday: 0
-                  });  
+                  });
                 }
               }
               else {
-                records.push({ 
+                records.push({
                   _id: data._id,
-                  empName: data.lastName + ", " + data.firstName, 
-                  dayswork: 0, 
-                  hourswork: 0, 
-                  hourstardy: 0, 
+                  empName: data.lastName + ", " + data.firstName,
+                  dayswork: 0,
+                  hourswork: 0,
+                  hourstardy: 0,
                   overtime: schedulesFound[0].otHours,
                   nightdiff: schedulesFound[0].nightdiff,
                   restday: schedulesFound[0].restday,
                   legalholiday: legalHoliday,
                   specialholiday: 0
-                });   
-              } 
+                });
+              }
             }
             else {
-              records.push({ 
+              records.push({
                 _id: data._id,
-                empName: data.lastName + ", " + data.firstName, 
-                dayswork: 0, 
-                hourswork: 0, 
-                hourstardy: 0, 
+                empName: data.lastName + ", " + data.firstName,
+                dayswork: 0,
+                hourswork: 0,
+                hourstardy: 0,
                 overtime: 0,
                 nightdiff: 0,
-                restday: 0 
+                restday: 0
               });
             }
           }))
@@ -2557,7 +2582,7 @@ var controllers = {
                 restday: parseInt(entry.restday, 10),
                 legalholiday: parseFloat(entry.legalholiday),
                 specialholiday: parseFloat(entry.specialholiday),
-              }; 
+              };
 
             }
         });
@@ -2573,7 +2598,7 @@ var controllers = {
           msg: "Success",
           data: records
         });
-      }  
+      }
       else {
         return res.status(400).json({
           success: false,
@@ -2639,15 +2664,15 @@ var controllers = {
               let timeOutStamp = `${moment(result[0].record[result.length].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
               const timeIn = moment(timeInStamp).utc().format('HH:mm');
               const timeOut = moment(timeOutStamp).utc().format('HH:mm');
-              records.push({ 
+              records.push({
                 _id: user._id,
                 date: date,
-                empName: user.displayName, 
-                timein: timeIn, 
+                empName: user.displayName,
+                timein: timeIn,
                 timeout: timeOut,
-              }); 
+              });
             }
-      
+
           }
         }))
         if (records.length > 0) {
@@ -2655,7 +2680,7 @@ var controllers = {
             success: true,
             msg: "Success",
             data: records
-          });  
+          });
         }
         else {
           return res.status(200).json({
@@ -2690,15 +2715,15 @@ var controllers = {
           return res.status(400).json({
             success: true,
             msg: "No record found",
-          }); 
+          });
         }
         else {
           return res.status(200).json({
             success: true,
             msg: "Record updated",
-          });  
+          });
         }
-        
+
       });
     } catch (err) {
       console.log(err);
@@ -2710,7 +2735,7 @@ var controllers = {
     }
   },
   post_save_breaklist: async function (req, res) {
-    const {employees, from, to, store, generatedby, employeecount, cutoff} = req.body
+    const {employees, from, to, store, generatedby, employeecount, cutoff, remarks} = req.body
     const breaklistId = uuid();
 
     const data = new Breaklist({
@@ -2724,7 +2749,8 @@ var controllers = {
     })
 
     try {
-    
+
+        //breaklists
         const promises = employees.map(async (doc) => {
         const { _id, empName, ...rest } = doc;
         // Create new Breaklist document
@@ -2733,7 +2759,7 @@ var controllers = {
           breaklistid: breaklistId,
           employeeid: _id,
           employeename: empName,
-          ...rest 
+          ...rest
         });
 
         // Save the document
@@ -2741,7 +2767,22 @@ var controllers = {
         return result;
       });
 
-      const results = await Promise.all(promises);
+
+      const breaklistRemarks = await Object.keys(remarks).map(async (key) => {
+        let writtenRemark = remarks[key]
+
+        const remark = new BreaklistRemark({
+          id: key, 
+          remark: writtenRemark, 
+          breaklistId: breaklistId
+        })
+
+        const result = await remark.save()
+        return result
+      })
+
+
+      const results = await Promise.all([...promises, ...breaklistRemarks]);
 
       if (results){
       await data.save();
@@ -2754,7 +2795,7 @@ var controllers = {
         msg: "Breaklists Saved",
         results: results  // Optionally return inserted documents or IDs
       });
-    
+
     } catch (err) {
       // await logError(err, "Reports", null, breaklistid, "POST");  // Adjusted the method to POST
       console.log(err)
@@ -2768,9 +2809,9 @@ var controllers = {
 
     try {
       const breaklist = await Breaklist.find({ store: store }).sort({ createdAt: -1 }).exec();
-      
+
       console.log('Breaklist retrieved successfully:');
-  
+
       return res.status(200).json({
         success: true,
         data: breaklist
@@ -2778,7 +2819,7 @@ var controllers = {
 
     } catch (err) {
       console.error('Error retrieving breaklist:', err);
-  
+
       return res.status(500).json({ success: false, msg: "Internal Server Error" });
     }
   },
@@ -2788,9 +2829,9 @@ var controllers = {
 
     try {
       const breaklist = await Breaklist.find({ store: store, approved: false }).sort({ createdAt: -1 }).exec();
-      
+
       console.log('Breaklist retrieved successfully:');
-  
+
       return res.status(200).json({
         success: true,
         data: breaklist
@@ -2798,17 +2839,17 @@ var controllers = {
 
     } catch (err) {
       console.error('Error retrieving breaklist:', err);
-  
+
       return res.status(500).json({ success: false, msg: "Internal Server Error" });
     }
   },
 
   get_store_breaklist_approved: async function (req, res) {
     const {  payroll, from, to } = req.body;
-  
+
     try {
       let allBreaklists;
-  
+
       if (payroll === 2) {
         allBreaklists = await Breaklist.find({
           store: { $regex: /Inhouse/i },
@@ -2819,11 +2860,11 @@ var controllers = {
       } else {
         allBreaklists = await Breaklist.find({ store: { $not: { $regex: /Inhouse/i } }, createdAt: { $gte: new Date(`${from}T00:00:00.000Z`), $lte: new Date(`${to}T23:59:59.999Z`) } }).sort({createdAt: -1}).exec();
       }
-  
+
       const approvedBreaklists = allBreaklists.filter(item => {
         return item.approved;
       });
-  
+
       const detailedBreaklist = await Promise.all(approvedBreaklists.map(async (item) => {
         const breaklistDetails = await Breaklistinfo.find({ breaklistid: item.breaklistid }).exec();
         return {
@@ -2831,10 +2872,10 @@ var controllers = {
           details: breaklistDetails
         };
       }));
-  
+
       const totalBreaklist = allBreaklists.length;
       const totalApproved = approvedBreaklists.length;
-  
+
       /*console.log(detailedBreaklist, 'Breaklist retrieved successfully:');
   */
       return res.status(200).json({
@@ -2845,20 +2886,20 @@ var controllers = {
           totalApproved: totalApproved
         }
       });
-  
+
     } catch (err) {
       console.error('Error retrieving breaklist:', err);
-  
+
       return res.status(500).json({ success: false, msg: "Internal Server Error" });
     }
   },
-  
+
   get_breaklistinfo: async function (req, res) {
     const {breaklistid} = req.body;
 
     try {
       const breaklistinfo = await Breaklistinfo.find({breaklistid: breaklistid}).exec();
-      
+
       console.log('Breaklistinfo retrieved successfully:');
       breaklistinfo.sort(function(a, b){
           if(a.employeename < b.employeename) { return -1; }
@@ -2872,30 +2913,64 @@ var controllers = {
 
     } catch (err) {
       console.error('Error retrieving breaklist:', err);
-  
+
       return res.status(500).json({ success: false, msg: "Internal Server Error" });
     }
   },
-  
+
+  post_breaklist_info_add_remark : async function(req, res){
+    let {id} = req.params
+
+    let {remarks} =req.body
+
+
+
+    try{
+      let updatedBreakListInfo = await Breaklistinfo.findOneAndUpdate({
+        _id: new mongoose.Types.ObjectId(id)
+      }, {
+        remarks: remarks
+      })
+
+      return res.status(200).json({
+        status: true,
+        message: 'Remarks added.',
+        data: updatedBreakListInfo
+      })
+
+    }catch(err){
+      console.log(err)
+      return res.status(500).json({
+        status: false,
+        message: 'Cannot set remark.'
+      })
+    }
+  },
   delete_breaklist: async function(req, res) {
     const {breaklistid} = req.body;
+    console.log('deleting', breaklistid)
     try {
       const breaklistResult = await Breaklist.deleteOne({breaklistid: breaklistid}).lean().exec();
-      
+
       const breaklistinfoResult= await Breaklistinfo.deleteMany({breaklistid: breaklistid}).lean().exec();
+
+      
+      const breaklistRemark = await BreaklistRemark.deleteMany({breaklistId: breaklistid}).lean().exec()
+      console.log(breaklistRemark)
+
       if (breaklistResult.deletedCount === 0 || breaklistinfoResult.deletedCount === 0){
         return res.status(200).json({
           success: true,
           msg: "No Records found",
-        });    
+        });
       }
       else {
         return res.status(200).json({
           success: true,
           msg: "Success",
-        });  
+        });
       }
-         
+
     }
     catch (err) {
       console.log(err);
@@ -2921,7 +2996,7 @@ var controllers = {
         let update = {
           $set: { approved: true, approvedby:  },
         };
-        result = 
+        result =
         await Breaklist.findOneAndUpdate(
           { breaklistid: breaklistid },
            update
@@ -2930,7 +3005,7 @@ var controllers = {
           return res.status(200).json({
             success: true,
             msg: "Update successfull",
-          });  
+          });
         }*/
       const findTokenResult = await User.findOne({email: email}).select("timeAdjustmentVerification")
       if(findTokenResult){
@@ -2949,7 +3024,7 @@ var controllers = {
             let update = {
               $set: { approved: true, approvedby: approver },
             };
-            result = 
+            result =
             await Breaklist.findOneAndUpdate(
               { breaklistid: breaklistid },
                update
@@ -2958,9 +3033,9 @@ var controllers = {
               return res.status(200).json({
                 success: true,
                 msg: "Update successfull",
-              });  
+              });
             }
-          }  
+          }
         }
         else {
           return res.status(200).json({
@@ -2981,12 +3056,12 @@ var controllers = {
 /*  archived_many_users: async function (req, res) {
     try {
       const breaklist = await User.updateMany({ store: "PPRE Corporation" }, { isArchived: true }).exec();
-      
+
       console.log('Archived successfully:');
 
     } catch (err) {
       console.error('Error retrieving breaklist:', err);
-  
+
       return res.status(500).json({ success: false, msg: "Internal Server Error" });
     }
   },*/
@@ -2997,11 +3072,11 @@ var controllers = {
         .status(400)
         .json({ success: false, msg: `Missing Request parameters.` });
     try {
-      const schedule = await Payroll.deleteOne({ _id: id }).lean().exec(); 
+      const schedule = await Payroll.deleteOne({ _id: id }).lean().exec();
       return res.status(200).json({
         success: true,
         msg: "Delete successfull",
-      });  
+      });
     } catch (err) {
       return res.status(500).json({ success: false, msg: "Internal Server Error" });
     }
@@ -3022,7 +3097,7 @@ var controllers = {
         let update = {
           $set: { otHours: ot, restday: rd, nightdiff: nightdiff },
         };
-        result = 
+        result =
         await Payroll.findOneAndUpdate(
           { _id: id },
            update
@@ -3032,7 +3107,7 @@ var controllers = {
           return res.status(200).json({
             success: true,
             msg: "Update successfull",
-          });  
+          });
         }
       }
     }
@@ -3065,7 +3140,7 @@ var controllers = {
         return res.status(200).json({
           success: true,
           data: stores
-        });  
+        });
       }
     }
     catch (err) {
@@ -3128,7 +3203,7 @@ var controllers = {
             });
           }
         });
-  
+
       }
     }
     catch (err) {
@@ -3314,7 +3389,7 @@ var controllers = {
       });
     }
   },
-  get_logs_by_id: async function (req, res) { 
+  get_logs_by_id: async function (req, res) {
     const { id } = req.params;
 
     if (!id) return res.status(404).json({ success: false, msg: `No such user.` });
@@ -3339,7 +3414,7 @@ var controllers = {
       return res.status(500).json({ success: false, msg: 'Server error' });
     }
   },
-  register_store: async function (req, res) { 
+  register_store: async function (req, res) {
     const { uid, storeid } = req.body;
 
     if (!storeid) return res.status(404).json({ success: false, msg: `No such user.` });
@@ -3391,7 +3466,7 @@ var controllers = {
       return res.status(500).json({ success: false, msg: 'Server error' });
     }
   },
-  get_group_store: async function (req, res) { 
+  get_group_store: async function (req, res) {
     const { id } = req.params;
 
     if (!id) return res.status(200).json({ success: false, msg: `No such user.` });
@@ -3505,7 +3580,7 @@ var controllers = {
       let employees = await User.find({$and: [{company: store, role: 0, isArchived: false}]}, { displayName: 1, lastName: 1, firstName: 1})
         .lean()
         .exec();
-      let count = employees.length 
+      let count = employees.length
       if (!employees) {
         return res.status(200).json({
           success: true,
@@ -3525,14 +3600,14 @@ var controllers = {
       employees.map(data => {
        dates.map(date => {
           const result = Reports.find({$and: [{uid: data._id}, {date: date}]}).lean().exec()
-          d.push({date: date})  
+          d.push({date: date})
         })
       })
 
       employees.map(async data => {
        dates.map(async date => {
           const result = await Reports.find({$and: [{uid: data._id}, {date: date}]}).lean().exec()
-          records.push({Employee: data, date: date, reports:result, count: count})  
+          records.push({Employee: data, date: date, reports:result, count: count})
         })
       })
 
@@ -3544,8 +3619,8 @@ var controllers = {
           console.log(data.reports[0])
           if (data.reports !== null) {
             if (moment(data.reports.date).format('YYYY-MM-DD') === moment(date).format('YYYY-MM-DD')) {
-              finalReports.push(filterResult)   
-            }  
+              finalReports.push(filterResult)
+            }
           }
         })
       })*/
@@ -3560,7 +3635,7 @@ var controllers = {
           if(a.Employee.lastName > b.Employee.lastName) { return 1; }
           return 0;
       })
-      return res.json({data: records, l: d.length}); 
+      return res.json({data: records, l: d.length});
     } catch (err) {
       res.status(400).json({ success: false, msg: err });
       throw new createError.InternalServerError(err);
@@ -3590,7 +3665,7 @@ var controllers = {
           try {
             // Update record
             const updatedBreaklist = await Breaklistinfo.findOneAndUpdate(
-              { 
+              {
                 breaklistid: breaklistid,
                 employeeid: updateFields.employeeid,
               }, // Find record by ID
@@ -3626,7 +3701,7 @@ var controllers = {
       });
     }
   },
-  post_holiday: async function (req, res) { 
+  post_holiday: async function (req, res) {
     const { holiday, type, date } = req.body;
 
     if (!date) return res.status(400).json({ success: false, msg: `Date is required.` });
@@ -3638,7 +3713,7 @@ var controllers = {
           success: true,
           msg: "Date already saved.",
         });
-      } 
+      }
       const newHoliday = new Holidays({ holiday, type, date });
       await newHoliday.save();
       return res.status(201).json({
@@ -3646,14 +3721,14 @@ var controllers = {
         msg: "Holiday saved successfully.",
       });
     } catch (error) {
-      return res.status(500).json({ 
-        success: false, 
-        msg: 'Server error', 
-        error: error.message 
+      return res.status(500).json({
+        success: false,
+        msg: 'Server error',
+        error: error.message
       });
     }
   },
-  delete_store_in_group: async function (req, res) { 
+  delete_store_in_group: async function (req, res) {
     const { store, id } = req.body;
 
     if (!store || !id) return res.status(400).json({ success: false, msg: `Store is required.` });
@@ -3668,16 +3743,16 @@ var controllers = {
           success: true,
           msg: "Success."
         });
-      } 
+      }
     } catch (error) {
-      return res.status(500).json({ 
-        success: false, 
-        msg: 'Server error', 
-        error: error.message 
+      return res.status(500).json({
+        success: false,
+        msg: 'Server error',
+        error: error.message
       });
     }
   },
-  check_schedule_cron: async function (req, res) { 
+  check_schedule_cron: async function (req, res) {
     try {
       const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
       const currentDate = new Date(now);
@@ -3742,7 +3817,62 @@ var controllers = {
       });
     }
   },
+  get_schedule_specific: async function(req, res) {
+    const { id } = req.params;
 
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        msg: `Missing fields`,
+      });
+    }
+    const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
+    now.setUTCHours(0, 0, 0, 0);
+    const formattedDate = now.toISOString().replace("Z", "+00:00");
+    const record = await Payroll.find({uid: id, date: now}).sort({date: -1})
+      .lean()
+      .exec();
+    res.json(record)
+  },
+
+  get_schedule_specific_with_date: async function(req, res) {
+    const { id, date } = req.body;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        msg: `Missing fields`,
+      });
+    }
+    const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
+    now.setUTCHours(0, 0, 0, 0);
+    const formattedDate = now.toISOString().replace("Z", "+00:00");
+    const record = await Payroll.find({uid: id, date: date}).sort({date: -1})
+      .lean()
+      .exec();
+    res.json(record)
+  },
+
+    post_schedule_employee: async function(req, res) {
+      const { uid, date, ot, nightdiff } = req.body;
+      const [month, day, year] = date.split('/');
+      const formattedDate = new Date(Date.UTC(year, month - 1, day));
+      let update = {
+        $set: {  otHours: ot, nightdiff: nightdiff },
+      };
+      result = await Payroll.updateOne( { uid: uid, date: formattedDate }, update ).lean().exec()
+      if (result.nModified > 0) {
+        return res.json({
+          success: true,
+          msg: "Schedule updated successfully",
+        });
+      } else {
+        return res.status(404).json({
+          success: false,
+          msg: "No matching record found to update",
+        });
+      }
+    },
 
 }
 module.exports = controllers;

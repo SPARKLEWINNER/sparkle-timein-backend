@@ -377,4 +377,7 @@ app
   app.route("/api/holiday").post(reports.post_holiday);
   app.route("/api/delete/store/group").post(reports.delete_store_in_group);
   app.route("/api/check/schedule/cron").get(reports.check_schedule_cron);
+  app.route("/api/specific/schedule/:id").get(reports.get_schedule_specific);
+  app.route("/api/specific/schedule/with/date").post(reports.get_schedule_specific_with_date);
+  app.route("/api/specific/schedule/employee").post(reports.post_schedule_employee);
 };
