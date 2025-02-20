@@ -13,9 +13,15 @@ const cron = require('node-cron');
 const fetch = require('node-fetch');
 const moment = require('moment-timezone');
 var mysql = require('mysql');
+
+const sms_no_timeouts = require('./jobs/sms_no_timeouts')
+
+
+
 require("dotenv").config();
 require("./services/passport")(passport);
 require("./services/notif")
+
 
 // Connect to the database
 mongoose
@@ -25,7 +31,9 @@ mongoose
     useCreateIndex: true,
     useFindAndModify: false,
   })
-  .then(() => console.log(`Database Connected`))
+  .then(async () => {
+    console.log(`Database Connected`)
+  })
   .catch((err) => console.log(err));
 
 // Instantiate express
@@ -65,10 +73,9 @@ io.on("connection", (_socket) => {
 
 
 
-cron.schedule('*/5 * * * *', () => {
-  console.log("Hello world")
+cron.schedule('*/5 * * * *', async () => {
+  sms_no_timeouts()
 });
-
 
 // Run cronjob
 
