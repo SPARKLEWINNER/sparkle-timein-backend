@@ -7,6 +7,9 @@ module.exports = {
 	send_sms: async function (recipients, message) {
 	    console.log('🚀 ~ message:', message)
 	    console.log('🚀 ~ recipients:', recipients)
+
+		if(recipients.length === 0) return
+		
 	    let token
 	    try {
 	      // Generate a new token
@@ -33,15 +36,14 @@ module.exports = {
 
 	   
 	    // Send OTP
-	    const url = 'https://svc.app.cast.ph/api/announcement/send/otp'
+	    const url = 'https://svc.app.cast.ph/api/announcement/send'
 
 	    const data = {
 	      MessageFrom: "SPARKLETIMEKEEPING",
 	      Message: message,
-	      Recipient: {
-	        ContactNumber: recipients
-	      }
+	      Recipients: recipients
 	    }
+	    
 	    console.log('🚀 ~ data:', data)
 
 	    const headers = {
