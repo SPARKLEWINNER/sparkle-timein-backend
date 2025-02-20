@@ -38,17 +38,23 @@ module.exports = async function () {
             }
         ])
 
-        let contactNumbers = await Promise.all(schedules.map(async data => {
+        console.log('schedules', schedules)
 
+        let contactNumbers = await Promise.all(schedules.map(async data => {
             const result = await Reports.findOne({
                 uid: data.uid,
                 date: currentDate
             })
 
+            console.log('report for today', result)
+
+            if(!result) return {"ContactNumber": null} 
+
             if (result.status !== 'time-out') {
                 let contact = data?.user?.[0]?.phone || null
                 return { "ContactNumber": contact }
             }
+
         }))
         let filteredContactNumbers = contactNumbers.filter(({ ContactNumber }) => ContactNumber !== null)
         console.log(filteredContactNumbers)
