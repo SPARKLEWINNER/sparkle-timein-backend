@@ -39,7 +39,7 @@ module.exports = {
 	    const url = 'https://svc.app.cast.ph/api/announcement/send'
 
 	    const data = {
-	      MessageFrom: "SPARKLETIMEKEEPING",
+	      MessageFrom: "Sparkle",
 	      Message: message,
 	      Recipients: recipients
 	    }
