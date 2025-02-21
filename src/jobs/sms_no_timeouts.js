@@ -5,6 +5,13 @@ const SMSService = require('../services/sms')
 
 module.exports = async function () {
     try {
+
+        let message  = `⚠️ URGENT: Time Out Missing!
+
+                        You haven’t Timed Out, and it’s already 1 hour past your schedule. This is important to keep your records accurate and avoid payroll issues.
+
+                        Please Time Out now, or inform your supervisor if you need help.
+    `
         const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
         const currentDate = new Date(now);
         currentDate.setUTCHours(0, 0, 0, 0);
@@ -48,18 +55,18 @@ module.exports = async function () {
 
             console.log('report for today', result)
 
-            if(!result) return {"ContactNumber": null} 
+            if(!result) return {ContactNumber: null} 
 
             if (result.status !== 'time-out') {
                 let contact = data?.user?.[0]?.phone || null
-                return { "ContactNumber": contact }
+                return { ContactNumber: contact }
             }
-
         }))
+        console.log(contactNumbers)
         let filteredContactNumbers = contactNumbers.filter(({ ContactNumber }) => ContactNumber !== null)
         console.log(filteredContactNumbers)
 
-        SMSService.send_sms(filteredContactNumbers, "Hey, you are still timed-in. Mind timing out?")
+        SMSService.send_sms(filteredContactNumbers, message)
 
     } catch (error) {
         console.log("SMS NO TIMEOUTS ERR", error)
