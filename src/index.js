@@ -13,9 +13,15 @@ const cron = require('node-cron');
 const fetch = require('node-fetch');
 const moment = require('moment-timezone');
 var mysql = require('mysql');
+
+const sms_no_timeouts = require('./jobs/sms_no_timeouts')
+
+
+
 require("dotenv").config();
 require("./services/passport")(passport);
 require("./services/notif")
+
 
 // Connect to the database
 mongoose
@@ -25,7 +31,9 @@ mongoose
     useCreateIndex: true,
     useFindAndModify: false,
   })
-  .then(() => console.log(`Database Connected`))
+  .then(async () => {
+    console.log(`Database Connected`)
+  })
   .catch((err) => console.log(err));
 
 // Instantiate express
@@ -65,10 +73,9 @@ io.on("connection", (_socket) => {
 
 
 
-cron.schedule('*/5 * * * *', () => {
-  console.log("Hello world")
-});
-
+// cron.schedule('*/5 * * * *', async () => {
+//   sms_no_timeouts()
+// });
 
 // Run cronjob
 
@@ -91,103 +98,102 @@ cron.schedule('*/5 * * * *', () => {
     });
 });*/
 
-/*function cronTimein (id, location) {
+// function cronTimein (id, location) {
 
-  const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
-  const _previous = {}
-  fetch(`https://timekeeping-real-time.herokuapp.com/api/user/status/${id}`, {
-    method: 'GET', // *GET, POST, PUT, DELETE, etc.
-    mode: 'cors', // no-cors, *cors, same-origin
-    cache: 'no-cache',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/vnd.heroku+json; version=3',
-    },
-  })
-  .then(async (response) => {
-    const r = await response.json()
-    fetch(`https://timekeeping-real-time.herokuapp.com/api/special/time/${id}`, {
-    method: 'POST', // *GET, POST, PUT, DELETE, etc.
-    mode: 'cors', // no-cors, *cors, same-origin
-    cache: 'no-cache',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/vnd.heroku+json; version=3',
-    },
-    body: JSON.stringify({ status: "time-in", location: location, logdate: now, previous: r[r.length -1]._id })
-    })
-    .then(async (response) => {
-      console.log("Time-in Success")
-    })
-    .catch(function (err) {
-      console.log("Unable to fetch -", err);
-    }); 
-  })
-  .catch(function (err) {
-    console.log("Unable to fetch -", err);
-  });
-}
+//   const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
+//   const _previous = {}
+//   fetch(`https://timekeeping-real-time.herokuapp.com/api/user/status/${id}`, {
+//     method: 'GET', // *GET, POST, PUT, DELETE, etc.
+//     mode: 'cors', // no-cors, *cors, same-origin
+//     cache: 'no-cache',
+//     headers: {
+//       'Content-Type': 'application/json',
+//       'Accept': 'application/vnd.heroku+json; version=3',
+//     },
+//   })
+//   .then(async (response) => {
+//     const r = await response.json()
+//     fetch(`https://timekeeping-real-time.herokuapp.com/api/special/time/${id}`, {
+//     method: 'POST', // *GET, POST, PUT, DELETE, etc.
+//     mode: 'cors', // no-cors, *cors, same-origin
+//     cache: 'no-cache',
+//     headers: {
+//       'Content-Type': 'application/json',
+//       'Accept': 'application/vnd.heroku+json; version=3',
+//     },
+//     body: JSON.stringify({ status: "time-in", location: location, logdate: now, previous: r[r.length -1]._id })
+//     })
+//     .then(async (response) => {
+//       console.log("Time-in Success")
+//     })
+//     .catch(function (err) {
+//       console.log("Unable to fetch -", err);
+//     }); 
+//   })
+//   .catch(function (err) {
+//     console.log("Unable to fetch -", err);
+//   });
+// }
 
-function cronTimeOut (id, location) {
-  const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
-  let _previous
-  fetch(`https://timekeeping-real-time.herokuapp.com/api/user/status/${id}`, {
-    method: 'GET', // *GET, POST, PUT, DELETE, etc.
-    mode: 'cors', // no-cors, *cors, same-origin
-    cache: 'no-cache',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/vnd.heroku+json; version=3',
-    },
-  })
-  .then(async (response) => {
-    const r = await response.json()
-    fetch(`https://timekeeping-real-time.herokuapp.com/api/special/time/${id}`, {
-    method: 'POST', // *GET, POST, PUT, DELETE, etc.
-    mode: 'cors', // no-cors, *cors, same-origin
-    cache: 'no-cache',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/vnd.heroku+json; version=3',
-    },
-    body: JSON.stringify({ status: "time-out", location: location, logdate: now, previous: r[r.length -1]._id })
-  })
-  .then(async (response) => {
-    console.log("Time-out Success")
-  })
-  .catch(function (err) {
-    console.log("Unable to fetch -", err);
-  }); 
-  })
-  .catch(function (err) {
-    console.log("Unable to fetch -", err);
-  });
-}
+// function cronTimeOut (id, location) {
+//   const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
+//   let _previous
+//   fetch(`https://timekeeping-real-time.herokuapp.com/api/user/status/${id}`, {
+//     method: 'GET', // *GET, POST, PUT, DELETE, etc.
+//     mode: 'cors', // no-cors, *cors, same-origin
+//     cache: 'no-cache',
+//     headers: {
+//       'Content-Type': 'application/json',
+//       'Accept': 'application/vnd.heroku+json; version=3',
+//     },
+//   })
+//   .then(async (response) => {
+//     const r = await response.json()
+//     fetch(`https://timekeeping-real-time.herokuapp.com/api/special/time/${id}`, {
+//     method: 'POST', // *GET, POST, PUT, DELETE, etc.
+//     mode: 'cors', // no-cors, *cors, same-origin
+//     cache: 'no-cache',
+//     headers: {
+//       'Content-Type': 'application/json',
+//       'Accept': 'application/vnd.heroku+json; version=3',
+//     },
+//     body: JSON.stringify({ status: "time-out", location: location, logdate: now, previous: r[r.length -1]._id })
+//   })
+//   .then(async (response) => {
+//     console.log("Time-out Success")
+//   })
+//   .catch(function (err) {
+//     console.log("Unable to fetch -", err);
+//   }); 
+//   })
+//   .catch(function (err) {
+//     console.log("Unable to fetch -", err);
+//   });
+// }
 
-cron.schedule('37 7 * * 1-6', () => {
-  const locationV1 = {
-    latitude: 14.685210776473351,
-    longitude: 121.04094459783593,
-  }
-  cronTimein("62bb925753f9b300378b6062", locationV1)
-  cronTimein("63e247b452b472002d008ab1", locationV1)
+// cron.schedule('37 7 * * 1-6', () => {
+//   const locationV1 = {
+//     latitude: 14.685210776473351,
+//     longitude: 121.04094459783593,
+//   }
+//   cronTimein("63e247b452b472002d008ab1", locationV1)
 
-});
+// });
 
 
-cron.schedule('07 19 * * 1-6', async () => {
-  const locationV1 = {
-    latitude: 14.685210776473351,
-    longitude: 121.04094459783593,
-  }
-  const locationV2 = {
-    latitude: 14.525547,
-    longitude: 121.067896,
-  }
-  await cronTimeOut('63e247b452b472002d008ab1', locationV1)
-});
+// cron.schedule('07 19 * * 1-6', async () => {
+//   const locationV1 = {
+//     latitude: 14.685210776473351,
+//     longitude: 121.04094459783593,
+//   }
+//   const locationV2 = {
+//     latitude: 14.525547,
+//     longitude: 121.067896,
+//   }
+//   await cronTimeOut('63e247b452b472002d008ab1', locationV1)
+// });
 
-cron.schedule('20 23 * * 1-6', async () => {
+/*cron.schedule('20 23 * * 1-6', async () => {
   const locationV1 = {
     latitude: 14.685210776473351,
     longitude: 121.04094459783593,
