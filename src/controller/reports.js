@@ -1429,8 +1429,6 @@ var controllers = {
       .lean()
       .exec();
 
-       console.log(`looking for ${date}`, reportsArray)
-
       if (reportsArray.length > 0) {
         let timeInStamp
         let timeOutStamp
@@ -1529,12 +1527,29 @@ var controllers = {
           const hoursDifference = Math.floor(timeDifferenceMilliseconds / (1000 * 60 * 60));
           const minutesDifference = Math.floor((timeDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
           const totalMinutesDifference = (hoursDifference * 60) + minutesDifference;
-          const timeOutDifferenceMilliseconds = Math.abs(dateTimeOut2 - dateTimeOut1);
-          let hoursTimeOutDifference = Math.floor(timeOutDifferenceMilliseconds / (1000 * 60 * 60));
-          const minutesTimeOutDifference = Math.floor((timeOutDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
-          const totalMinutesTimeOutDifference = (hoursTimeOutDifference * 60) + minutesTimeOutDifference;
-          let totalUndertimeHours = Math.floor(totalMinutesTimeOutDifference / 60)
-  /*        if(dateTimeOut2 > dateTimeOut1){
+          let totalUndertimeHours = 0
+
+          function calculateUndertime(expectedTimeout, actualTimeout) {
+              const getMinutesSinceMidnight = (date) =>
+                  date.getHours() * 60 + date.getMinutes();
+              const expectedMinutes = getMinutesSinceMidnight(expectedTimeout);
+              const actualMinutes = getMinutesSinceMidnight(actualTimeout);
+              if (actualMinutes < expectedMinutes) {
+                  const totalMinutesUndertime = expectedMinutes - actualMinutes;
+                  return Math.ceil(totalMinutesUndertime / 60);
+              }
+              return 0; // No undertime
+          }
+          totalUndertimeHours = calculateUndertime(dateTimeOut2, dateTimeOut1);
+          
+          // if(dateTimeOut1 && dateTimeOut2 && dateTimeOut2 < dateTimeOut1) {
+          //   const timeOutDifferenceMilliseconds = Math.abs(dateTimeOut2 - dateTimeOut1);
+          //   let hoursTimeOutDifference = Math.floor(timeOutDifferenceMilliseconds / (1000 * 60 * 60));
+          //   const minutesTimeOutDifference = Math.floor((timeOutDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
+          //   const totalMinutesTimeOutDifference = (hoursTimeOutDifference * 60) + minutesTimeOutDifference;
+          //   totalUndertimeHours = Math.floor(totalMinutesTimeOutDifference / 60)
+          // }
+          /*if(dateTimeOut2 > dateTimeOut1){
             totalUndertimeHours += 1
           }*/
           const formattedHolidayDate = moment(data.date).format("MM-DD"); // Extract month and day
@@ -1548,6 +1563,7 @@ var controllers = {
 
           if (timeOnly2 < timeOnly1) {
             if (dateTimeOut2 > dateTimeOut1) {
+              console.log(date + " " + totalUndertimeHours + " " + dateTimeOut2 + " " + dateTimeOut1)
               if(holidayFound && holidayFound.type !== "Special Holiday") {
                 legalHoliday = 8
               }
@@ -2399,13 +2415,26 @@ var controllers = {
                   const minutesDifference = Math.floor((timeDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
                   const totalMinutesDifference = (hoursDifference * 60) + minutesDifference;
                   let totalUndertimeHours = 0
-                  if(dateTimeOut1 && dateTimeOut2 && dateTimeOut2 < dateTimeOut1) {
-                    const timeOutDifferenceMilliseconds = Math.abs(dateTimeOut2 - dateTimeOut1);
-                    let hoursTimeOutDifference = Math.floor(timeOutDifferenceMilliseconds / (1000 * 60 * 60));
-                    const minutesTimeOutDifference = Math.floor((timeOutDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
-                    const totalMinutesTimeOutDifference = (hoursTimeOutDifference * 60) + minutesTimeOutDifference;
-                    totalUndertimeHours = Math.floor(totalMinutesTimeOutDifference / 60)
+                  function calculateUndertime(expectedTimeout, actualTimeout) {
+                    const getMinutesSinceMidnight = (date) =>
+                        date.getHours() * 60 + date.getMinutes();
+                    const expectedMinutes = getMinutesSinceMidnight(expectedTimeout);
+                    const actualMinutes = getMinutesSinceMidnight(actualTimeout);
+                    if (actualMinutes < expectedMinutes) {
+                        const totalMinutesUndertime = expectedMinutes - actualMinutes;
+                        return Math.ceil(totalMinutesUndertime / 60);
+                    }
+                    return 0;
                   }
+                  totalUndertimeHours = calculateUndertime(dateTimeOut2, dateTimeOut1);
+                  
+                  // if(dateTimeOut1 && dateTimeOut2 && dateTimeOut2 < dateTimeOut1) {
+                  //   const timeOutDifferenceMilliseconds = Math.abs(dateTimeOut2 - dateTimeOut1);
+                  //   let hoursTimeOutDifference = Math.floor(timeOutDifferenceMilliseconds / (1000 * 60 * 60));
+                  //   const minutesTimeOutDifference = Math.floor((timeOutDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
+                  //   const totalMinutesTimeOutDifference = (hoursTimeOutDifference * 60) + minutesTimeOutDifference;
+                  //   totalUndertimeHours = Math.floor(totalMinutesTimeOutDifference / 60)
+                  // }
              /*     if(dateTimeOut2 > dateTimeOut1){
                     totalUndertimeHours += 1
                   }*/
@@ -3800,7 +3829,6 @@ var controllers = {
 
   
        let filteredContactNumbers = contactNumbers.filter(({ContactNumber}) => ContactNumber !== null)
-      console.log(filteredContactNumbers)
      
 
        SMSService.send_sms(filteredContactNumbers, "Hey, you are still timed-in. Mind timing out?")
