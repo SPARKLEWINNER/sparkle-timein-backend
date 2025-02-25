@@ -1450,6 +1450,7 @@ var controllers = {
             timeInStamp = `${moment(reportsArray[0].record[0].time).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`
           }
           if(typeof reportsArray[0].record[reportsLength - 1].time != "number") {
+
             let [hours, minutes] = reportsArray[0].record[reportsLength - 1].time.split(':').map(part => parseInt(part, 10));
             let date = new Date();
             date.setHours(hours);
@@ -1515,32 +1516,33 @@ var controllers = {
           const dateTime2 = new Date(referenceDate + timeOnly2 + 'Z');
           let dateTimeOut1 = new Date(parsedDateTimeOut1);
           let dateTimeOut2 = new Date(parsedDateTimeOut2);
-          if (data.from < data.to) {
+/*          if (data.from < data.to) {
             dateTimeOut1 = new Date(referenceDate + timeOutTimeOnly1 + 'Z');
             dateTimeOut2 = new Date(referenceDate + timeOutTimeOnly2 + 'Z');
           }
           else {
             dateTimeOut1 = new Date(dateTimeOut1);
             dateTimeOut2 = new Date(dateTimeOut2.getTime() + 24 * 60 * 60 * 1000);
-          }
+          }*/
           const timeDifferenceMilliseconds = Math.abs(dateTime2 - dateTime1);
           const hoursDifference = Math.floor(timeDifferenceMilliseconds / (1000 * 60 * 60));
           const minutesDifference = Math.floor((timeDifferenceMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
           const totalMinutesDifference = (hoursDifference * 60) + minutesDifference;
           let totalUndertimeHours = 0
-
           function calculateUndertime(expectedTimeout, actualTimeout) {
               const getMinutesSinceMidnight = (date) =>
-                  date.getHours() * 60 + date.getMinutes();
+                  date.getUTCHours() * 60 + date.getUTCMinutes();
+
               const expectedMinutes = getMinutesSinceMidnight(expectedTimeout);
               const actualMinutes = getMinutesSinceMidnight(actualTimeout);
+
               if (actualMinutes < expectedMinutes) {
                   const totalMinutesUndertime = expectedMinutes - actualMinutes;
                   return Math.ceil(totalMinutesUndertime / 60);
               }
-              return 0; // No undertime
+              return 0; 
           }
-          totalUndertimeHours = calculateUndertime(dateTimeOut2, dateTimeOut1);
+          totalUndertimeHours = calculateUndertime(parsedDateTimeOut2, parsedDateTimeOut1);
           
           // if(dateTimeOut1 && dateTimeOut2 && dateTimeOut2 < dateTimeOut1) {
           //   const timeOutDifferenceMilliseconds = Math.abs(dateTimeOut2 - dateTimeOut1);
@@ -1563,7 +1565,7 @@ var controllers = {
 
           if (timeOnly2 < timeOnly1) {
             if (dateTimeOut2 > dateTimeOut1) {
-              console.log(date + " " + totalUndertimeHours + " " + dateTimeOut2 + " " + dateTimeOut1)
+
               if(holidayFound && holidayFound.type !== "Special Holiday") {
                 legalHoliday = 8
               }
@@ -1595,6 +1597,7 @@ var controllers = {
               })
             }
             else {
+
               if(holidayFound && holidayFound.type !== "Special Holiday") {
                 legalHoliday = 8
               }
@@ -1627,6 +1630,7 @@ var controllers = {
             }
           }
           else {
+            
             if (dateTimeOut2 > dateTimeOut1) {
               if(holidayFound && holidayFound.type !== "Special Holiday") {
                 legalHoliday = 8
@@ -1668,7 +1672,7 @@ var controllers = {
               }
               if(holidayFound && holidayFound.type === "Special Holiday") {
 
-                specialHoliday = data.totalHours
+                specialHoliday = data.totalHours - totalUndertimeHours
               }
               else {
                 specialHoliday = 0
@@ -1680,7 +1684,7 @@ var controllers = {
                 to: data.to,
                 timeIn: timeIn,
                 timeOut: timeOut,
-                hourswork: data.totalHours,
+                hourswork: data.totalHours - totalUndertimeHours,
                 hoursTardy: 0,
                 overtime: data.otHours,
                 nightdiff: data.nightdiff,
@@ -1739,6 +1743,7 @@ var controllers = {
       const dateB = new Date(b.date);
       return dateA - dateB;
     });
+    console.log(records)
     res.json(records)
   },
   get_all_schedule: async function(req, res) {
@@ -2416,18 +2421,19 @@ var controllers = {
                   const totalMinutesDifference = (hoursDifference * 60) + minutesDifference;
                   let totalUndertimeHours = 0
                   function calculateUndertime(expectedTimeout, actualTimeout) {
-                    const getMinutesSinceMidnight = (date) =>
-                        date.getHours() * 60 + date.getMinutes();
-                    const expectedMinutes = getMinutesSinceMidnight(expectedTimeout);
-                    const actualMinutes = getMinutesSinceMidnight(actualTimeout);
-                    if (actualMinutes < expectedMinutes) {
-                        const totalMinutesUndertime = expectedMinutes - actualMinutes;
-                        return Math.ceil(totalMinutesUndertime / 60);
-                    }
-                    return 0;
-                  }
-                  totalUndertimeHours = calculateUndertime(dateTimeOut2, dateTimeOut1);
+                      const getMinutesSinceMidnight = (date) =>
+                          date.getUTCHours() * 60 + date.getUTCMinutes();
 
+                      const expectedMinutes = getMinutesSinceMidnight(expectedTimeout);
+                      const actualMinutes = getMinutesSinceMidnight(actualTimeout);
+
+                      if (actualMinutes < expectedMinutes) {
+                          const totalMinutesUndertime = expectedMinutes - actualMinutes;
+                          return Math.ceil(totalMinutesUndertime / 60);
+                      }
+                      return 0; 
+                  }
+                  totalUndertimeHours = calculateUndertime(parsedDateTimeOut2, parsedDateTimeOut1);
                   // if(dateTimeOut1 && dateTimeOut2 && dateTimeOut2 < dateTimeOut1) {
                   //   const timeOutDifferenceMilliseconds = Math.abs(dateTimeOut2 - dateTimeOut1);
                   //   let hoursTimeOutDifference = Math.floor(timeOutDifferenceMilliseconds / (1000 * 60 * 60));
