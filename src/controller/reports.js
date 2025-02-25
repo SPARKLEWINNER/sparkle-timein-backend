@@ -1597,7 +1597,6 @@ var controllers = {
               })
             }
             else {
-
               if(holidayFound && holidayFound.type !== "Special Holiday") {
                 legalHoliday = 8
               }
@@ -1606,7 +1605,7 @@ var controllers = {
               }
               if(holidayFound && holidayFound.type === "Special Holiday") {
 
-                specialHoliday = data.totalHours
+                specialHoliday = data.totalHours - totalUndertimeHours
               }
               else {
                 specialHoliday = 0
@@ -1618,7 +1617,7 @@ var controllers = {
                 to: data.to,
                 timeIn: timeIn,
                 timeOut: timeOut,
-                hourswork: data.totalHours,
+                hourswork: data.totalHours - totalUndertimeHours,
                 hoursTardy: totalMinutesDifference,
                 overtime: data.otHours,
                 nightdiff: data.nightdiff,
@@ -1743,7 +1742,6 @@ var controllers = {
       const dateB = new Date(b.date);
       return dateA - dateB;
     });
-    console.log(records)
     res.json(records)
   },
   get_all_schedule: async function(req, res) {
