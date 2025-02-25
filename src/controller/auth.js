@@ -349,17 +349,17 @@ var controllers = {
       await send_sms(phone, `Sparkle Time in verification code ${code}`);
     }
 
-    if(mpin !== ''){
-      if (user[0].mpin === '') return res
-      .status(400)
-      .json({ success: false, msg: `MPIN not set` });
+    // if(mpin !== ''){
+    //   if (user[0].mpin === '') return res
+    //   .status(400)
+    //   .json({ success: false, msg: `MPIN not set` });
 
-      if (!userAuth.mpinAuthenticate(mpin)) {
-        return res
-          .status(400)
-          .json({ success: false, msg: `Invalid MPIN` });
-      }
-    }
+    //   if (!userAuth.mpinAuthenticate(mpin)) {
+    //     return res
+    //       .status(400)
+    //       .json({ success: false, msg: `Invalid MPIN` });
+    //   }
+    // }
 
     try {
       await User.findOneAndUpdate({ phone: phone, isArchived: false }, { lastLogin: now }, {upsert: true}).lean().exec();
