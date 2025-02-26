@@ -4,6 +4,7 @@ const jwt_decode = require('jwt-decode')
 const User = require("../models/Users");
 const mongoose = require("mongoose");
 const send_sms = require("../services/twilio");
+const SMSService = require('../services/sms')
 const querystring = require("querystring");
 const logError = require("../services/logger");
 const logDevice = require("../services/devices");
@@ -380,6 +381,43 @@ var controllers = {
         .status(400)
         .json({ success: false, msg: `Unable to sign in using phone` });
     }
+  },
+  send_change_mpin_otp: async function (req, res) {
+    let { phone } = req.body;
+    try {
+      if (!phone || phone.trim() === '') return res.status(404).json({
+        success: false,
+        msg: "Phone number is required",
+      });
+    
+      const otpNumber = Math.floor(100000 + Math.random() * 900000);
+    
+      const user = await User.findOne({ phone: phone, isArchived: false });
+
+      if (!user) return res.status(404).json({
+        success: false,
+        msg: "User not found",
+      });
+      
+      user.changeMpinOtp = otpNumber
+      user.changeMpinOtpValidDate = new Date();
+    
+      await user.save()
+
+      const numberFormat =
+        String(phone).charAt(0) +
+        String(phone).charAt(1) +
+        String(phone).charAt(2);
+      if (numberFormat === "+63") {
+        phone = "0" + phone.substring(3);
+      }
+    
+      const message = `Sparkling Hello! Here is your OTP code for Sparkle Timekeeping to change your MPIN: ${otpNumber}`
+      await SMSService.send_sms([phone], message)
+    } catch (error) {
+      console.log(error)
+    }
+    
   },
   phone_check: async function (req, res) {
     let { phone } = req.body;

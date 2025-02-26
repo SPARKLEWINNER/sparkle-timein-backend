@@ -432,16 +432,24 @@ var controllers = {
       }
     },
     set_mpin: async function (req, res) {
-      const { id, mpin } = req.body;
+      const { id, mpin, otp } = req.body;
 
       try {
+
         await User.findOne({ _id: mongoose.Types.ObjectId(id) })
           .then((user) => {
             if (!user)
               return res
                 .status(400)
                 .json({ success: false, msg: `User not found` });
+
+            const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+            if (user.changeMpinOtp !== otp || user.changeMpinOtpValidDate < fiveMinutesAgo || !otp || otp === '') return res
+            .status(400)
+            .json({ success: false, msg: `Wrong OTP/Invalid OTP` });
+
             user.mpin = user.encryptPassword(mpin);
+            user.changeMpinOtp = ''
             user.save().then((result) => {
               if (!result)
                 return res.status(400).json({

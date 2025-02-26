@@ -94,6 +94,14 @@ const data = {
     type: Object,
     default: null,
   },
+  changeMpinOtp: {
+    type: String,
+    default: '',
+  },
+  changeMpinOtpValidDate: {
+    type: Date,
+    default: null,
+  },
 };
 const userSchema = new Schema(data, { timestamps: true });
 userSchema
