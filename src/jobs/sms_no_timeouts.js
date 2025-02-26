@@ -8,9 +8,9 @@ module.exports = async function () {
 
         let message  = `⚠️ URGENT: Time Out Missing!
 
-                        You haven’t Timed Out, and it’s already 1 hour past your schedule. This is important to keep your records accurate and avoid payroll issues.
+You haven’t Timed Out, and it’s already 1 hour past your schedule. This is important to keep your records accurate and avoid payroll issues.
 
-                        Please Time Out now, or inform your supervisor if you need help.
+Please Time Out now, or inform your supervisor if you need help.
     `
         const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
         const currentDate = new Date(now);
