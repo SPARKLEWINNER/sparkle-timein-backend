@@ -432,9 +432,18 @@ var controllers = {
       }
     },
     set_mpin: async function (req, res) {
-      const { id, mpin, otp, phone } = req.body;
+      let { id, mpin, otp, phone } = req.body;
 
       try {
+
+        const numberFormat =
+        String(phone).charAt(0) +
+        String(phone).charAt(1) +
+        String(phone).charAt(2);
+
+        if (numberFormat !== "+63") {
+          phone = "+63" + phone.substring(1);
+        }
 
         if(phone && phone.trim() !== '') {
           await User.findOne({ phone: phone })
@@ -464,7 +473,6 @@ var controllers = {
                 })
             });
           })
-          .catch((err) => console.log(err));
         } else {
           if(!id || id === '') {
             return res.status(400).json({
@@ -499,11 +507,14 @@ var controllers = {
                 })
             });
           })
-          .catch((err) => console.log(err));
         }
         
       } catch (err) {
         console.log(err);
+        return res.status(500).json({
+          success: false,
+          msg: "Failed to set MPIN",
+        });
       }
     },
     update_user_new_password: async function (req, res) {
