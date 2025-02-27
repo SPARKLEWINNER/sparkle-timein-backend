@@ -9,6 +9,7 @@ const querystring = require("querystring");
 const logError = require("../services/logger");
 const logDevice = require("../services/devices");
 const moment = require('moment-timezone');
+const axios = require('axios')
 const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
 const maxAge = 3 * 24 * 60 * 60;
 const create_token = (id) => {
@@ -383,6 +384,7 @@ var controllers = {
     }
   },
   send_change_mpin_otp: async function (req, res) {
+    console.log("HERE")
     let { phone } = req.body;
     try {
       if (!phone || phone.trim() === '') return res.status(404).json({
@@ -430,7 +432,8 @@ var controllers = {
         )
 
         token = response.data.Token
-        if(token) {
+        console.log(token)
+    /*    if(token) {
           const url = 'https://svc.app.cast.ph/api/announcement/send'
 
           const data = {
@@ -448,7 +451,7 @@ var controllers = {
           const response = await axios.post(url, data, {headers})
           console.log(response)
         }
-        console.log('New token:', token)
+        console.log('New token:', token)*/
       } catch (error) {
         console.error('Error generating token:', error)
       }
