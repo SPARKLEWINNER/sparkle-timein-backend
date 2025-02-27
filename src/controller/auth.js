@@ -466,6 +466,7 @@ var controllers = {
           {
             "ContactNumber": phone
           }
+        ]
       }
       
       console.log('🚀 ~ data:', data)
