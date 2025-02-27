@@ -61,6 +61,8 @@ Please Time Out now, or inform your supervisor if you need help.
                 let contact = data?.user?.[0]?.phone || null
                 return { ContactNumber: contact }
             }
+
+            return {ContactNumber: null}
         }))
         console.log(contactNumbers)
         let filteredContactNumbers = contactNumbers.filter(({ ContactNumber }) => ContactNumber !== null)
