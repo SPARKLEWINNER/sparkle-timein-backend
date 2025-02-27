@@ -5,6 +5,7 @@ const User = require("../models/Users");
 const mongoose = require("mongoose");
 const send_sms = require("../services/twilio");
 const SMSService = require('../services/sms')
+const Mailer = require('../services/mailer')
 const querystring = require("querystring");
 const logError = require("../services/logger");
 const logDevice = require("../services/devices");
@@ -383,11 +384,17 @@ var controllers = {
     }
   },
   send_change_mpin_otp: async function (req, res) {
-    let { phone } = req.body;
+    let { phone, email } = req.body;
+
     try {
       if (!phone || phone.trim() === '') return res.status(404).json({
         success: false,
         msg: "Phone number is required",
+      });
+
+      if (!email || email.trim() === '') return res.status(404).json({
+        success: false,
+        msg: "Email is required",
       });
     
       const otpNumber = Math.floor(100000 + Math.random() * 900000);
@@ -413,11 +420,40 @@ var controllers = {
       }
     
       const message = `Sparkling Hello! Here is your OTP code for Sparkle Timekeeping to change your MPIN: ${otpNumber}`
-      await SMSService.send_sms([phone], message)
+      const html = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="color: #4a4a4a;">Sparkle Timekeeping</h2>
+          </div>
+          <p style="color: #4a4a4a; font-size: 16px;">Sparkling Hello!</p>
+          <p style="color: #4a4a4a; font-size: 16px;">You have requested to change your MPIN. Please use the following OTP code to complete the process:</p>
+          <div style="background-color: #f7f7f7; padding: 15px; text-align: center; margin: 20px 0; border-radius: 4px;">
+            <h1 style="color: #4285f4; letter-spacing: 5px; font-size: 32px; margin: 0;">${otpNumber}</h1>
+          </div>
+          <p style="color: #4a4a4a; font-size: 14px;">If you did not request this change, please ignore this email or contact support.</p>
+          <p style="color: #4a4a4a; font-size: 14px;">This OTP will expire shortly for security reasons.</p>
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center; color: #888; font-size: 12px;">
+            <p>© ${new Date().getFullYear()} Sparkle Timekeeping. All rights reserved.</p>
+          </div>
+        </div>
+      `;
+      
+      await SMSService.send_sms([phone], message);
+      await Mailer.send_mail_resend(email, "Sparkle Time In - MPIN Change OTP", html);
+      
+      // Send a success response to the client
+      return res.status(200).json({
+        success: true,
+        msg: "OTP sent successfully to your email and phone"
+      });
     } catch (error) {
-      console.log(error)
+      console.log(error);
+      // Send an error response to the client
+      return res.status(500).json({
+        success: false,
+        msg: "Failed to send OTP. Please try again."
+      });
     }
-    
   },
   phone_check: async function (req, res) {
     let { phone } = req.body;
