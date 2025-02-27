@@ -352,17 +352,17 @@ var controllers = {
       await send_sms(phone, `Sparkle Time in verification code ${code}`);
     }
 
-    // if(mpin !== ''){
-    //   if (user[0].mpin === '') return res
-    //   .status(400)
-    //   .json({ success: false, msg: `MPIN not set` });
+    if(mpin !== ''){
+      if (user[0].mpin === '') return res
+      .status(400)
+      .json({ success: false, msg: `MPIN not set` });
 
-    //   if (!userAuth.mpinAuthenticate(mpin)) {
-    //     return res
-    //       .status(400)
-    //       .json({ success: false, msg: `Invalid MPIN` });
-    //   }
-    // }
+      if (!userAuth.mpinAuthenticate(mpin)) {
+        return res
+          .status(400)
+          .json({ success: false, msg: `Invalid MPIN` });
+      }
+    }
 
     try {
       await User.findOneAndUpdate({ phone: phone, isArchived: false }, { lastLogin: now }, {upsert: true}).lean().exec();
@@ -392,13 +392,17 @@ var controllers = {
         success: false,
         msg: "Phone number is required",
       });
-
-      if (!email || email.trim() === '') return res.status(404).json({
-        success: false,
-        msg: "Email is required",
-      });
     
       const otpNumber = Math.floor(100000 + Math.random() * 900000);
+
+      const numberFormat =
+        String(phone).charAt(0) +
+        String(phone).charAt(1) +
+        String(phone).charAt(2);
+
+      if (numberFormat !== "+63") {
+        phone = "+63" + phone.substring(1);
+      }
     
       const user = await User.findOne({ phone: phone, isArchived: false });
 
@@ -412,77 +416,85 @@ var controllers = {
     
       await user.save()
 
-      const numberFormat =
-        String(phone).charAt(0) +
-        String(phone).charAt(1) +
-        String(phone).charAt(2);
+      if (!!email && email.trim() !== '') {
+        const html = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+            <div style="text-align: center; margin-bottom: 20px;">
+              <h2 style="color: #4a4a4a;">Sparkle Timekeeping</h2>
+            </div>
+            <p style="color: #4a4a4a; font-size: 16px;">Sparkling Hello!</p>
+            <p style="color: #4a4a4a; font-size: 16px;">You have requested to change your MPIN. Please use the following OTP code to complete the process:</p>
+            <div style="background-color: #f7f7f7; padding: 15px; text-align: center; margin: 20px 0; border-radius: 4px;">
+              <h1 style="color: #4285f4; letter-spacing: 5px; font-size: 32px; margin: 0;">${otpNumber}</h1>
+            </div>
+            <p style="color: #4a4a4a; font-size: 14px;">If you did not request this change, please ignore this email or contact support.</p>
+            <p style="color: #4a4a4a; font-size: 14px;">This OTP will expire shortly for security reasons.</p>
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center; color: #888; font-size: 12px;">
+              <p>© ${new Date().getFullYear()} Sparkle Timekeeping. All rights reserved.</p>
+            </div>
+          </div>
+        `;
+
+        await Mailer.send_mail_resend(email, "Sparkle Time In - MPIN Change OTP", html);
+      }
+
       if (numberFormat === "+63") {
         phone = "0" + phone.substring(3);
       }
     
       const message = `Sparkling Hello! Here is your OTP code for Sparkle Timekeeping to change your MPIN: ${otpNumber}`
-      const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
-        <div style="text-align: center; margin-bottom: 20px;">
-          <h2 style="color: #4a4a4a;">Sparkle Timekeeping</h2>
-        </div>
-        <p style="color: #4a4a4a; font-size: 16px;">Sparkling Hello!</p>
-        <p style="color: #4a4a4a; font-size: 16px;">You have requested to change your MPIN. Please use the following OTP code to complete the process:</p>
-        <div style="background-color: #f7f7f7; padding: 15px; text-align: center; margin: 20px 0; border-radius: 4px;">
-          <h1 style="color: #4285f4; letter-spacing: 5px; font-size: 32px; margin: 0;">${otpNumber}</h1>
-        </div>
-        <p style="color: #4a4a4a; font-size: 14px;">If you did not request this change, please ignore this email or contact support.</p>
-        <p style="color: #4a4a4a; font-size: 14px;">This OTP will expire shortly for security reasons.</p>
-        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center; color: #888; font-size: 12px;">
-          <p>© ${new Date().getFullYear()} Sparkle Timekeeping. All rights reserved.</p>
-        </div>
-      </div>
-    `;
-
-    await Mailer.send_mail_resend(email, "Sparkle Time In - MPIN Change OTP", html);
-    let token
-    // Generate a new token
-    const response = await axios.post(
-      'https://svc.app.cast.ph/api/auth/signin',
-      {
-        username: process.env.CAST_USERNAME,
-        password: process.env.CAST_PASSWORD
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }
-    )
-
-    token = response.data.Token
-    if(token) {
-      const url = 'https://svc.app.cast.ph/api/announcement/send'
-
-      const data = {
-        MessageFrom: "Sparkle",
-        Message: message,
-        Recipients: [
-          {
-            "ContactNumber": phone
+      let token
+      // Generate a new token
+      const response = await axios.post(
+        'https://svc.app.cast.ph/api/auth/signin',
+        {
+          username: process.env.CAST_USERNAME,
+          password: process.env.CAST_PASSWORD
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json'
           }
-        ]
-      }
-      
-      console.log('🚀 ~ data:', data)
+        }
+      )
 
-      const headers = {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + token
-      }
-      const response = await axios.post(url, data, {headers})
-      if(response.status === 200) {
-          return {success: true, data: response.data} 
-      }
-      
-    }
-    console.log('New token:', token)
+      token = response.data.Token
+      if(token) {
+        const url = 'https://svc.app.cast.ph/api/announcement/send'
 
+        const data = {
+          MessageFrom: "Sparkle",
+          Message: message,
+          Recipients: [
+            {
+              "ContactNumber": phone
+            }
+          ]
+        }
+        
+        console.log('🚀 ~ data:', data)
+
+        const headers = {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + token
+        }
+        const response = await axios.post(url, data, {headers})
+        if(response.status !== 200) {
+            return res.status(500).json({
+              success: false,
+              msg: "Failed to send OTP. Please try again."
+            });
+        }
+
+        console.log('🚀 ~ response:', response.data)
+        
+      }
+      console.log('New token:', token)
+
+      return res.status(200).json({
+        success: true,
+        msg: "OTP sent successfully."
+      });
 
     } catch (error) {
       console.log(error);
