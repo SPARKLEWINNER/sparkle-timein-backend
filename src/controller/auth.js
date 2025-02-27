@@ -440,7 +440,7 @@ var controllers = {
     `;
 
     await Mailer.send_mail_resend(email, "Sparkle Time In - MPIN Change OTP", html);
-    let token
+    /*let token
     // Generate a new token
     const response = await axios.post(
       'https://svc.app.cast.ph/api/auth/signin',
@@ -481,7 +481,7 @@ var controllers = {
       }
       
     }
-    console.log('New token:', token)
+    console.log('New token:', token)*/
 
 
     } catch (error) {
