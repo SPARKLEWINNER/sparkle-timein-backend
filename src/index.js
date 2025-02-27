@@ -73,9 +73,9 @@ io.on("connection", (_socket) => {
 
 
 
-cron.schedule('*/5 * * * *', async () => {
-  sms_no_timeouts()
-});
+// cron.schedule('*/5 * * * *', async () => {
+//   sms_no_timeouts()
+// });
 
 // Run cronjob
 
