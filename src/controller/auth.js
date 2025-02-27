@@ -413,7 +413,7 @@ var controllers = {
       }
     
       const message = `Sparkling Hello! Here is your OTP code for Sparkle Timekeeping to change your MPIN: ${otpNumber}`
-      await SMSService.send_sms([phone], message)
+      await SMSService.send_sms(phone, message)
     } catch (error) {
       console.log(error)
     }
