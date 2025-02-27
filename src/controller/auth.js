@@ -454,7 +454,6 @@ var controllers = {
             Authorization: 'Bearer ' + token
           }
           const response = await axios.post(url, data, {headers})
-          console.log(response)
           return {success: true, data: response.data}
         }
         console.log('New token:', token)
