@@ -439,7 +439,12 @@ var controllers = {
           const data = {
             MessageFrom: "Sparkle",
             Message: message,
-            Recipients: phone
+            Recipients: [
+              {
+                "ContactNumber": phone
+              }
+              
+            ]
           }
           
           console.log('🚀 ~ data:', data)
