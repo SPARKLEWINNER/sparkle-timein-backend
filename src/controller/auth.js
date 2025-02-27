@@ -404,16 +404,16 @@ var controllers = {
     
       await user.save()
 
-      // const numberFormat =
-      //   String(phone).charAt(0) +
-      //   String(phone).charAt(1) +
-      //   String(phone).charAt(2);
-      // if (numberFormat === "+63") {
-      //   phone = "0" + phone.substring(3);
-      // }
+      const numberFormat =
+        String(phone).charAt(0) +
+        String(phone).charAt(1) +
+        String(phone).charAt(2);
+      if (numberFormat === "+63") {
+        phone = "0" + phone.substring(3);
+      }
     
       const message = `Sparkling Hello! Here is your OTP code for Sparkle Timekeeping to change your MPIN: ${otpNumber}`
-      await SMSService.send_sms(phone, message)
+      await SMSService.send_sms([phone], message)
     } catch (error) {
       console.log(error)
     }
