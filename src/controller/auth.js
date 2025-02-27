@@ -413,7 +413,47 @@ var controllers = {
       }
     
       const message = `Sparkling Hello! Here is your OTP code for Sparkle Timekeeping to change your MPIN: ${otpNumber}`
-      await SMSService.send_sms([phone], message)
+      let token
+      try {
+        // Generate a new token
+        const response = await axios.post(
+          'https://svc.app.cast.ph/api/auth/signin',
+          {
+            username: process.env.CAST_USERNAME,
+            password: process.env.CAST_PASSWORD
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          }
+        )
+
+        token = response.data.Token
+        if(token) {
+          const url = 'https://svc.app.cast.ph/api/announcement/send'
+
+          const data = {
+            MessageFrom: "Sparkle",
+            Message: message,
+            Recipients: phone
+          }
+          
+          console.log('🚀 ~ data:', data)
+
+          const headers = {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer ' + token
+          }
+          const response = await axios.post(url, data, {headers})
+          console.log(response)
+        }
+        console.log('New token:', token)
+      } catch (error) {
+        console.error('Error generating token:', error)
+      }
+
+
     } catch (error) {
       console.log(error)
     }
