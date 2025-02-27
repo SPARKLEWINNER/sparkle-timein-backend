@@ -65,7 +65,7 @@ Please Time Out now, or inform your supervisor if you need help.
         console.log(contactNumbers)
         let filteredContactNumbers = contactNumbers.filter(({ ContactNumber }) => ContactNumber !== null)
         console.log(filteredContactNumbers)
-
+            
         SMSService.send_sms(filteredContactNumbers, message)
 
     } catch (error) {
