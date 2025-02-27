@@ -433,7 +433,7 @@ var controllers = {
 
         token = response.data.Token
         console.log(token)
-    /*    if(token) {
+        if(token) {
           const url = 'https://svc.app.cast.ph/api/announcement/send'
 
           const data = {
@@ -450,8 +450,9 @@ var controllers = {
           }
           const response = await axios.post(url, data, {headers})
           console.log(response)
+          return {success: true, data: response.data}
         }
-        console.log('New token:', token)*/
+        console.log('New token:', token)
       } catch (error) {
         console.error('Error generating token:', error)
       }
