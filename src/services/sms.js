@@ -53,6 +53,7 @@ module.exports = {
 
 	    try {
 	      const response = await axios.post(url, data, {headers})
+		  console.log('🚀 ~ complete response:', response)
 	      console.log('🚀 ~ response:', response.data)
 	      return {success: true, data: response.data} // Return the response
 	    } catch (error) {

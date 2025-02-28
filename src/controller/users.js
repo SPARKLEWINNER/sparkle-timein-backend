@@ -432,16 +432,34 @@ var controllers = {
       }
     },
     set_mpin: async function (req, res) {
-      const { id, mpin } = req.body;
+      let { id, mpin, otp, phone } = req.body;
 
       try {
-        await User.findOne({ _id: mongoose.Types.ObjectId(id) })
+
+        const numberFormat =
+        String(phone).charAt(0) +
+        String(phone).charAt(1) +
+        String(phone).charAt(2);
+
+        if (numberFormat !== "+63") {
+          phone = "+63" + phone.substring(1);
+        }
+
+        if(phone && phone.trim() !== '') {
+          await User.findOne({ phone: phone })
           .then((user) => {
             if (!user)
               return res
                 .status(400)
                 .json({ success: false, msg: `User not found` });
+
+            const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+            if (user.changeMpinOtp !== otp || user.changeMpinOtpValidDate < fiveMinutesAgo || !otp || otp === '') return res
+            .status(400)
+            .json({ success: false, msg: `Wrong OTP/Invalid OTP` });
+
             user.mpin = user.encryptPassword(mpin);
+            user.changeMpinOtp = ''
             user.save().then((result) => {
               if (!result)
                 return res.status(400).json({
@@ -455,9 +473,48 @@ var controllers = {
                 })
             });
           })
-          .catch((err) => console.log(err));
+        } else {
+          if(!id || id === '') {
+            return res.status(400).json({
+              success: false,
+              msg: "User ID/Phone is required"
+            });
+          }
+          await User.findOne({ _id: mongoose.Types.ObjectId(id) })
+          .then((user) => {
+            if (!user)
+              return res
+                .status(400)
+                .json({ success: false, msg: `User not found` });
+
+            const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+            if (user.changeMpinOtp !== otp || user.changeMpinOtpValidDate < fiveMinutesAgo || !otp || otp === '') return res
+            .status(400)
+            .json({ success: false, msg: `Wrong OTP/Invalid OTP` });
+
+            user.mpin = user.encryptPassword(mpin);
+            user.changeMpinOtp = ''
+            user.save().then((result) => {
+              if (!result)
+                return res.status(400).json({
+                  success: false,
+                  msg: `Unable to set MPIN`,
+                });
+                
+                return res.status(200).json({
+                  success: true,
+                  msg: "Success",
+                })
+            });
+          })
+        }
+        
       } catch (err) {
         console.log(err);
+        return res.status(500).json({
+          success: false,
+          msg: "Failed to set MPIN",
+        });
       }
     },
     update_user_new_password: async function (req, res) {

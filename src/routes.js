@@ -27,6 +27,7 @@ module.exports = function (app) {
   app.route("/api/user/verify").post(user.verify_reset_token);
   app.route("/api/set/MPIN").post(user.set_mpin);
   app.route("/api/auth/check").post(auth.auth_check);
+  app.route("/api/auth/otp/mpin_change/send").post(auth.send_change_mpin_otp)
 
   app.route("/api/login").post(auth.sign_in);
   app.route("/api/employee/register").post(auth.sign_up);
