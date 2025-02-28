@@ -5,8 +5,8 @@ const axios = require('axios')
 
 const { SG_EMAIL, SG_KEY } = process.env;
 sgMail.setApiKey(SG_KEY);
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const RESEND_EMAIL = process.env.RESEND_EMAIL;
+const RESEND_API_KEY = process.env.RESEND_KEY;
+const RESEND_EMAIL = 'no-reply@sparkletimekeeping.com';
 
 var controller = {
     send_mail: async function (data) {
