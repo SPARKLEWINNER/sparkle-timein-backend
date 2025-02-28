@@ -51,6 +51,11 @@ const data = {
         type: Number,
         required: false,    
     },
+    hoursTardy: {
+        type: Number, 
+        require: false, 
+        default: 0
+    },
     restday: {
         type: Number,
         required: false,    

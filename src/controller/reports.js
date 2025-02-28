@@ -1652,7 +1652,7 @@ var controllers = {
                 timeIn: timeIn,
                 timeOut: timeOut,
                 hourswork: data.totalHours - totalUndertimeHours,
-                hoursTardy: 0,
+                hoursTardy: data.hoursTardy,
                 overtime: data.otHours,
                 nightdiff: data.nightdiff,
                 rd: data.restday,
@@ -1684,7 +1684,7 @@ var controllers = {
                 timeIn: timeIn,
                 timeOut: timeOut,
                 hourswork: data.totalHours - totalUndertimeHours,
-                hoursTardy: 0,
+                hoursTardy: data.hoursTardy,
                 overtime: data.otHours,
                 nightdiff: data.nightdiff,
                 rd: data.restday,
@@ -1706,7 +1706,7 @@ var controllers = {
             timeIn: 0,
             timeOut: 0,
             hourswork: 0,
-            hoursTardy: 0,
+            hoursTardy: data.hoursTardy,
             overtime: data.otHours,
             nightdiff: data.nightdiff,
             rd: data.restday,
@@ -2768,8 +2768,14 @@ var controllers = {
     }
   },
   post_save_breaklist: async function (req, res) {
-    const {employees, from, to, store, generatedby, employeecount, cutoff, remarks} = req.body
+    console.log('saving breaklist')
+    const {employees, from, to, store, generatedby, employeecount, cutoff, remarks, updatedScheduleValues} = req.body
     const breaklistId = uuid();
+
+
+    let {totals} = updatedScheduleValues
+
+    console.log('for breaklist id', breaklistId)
 
     const data = new Breaklist({
       store: store,
@@ -2786,13 +2792,22 @@ var controllers = {
         //breaklists
         const promises = employees.map(async (doc) => {
         const { _id, empName, ...rest } = doc;
-        // Create new Breaklist document
+
+        let updatedScheduleValues = totals[`${_id}`]
+        console.log(`for ${empName}`)
+        console.log(updatedScheduleValues,  Number(updatedScheduleValues?.hoursTardy) || 0 , Number(updatedScheduleValues?.overtime) || 0, Number(updatedScheduleValues?.nightdiff) || 0, Number(updatedScheduleValues?.rd) || 0)
+
+        // Create new Breaklist document with updated total values
         const info = new Breaklistinfo({
+          ...rest, 
           store: store,
           breaklistid: breaklistId,
           employeeid: _id,
           employeename: empName,
-          ...rest
+          hourstardy: Number(updatedScheduleValues?.hoursTardy) || 0, 
+          overtime: Number(updatedScheduleValues?.overtime) || 0, 
+          nightdiff: Number(updatedScheduleValues?.nightdiff) || 0, 
+          restday: Number(updatedScheduleValues?.rd) || 0,
         });
 
         // Save the document
@@ -2800,7 +2815,7 @@ var controllers = {
         return result;
       });
 
-
+      //add breaklist remarks
       const breaklistRemarks = await Object.keys(remarks).map(async (key) => {
         let writtenRemark = remarks[key]
 
@@ -2815,7 +2830,31 @@ var controllers = {
       })
 
 
-      const results = await Promise.all([...promises, ...breaklistRemarks]);
+      //update values on each day
+
+      console.log('updating each day')
+      const updateScheduleValues = await Object.keys(updatedScheduleValues).filter(key => key !== 'totals').map(async key => {
+        //update each payroll object
+        let {overtime, hoursTardy, nightdiff, rd} = updatedScheduleValues[`${key}`]
+        let keys = key.split("-")
+        let userId = keys[0]
+        let date = new Date(`${keys[1]}-${keys[2]}-${keys[3]}`)        
+
+        console.log(updatedScheduleValues[`${key}`])
+
+        await Payroll.findOneAndUpdate({
+          uid: userId, 
+          date: date
+        }, {
+          otHours: Number(overtime) || 0, 
+          nightdiff: Number(nightdiff) || 0, 
+          restday: Number(rd) || 0, 
+          hoursTardy: Number(hoursTardy) || 0
+        })
+      })
+
+
+      const results = await Promise.all([...promises, ...breaklistRemarks, ...updateScheduleValues]);
 
       if (results){
       await data.save();
@@ -2983,13 +3022,42 @@ var controllers = {
     const {breaklistid} = req.body;
     console.log('deleting', breaklistid)
     try {
+      let breaklistInformation = await Breaklist.findOne({breaklistid: breaklistid}).lean().exec()
+
       const breaklistResult = await Breaklist.deleteOne({breaklistid: breaklistid}).lean().exec();
 
-      const breaklistinfoResult= await Breaklistinfo.deleteMany({breaklistid: breaklistid}).lean().exec();
+     
 
       
       const breaklistRemark = await BreaklistRemark.deleteMany({breaklistId: breaklistid}).lean().exec()
-      console.log(breaklistRemark)
+
+      //remove schedule updates here
+
+      //get employeeids
+      let employees = await Breaklistinfo.find({breaklistid: breaklistid}).select({
+        employeeid: 1
+      })
+
+      let employeeIds = employees.map(({employeeid}) => String(employeeid))
+
+      let query = {
+        uid: {
+          $in: employeeIds, 
+        },
+        date: {
+            $gte: breaklistInformation.datefrom,
+            $lte: breaklistInformation.dateto
+          }
+      }
+
+      console.log(query)
+
+      //update db payroll objects
+      await Payroll.updateMany(query, {otHours: 0, nightdiff: 0, hoursTardy: 0, restday: 0})
+
+
+      const breaklistinfoResult= await Breaklistinfo.deleteMany({breaklistid: breaklistid}).lean().exec();
+
 
       if (breaklistResult.deletedCount === 0 || breaklistinfoResult.deletedCount === 0){
         return res.status(200).json({
