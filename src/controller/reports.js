@@ -2773,7 +2773,7 @@ var controllers = {
     const breaklistId = uuid();
 
 
-    let {totals} = updatedScheduleValues
+    let totals = updatedScheduleValues?.totals || {}
 
     console.log('for breaklist id', breaklistId)
 
@@ -2833,7 +2833,7 @@ var controllers = {
       //update values on each day
 
       console.log('updating each day')
-      const updateScheduleValues = await Object.keys(updatedScheduleValues).filter(key => key !== 'totals').map(async key => {
+      const updateScheduleValues = await Object.keys(updatedScheduleValues || {}).filter(key => key !== 'totals').map(async key => {
         //update each payroll object
         let {overtime, hoursTardy, nightdiff, rd} = updatedScheduleValues[`${key}`]
         let keys = key.split("-")
