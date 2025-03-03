@@ -6,6 +6,7 @@ const logError = require("../services/logger");
 const nodemailer = require("nodemailer");
 const {emailVerificationHTML} = require("../helpers/timeAdjustMailFormat");
 const {breaklistVerificationHTML} = require("../helpers/generateBreaklist");
+const {scheduleVerificationHTML} = require("../helpers/scheduleCreationOtp");
 const axios = require("axios");
 
 var controllers = {
@@ -314,7 +315,7 @@ var controllers = {
     const { company } = req.body
     let mailOptions = {}
     try {
-      const result = await User.find({ role: 1, company: company }).lean().exec();
+      const result = await User.find({ role: 1, company: company, isArchived: false }).lean().exec();
       if (!result) {
         res.status(400).json({
           success: false,
@@ -410,6 +411,89 @@ var controllers = {
 
     } catch (error) {
       console.error("Error in timeAdjustmentSendOtp:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error.message,
+      });
+    }
+  },
+
+  employeeMyScheduleSendOtp: async function (req, res) {
+    try {
+      const { email, breaklist } = req.body;
+
+      if (!email) {
+        return res.status(400).json({
+          success: false,
+          message: "Email is required",
+        });
+      }
+
+      const token = Math.trunc(Math.random() * 999999);
+
+      // Update the user's token
+      const storeTokenResult = await User.findOneAndUpdate(
+        { email },
+        { $set: { timeAdjustmentVerification: token } },
+        { new: true }
+      );
+      console.log(storeTokenResult.company)
+      if (!storeTokenResult) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
+
+      // Create transporter for nodemailer (optional if Resend is used)
+      const transporter = nodemailer.createTransport({
+        host: process.env.SES_HOST,
+        port: 587,
+        secure: false,
+        auth: {
+          user: process.env.SES_USER,
+          pass: process.env.SES_PASS,
+        },
+      });
+
+      // Send email via Resend API
+      const sendEmail = async (subject, htmlTemplate) => {
+        try {
+          await axios.post(
+            'https://api.resend.com/emails',
+            {
+              from: 'no-reply@sparkletimekeeping.com',
+              to: email,
+              subject,
+              html: htmlTemplate,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${process.env.RESEND_KEY}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+        } catch (error) {
+          console.error("Error sending email:", error);
+          throw new Error("Failed to send email");
+        }
+      };
+
+      const subject = 'Sparkletimekeeping request for schedule creation';
+      const htmlTemplate = scheduleVerificationHTML({ verificationToken: token, store: storeTokenResult.company })
+
+
+      await sendEmail(subject, htmlTemplate);
+
+      return res.status(200).json({
+        success: true,
+        message: "OTP sent successfully",
+      });
+
+    } catch (error) {
+      console.error("Error in SendOtp:", error);
       return res.status(500).json({
         success: false,
         message: "Internal server error",

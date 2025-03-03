@@ -383,4 +383,5 @@ app
   app.route("/api/specific/schedule/:id").get(reports.get_schedule_specific);
   app.route("/api/specific/schedule/with/date").post(reports.get_schedule_specific_with_date);
   app.route("/api/specific/schedule/employee").post(reports.post_schedule_employee);
+  app.route("/api/otp/myschedule/send").post(stores.employeeMyScheduleSendOtp);
 };
