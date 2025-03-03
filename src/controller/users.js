@@ -322,6 +322,7 @@ var controllers = {
     },
     set_reset_token: async function (req, res) {
       const { email } = req.body;
+      
       try {
         const chkUser = await User.findOne({email: email}).lean().exec();
         if (!chkUser) {
@@ -403,7 +404,7 @@ var controllers = {
         await logError(err, "Users", null, null, "GET");
         res.status(400).json({
           success: false,
-          msg: "No such users",
+          msg: "Something went wrong",
         });
       }
     },
