@@ -314,7 +314,7 @@ var controllers = {
     const { company } = req.body
     let mailOptions = {}
     try {
-      const result = await User.find({ role: 1, company: company }).lean().exec();
+      const result = await User.find({ role: 1, company: company, isArchived: false }).lean().exec();
       if (!result) {
         res.status(400).json({
           success: false,
