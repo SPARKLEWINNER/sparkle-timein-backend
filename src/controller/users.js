@@ -433,13 +433,18 @@ var controllers = {
     },
     set_mpin: async function (req, res) {
       let { id, mpin, otp, phone } = req.body;
-
+      
       try {
-
+        if(!phone || phone === '') {
+          return res.status(400).json({
+            success: false,
+            msg: "Phone is required"
+          });
+        }
         const numberFormat =
-        String(phone).charAt(0) +
-        String(phone).charAt(1) +
-        String(phone).charAt(2);
+          String(phone).charAt(0) +
+          String(phone).charAt(1) +
+          String(phone).charAt(2);
 
         if (numberFormat !== "+63") {
           phone = "+63" + phone.substring(1);
