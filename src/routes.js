@@ -16,6 +16,7 @@ var feedback = require('./controller/feedback')
 const {messaging} = require('./services/firebase');
 
 module.exports = function (app) {
+
   app.get('/health', (req, res) => {
     res.status(200).json({status: 'ok', timestamp: new Date()})
   })
@@ -25,6 +26,7 @@ module.exports = function (app) {
   app.route('/api/user/:id/feedback').post(auth.require_sign_in, feedback.post_save_feedback)
   app.route("/api/user/reset").post(user.set_reset_token);
   app.route("/api/user/verify").post(user.verify_reset_token);
+  app.route("/api/user/edit/profile_pic").post(user.edit_profile_pic);
   app.route("/api/set/MPIN").post(user.set_mpin);
   app.route("/api/auth/check").post(auth.auth_check);
   app.route("/api/auth/otp/mpin_change/send").post(auth.send_change_mpin_otp)

@@ -408,6 +408,36 @@ var controllers = {
         });
       }
     },
+    edit_profile_pic: async function (req, res) {
+      const { id, image } = req.body;
+      if (!id || !image) {
+        return res.status(400).json({
+          success: false,
+          msg: "Missing required fields",
+        });
+      }
+      try {
+        const user = await User.findOne({ _id: mongoose.Types.ObjectId(id) });
+        if (!user) {
+          return res.status(400).json({
+            success: false,
+            msg: "User not found",
+          });
+        }
+        user.image = image;
+        await user.save();
+        return res.status(200).json({
+          success: true,
+          msg: "Profile picture updated successfully",
+        });
+      } catch (err) {
+        await logError(err, "Users", null, null, "GET");
+        return res.status(500).json({
+          success: false,
+          msg: "Failed to update profile picture",
+        });
+      }
+    },
     verify_reset_token: async function (req, res) {
       const { email, token } = req.body;
       try {
