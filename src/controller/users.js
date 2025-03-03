@@ -435,10 +435,10 @@ var controllers = {
       let { id, mpin, otp, phone } = req.body;
       
       try {
-        if(!phone || phone === '') {
+        if((!phone || phone === '') && (!id || id === '')) {
           return res.status(400).json({
             success: false,
-            msg: "Phone is required"
+            msg: "Phone/Id is required"
           });
         }
         const numberFormat =
