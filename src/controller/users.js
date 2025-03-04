@@ -568,7 +568,7 @@ var controllers = {
       }
     },
     verify_mobile_change_otp: async function (req, res) {
-      const { userId, otp } = req.body;
+      const { userId, otp, newMobile } = req.body;
       try {
         const user = await User.findById(userId);
         if (!user) {
@@ -599,6 +599,148 @@ var controllers = {
           success: true,
           msg: "Mobile number updated successfully",
         });
+      } catch (err) {
+        await logError(err, "Users", null, null, "GET");
+        return res.status(500).json({
+          success: false,
+          msg: "Failed to verify OTP",
+        });
+      }
+    },
+    send_email_change_otps: async function (req, res) {
+      const { userId, oldEmail, newEmail } = req.body;
+      try {
+        const user = await User.findById(userId);
+        if (!user) {
+          return res.status(400).json({
+            success: false,
+            msg: "User not found",
+          });
+        }
+
+        // Generate OTPs for both old and new email
+        const oldEmailOtp = Math.trunc(Math.random() * 999999).toString().padStart(6, '0');
+        const newEmailOtp = Math.trunc(Math.random() * 999999).toString().padStart(6, '0');
+
+        // Set expiry time (30 minutes from now)
+        const otpValidDate = new Date(Date.now() + 30 * 60 * 1000);
+
+        // Update user with OTPs and pending new email
+        user.oldEmailOtp = oldEmailOtp;
+        user.newEmailOtp = newEmailOtp; 
+        user.emailOtpValidDate = otpValidDate;
+        await user.save();
+
+        // Send emails with OTPs
+        const sendEmail = async (email, otp, isNew) => {
+          try {
+            await axios.post(
+              'https://api.resend.com/emails',
+              {
+                from: 'no-reply@sparkletimekeeping.com',
+                to: email,
+                subject: 'Email Change Verification',
+                html: emailVerificationHTML({ verificationToken: otp }),
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${process.env.RESEND_KEY}`,
+                  'Content-Type': 'application/json',
+                },
+              }
+            );
+          } catch (error) {
+            console.error("Error sending email:", error);
+            throw new Error(`Failed to send OTP to ${isNew ? 'new' : 'old'} email`);
+          }
+        };
+
+        await Promise.all([
+          sendEmail(oldEmail, oldEmailOtp, false),
+          sendEmail(newEmail, newEmailOtp, true)
+        ]);
+
+        return res.status(200).json({
+          success: true,
+          msg: "Verification codes sent successfully",
+        });
+
+      } catch (err) {
+        await logError(err, "Users", null, null, "GET");
+        return res.status(500).json({
+          success: false,
+          msg: "Failed to send OTP",
+        });
+      }
+    },
+    verify_email_change_otp: async function (req, res) {
+      const { userId, emailType, otp, newEmail } = req.body;
+      try {
+        const user = await User.findById(userId);
+        if (!user) {
+          return res.status(400).json({
+            success: false,
+            msg: "User not found",
+          });
+        }
+
+        // Check if OTP is still valid
+        const now = new Date();
+        if (now > user.emailOtpValidDate) {
+          return res.status(400).json({
+            success: false,
+            msg: "OTP has expired",
+          });
+        }
+
+        // Verify OTP based on email type
+        if (emailType === 'old' && otp !== user.oldEmailOtp) {
+          return res.status(400).json({
+            success: false,
+            msg: "Invalid OTP",
+          });
+        }
+
+        if (emailType === 'new' && otp !== user.newEmailOtp && (!newEmail || newEmail === '')) {
+          return res.status(400).json({
+            success: false,
+            msg: "Invalid OTP", 
+          });
+        }
+
+        // If verifying new email OTP, update the user's email
+        if (emailType === 'new' && otp === user.newEmailOtp) {
+          if(user.email === newEmail) {
+            return res.status(400).json({
+              success: false,
+              msg: "New email is the same as the old one",
+            });
+          }
+
+          if(newEmail && newEmail !== '') {
+            user.email = user.newEmail;
+            user.oldEmailOtp = '';
+            user.newEmailOtp = '';
+            user.emailOtpValidDate = null;
+            await user.save();
+
+            return res.status(200).json({
+              success: true,
+              msg: "OTP verified and email updated successfully",
+            });
+          } else {
+            return res.status(400).json({
+              success: false,
+              msg: "New email is required",
+            });
+          }
+        }
+
+        return res.status(200).json({
+          success: true,
+          msg: "OTP verified successfully",
+        });
+
       } catch (err) {
         await logError(err, "Users", null, null, "GET");
         return res.status(500).json({

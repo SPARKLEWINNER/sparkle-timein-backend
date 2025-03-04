@@ -110,6 +110,18 @@ const data = {
     type: Date,
     default: null,
   },
+  oldEmailOtp: {
+    type: String,
+    default: '',
+  },
+  newEmailOtp: {
+    type: String,
+    default: '',
+  },
+  emailOtpValidDate: {
+    type: Date,
+    default: null,
+  },
 };
 const userSchema = new Schema(data, { timestamps: true });
 userSchema

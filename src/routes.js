@@ -30,8 +30,8 @@ module.exports = function (app) {
   app.route("/api/set/MPIN").post(user.set_mpin);
   app.route("/api/auth/check").post(auth.auth_check);
   app.route("/api/auth/otp/mpin_change/send").post(auth.send_change_mpin_otp)
-  app.route("/api/user/otp/mobile/send").post(user.send_otp_for_mobile_change)
-  app.route("/api/user/otp/mobile/verify").post(user.verify_mobile_change_otp)
+  app.route("/api/user/otp/mobile/send").post(auth.require_sign_in, user.send_otp_for_mobile_change)
+  app.route("/api/user/otp/mobile/verify").post(auth.require_sign_in, user.verify_mobile_change_otp)
 
   app.route("/api/login").post(auth.sign_in);
   app.route("/api/employee/register").post(auth.sign_up);
@@ -39,6 +39,8 @@ module.exports = function (app) {
   app.route("/api/phone").post(auth.phone_sign_in);
   app.route("/api/phone/check").post(auth.phone_check);
   app.route("/api/phone/signup").post(auth.phone_sign_up);
+  app.route("/api/user/otp/email/send").post(auth.require_sign_in, user.send_email_change_otps)
+  app.route("/api/user/otp/email/verify").post(auth.require_sign_in, user.verify_email_change_otp)
   app
     .route("/api/phone/verify/:id")
     .post(auth.require_sign_in, auth.phone_verify);
