@@ -7,6 +7,7 @@ const Feedback = require('../models/Feedback')
 const logError = require("../services/logger");
 const logDevice = require("../services/devices");
 const nodemailer = require("nodemailer");
+const Mailer = require('../services/mailer')
 const {emailVerificationHTML} = require("../helpers/mailFormat");
 const axios = require("axios");
 const maxAge = 3 * 24 * 60 * 60;
@@ -321,7 +322,7 @@ var controllers = {
       }
     },
     set_reset_token: async function (req, res) {
-      const { email } = req.body;
+      const { email, type } = req.body;
       
       try {
         const chkUser = await User.findOne({email: email}).lean().exec();
@@ -359,8 +360,31 @@ var controllers = {
               }
             };
 
-            const subject = "Forgot Password";
-            const htmlTemplate = emailVerificationHTML({ verificationToken: token });
+            let subject = "";
+            let htmlTemplate = "";
+            if(type === 'forgot_password') {
+               subject = "Forgot Password";
+               htmlTemplate = emailVerificationHTML({ verificationToken: token });
+            } else if(type === 'change_password') {
+               subject = "Change Password";
+               htmlTemplate = `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                  <h2 style="color: #4a4a4a;">Sparkle Timekeeping</h2>
+                </div>
+                <p style="color: #4a4a4a; font-size: 16px;">Sparkling Hello!</p>
+                <p style="color: #4a4a4a; font-size: 16px;">You have requested to change your password. Please use the following OTP code to complete the process:</p>
+                <div style="background-color: #f7f7f7; padding: 15px; text-align: center; margin: 20px 0; border-radius: 4px;">
+                  <h1 style="color: #4285f4; letter-spacing: 5px; font-size: 32px; margin: 0;">${token}</h1>
+                </div>
+                <p style="color: #4a4a4a; font-size: 14px;">If you did not request this change, please ignore this email or contact support.</p>
+                <p style="color: #4a4a4a; font-size: 14px;">This OTP will expire shortly for security reasons.</p>
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center; color: #888; font-size: 12px;">
+                  <p>© ${new Date().getFullYear()} Sparkle Timekeeping. All rights reserved.</p>
+                </div>
+              </div>
+            `;
+            }
 
             await sendEmail(subject, htmlTemplate);
 
@@ -640,33 +664,46 @@ var controllers = {
         user.emailOtpValidDate = otpValidDate;
         await user.save();
 
-        // Send emails with OTPs
-        const sendEmail = async (email, otp, isNew) => {
-          try {
-            await axios.post(
-              'https://api.resend.com/emails',
-              {
-                from: 'no-reply@sparkletimekeeping.com',
-                to: email,
-                subject: 'Email Change Verification',
-                html: emailVerificationHTML({ verificationToken: otp }),
-              },
-              {
-                headers: {
-                  Authorization: `Bearer ${process.env.RESEND_KEY}`,
-                  'Content-Type': 'application/json',
-                },
-              }
-            );
-          } catch (error) {
-            console.error("Error sending email:", error);
-            throw new Error(`Failed to send OTP to ${isNew ? 'new' : 'old'} email`);
-          }
-        };
+        const htmlTemplateOld = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+            <div style="text-align: center; margin-bottom: 20px;">
+              <h2 style="color: #4a4a4a;">Sparkle Timekeeping</h2>
+            </div>
+            <p style="color: #4a4a4a; font-size: 16px;">Sparkling Hello!</p>
+            <p style="color: #4a4a4a; font-size: 16px;">You have requested to change your email. Please use the following OTP code to complete the process:</p>
+            <div style="background-color: #f7f7f7; padding: 15px; text-align: center; margin: 20px 0; border-radius: 4px;">
+              <h1 style="color: #4285f4; letter-spacing: 5px; font-size: 32px; margin: 0;">${oldEmailOtp}</h1>
+            </div>
+            <p style="color: #4a4a4a; font-size: 14px;">If you did not request this change, please ignore this email or contact support.</p>
+            <p style="color: #4a4a4a; font-size: 14px;">This OTP will expire shortly for security reasons.</p>
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center; color: #888; font-size: 12px;">
+              <p>© ${new Date().getFullYear()} Sparkle Timekeeping. All rights reserved.</p>
+            </div>
+          </div>
+        `;
+        const htmlTemplateNew = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+            <div style="text-align: center; margin-bottom: 20px;">
+              <h2 style="color: #4a4a4a;">Sparkle Timekeeping</h2>
+            </div>
+            <p style="color: #4a4a4a; font-size: 16px;">Sparkling Hello!</p>
+            <p style="color: #4a4a4a; font-size: 16px;">You have requested to change your email. Please use the following OTP code to complete the process:</p>
+            <div style="background-color: #f7f7f7; padding: 15px; text-align: center; margin: 20px 0; border-radius: 4px;">
+              <h1 style="color: #4285f4; letter-spacing: 5px; font-size: 32px; margin: 0;">${newEmailOtp}</h1>
+            </div>
+            <p style="color: #4a4a4a; font-size: 14px;">If you did not request this change, please ignore this email or contact support.</p>
+            <p style="color: #4a4a4a; font-size: 14px;">This OTP will expire shortly for security reasons.</p>
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center; color: #888; font-size: 12px;">
+              <p>© ${new Date().getFullYear()} Sparkle Timekeeping. All rights reserved.</p>
+            </div>
+          </div>
+        `;
+        const subject = "Email Change Verification";
 
+        // Send emails with OTPs
         await Promise.all([
-          sendEmail(oldEmail, oldEmailOtp, false),
-          sendEmail(newEmail, newEmailOtp, true)
+          Mailer.send_mail_resend(oldEmail, subject, htmlTemplateOld),
+          Mailer.send_mail_resend(newEmail, subject, htmlTemplateNew)
         ]);
 
         return res.status(200).json({
@@ -727,7 +764,7 @@ var controllers = {
           }
 
           if(newEmail && newEmail !== '') {
-            user.email = user.newEmail;
+            user.email = newEmail;
             user.oldEmailOtp = '';
             user.newEmailOtp = '';
             user.emailOtpValidDate = null;
