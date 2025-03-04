@@ -473,12 +473,21 @@ var controllers = {
         if (numberFormatNewPhone !== "+63") {
           newMobile = "+63" + newMobile.substring(1);
         }
+
+        if (numberFormatOldPhone === "+63") {
+          oldMobile = "0" + oldMobile.substring(3);
+        }
+        
         
         if (user.phone === newMobile) {
           return res.status(400).json({
             success: false,
             msg: "New mobile number is the same as the old one",
           });
+        }
+
+        if (numberFormatNewPhone === "+63") {
+          newMobile = "0" + newMobile.substring(3);
         }
         
         const otpNumber = Math.trunc(Math.random() * 999999)
