@@ -438,6 +438,175 @@ var controllers = {
         });
       }
     },
+    send_otp_for_mobile_change: async function (req, res) {
+      const { userId, oldMobile, newMobile } = req.body;
+      try {
+        const user = await User.findById(userId);
+        if (!user) {
+          return res.status(400).json({
+            success: false,
+            msg: "User not found",
+          });
+        }
+
+        const numberFormatOldPhone =
+        String(oldMobile).charAt(0) +
+        String(oldMobile).charAt(1) +
+        String(oldMobile).charAt(2);
+
+        if (numberFormatOldPhone !== "+63") {
+          oldMobile = "+63" + oldMobile.substring(1);
+        }
+        
+        if (user.phone !== oldMobile) {
+          return res.status(400).json({
+            success: false,
+            msg: "Old mobile number is not valid",
+          });
+        }
+
+        const numberFormatNewPhone =
+        String(newMobile).charAt(0) +
+        String(newMobile).charAt(1) +
+        String(newMobile).charAt(2);
+
+        if (numberFormatNewPhone !== "+63") {
+          newMobile = "+63" + newMobile.substring(1);
+        }
+        
+        if (user.phone === newMobile) {
+          return res.status(400).json({
+            success: false,
+            msg: "New mobile number is the same as the old one",
+          });
+        }
+        
+        const otpNumber = Math.trunc(Math.random() * 999999)
+        user.mobileChangeOtp = otpNumber
+        user.mobileChangeOtpValidDate = new Date(Date.now() + 10 * 60 * 1000)
+        await user.save()
+    
+        const messageForNewMobile = `Sparkling Hello! Here is your OTP code for Sparkle Timekeeping to change your Mobile Number: ${otpNumber}`
+        const messageForOldMobile = `Sparkling Hello! Here is your OTP code for Sparkle Timekeeping to change your Mobile Number: ${otpNumber}`
+        let token
+        // Generate a new token
+        const response = await axios.post(
+          'https://svc.app.cast.ph/api/auth/signin',
+          {
+            username: process.env.CAST_USERNAME,
+            password: process.env.CAST_PASSWORD
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          }
+        )
+
+        token = response.data.Token
+        if(token) {
+          const url = 'https://svc.app.cast.ph/api/announcement/send'
+
+          const dataForNewMobile = {
+            MessageFrom: "Sparkle",
+            Message: messageForNewMobile,
+            Recipients: [
+              {
+                "ContactNumber": newMobile
+              }
+            ]
+          }
+          
+          console.log('🚀 ~ data:', data)
+
+          const headers = {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer ' + token
+          }
+          const response = await axios.post(url, dataForNewMobile, {headers})
+          if(response.status !== 200) {
+              return res.status(500).json({
+                success: false,
+                msg: "Failed to send OTP. Please try again."
+              });
+          }
+
+          const dataForOldMobile = {
+            MessageFrom: "Sparkle",
+            Message: messageForOldMobile,
+            Recipients: [
+              {
+                "ContactNumber": oldMobile
+              }
+            ]
+          }
+
+          const responseForOldMobile = await axios.post(url, dataForOldMobile, {headers})
+          if(responseForOldMobile.status !== 200) {
+            return res.status(500).json({
+              success: false,
+              msg: "Failed to send OTP to old mobile number. Please try again."
+            });
+          }
+
+          console.log('🚀 ~ response:', response.data)
+          
+        }
+        console.log('New token:', token)
+
+        return res.status(200).json({
+          success: true,
+          msg: "OTP sent successfully",
+        });
+
+      } catch (err) {
+        await logError(err, "Users", null, null, "GET");
+        return res.status(500).json({
+          success: false,
+          msg: "Failed to send OTP",
+        });
+      }
+    },
+    verify_mobile_change_otp: async function (req, res) {
+      const { userId, otp } = req.body;
+      try {
+        const user = await User.findById(userId);
+        if (!user) {
+          return res.status(400).json({
+            success: false,
+            msg: "User not found",
+          });
+        }
+        
+        if (user.mobileChangeOtp !== otp) {
+          return res.status(400).json({
+            success: false,
+            msg: "OTP is not valid",
+          });
+        }
+        
+        if (user.mobileChangeOtpValidDate < new Date()) {
+          return res.status(400).json({
+            success: false,
+            msg: "OTP has expired",
+          });
+        }
+
+        user.phone = newMobile
+        await user.save()
+        
+        return res.status(200).json({
+          success: true,
+          msg: "Mobile number updated successfully",
+        });
+      } catch (err) {
+        await logError(err, "Users", null, null, "GET");
+        return res.status(500).json({
+          success: false,
+          msg: "Failed to verify OTP",
+        });
+      }
+    },
     verify_reset_token: async function (req, res) {
       const { email, token } = req.body;
       try {

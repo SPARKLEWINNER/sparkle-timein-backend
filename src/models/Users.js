@@ -102,6 +102,14 @@ const data = {
     type: Date,
     default: null,
   },
+  mobileChangeOtp: {
+    type: String,
+    default: '',
+  },
+  mobileChangeOtpValidDate: {
+    type: Date,
+    default: null,
+  },
 };
 const userSchema = new Schema(data, { timestamps: true });
 userSchema
