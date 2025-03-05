@@ -463,8 +463,7 @@ var controllers = {
       }
     },
     send_otp_for_mobile_change: async function (req, res) {
-      const { userId, oldMobile, newMobile } = req.body;
-      
+      let { userId, oldMobile, newMobile } = req.body;
       try {
         const user = await User.findOne({_id: userId});
         if (!user) {
@@ -603,7 +602,7 @@ var controllers = {
       }
     },
     verify_mobile_change_otp: async function (req, res) {
-      const { userId, otp, newMobile } = req.body;
+      let { userId, otp, newMobile } = req.body;
       try {
         const user = await User.findById(userId);
         if (!user) {
@@ -611,6 +610,15 @@ var controllers = {
             success: false,
             msg: "User not found",
           });
+        }
+
+        const numberFormatNewPhone =
+        String(newMobile).charAt(0) +
+        String(newMobile).charAt(1) +
+        String(newMobile).charAt(2);
+        
+        if (numberFormatNewPhone !== "+63") {
+          newMobile = "+63" + newMobile.substring(1);
         }
         
         if (user.mobileChangeOtp !== otp) {
