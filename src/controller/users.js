@@ -464,6 +464,8 @@ var controllers = {
     },
     send_otp_for_mobile_change: async function (req, res) {
       let { userId, oldMobile, newMobile } = req.body;
+      const newMobileSMS = newMobile
+      const oldMobileSMS = oldMobile
       try {
         const user = await User.findOne({_id: userId});
         if (!user) {
@@ -548,7 +550,7 @@ var controllers = {
             Message: messageForNewMobile,
             Recipients: [
               {
-                "ContactNumber": newMobile
+                "ContactNumber": newMobileSMS
               }
             ]
           }
@@ -574,7 +576,7 @@ var controllers = {
             Message: messageForOldMobile,
             Recipients: [
               {
-                "ContactNumber": oldMobile
+                "ContactNumber": oldMobileSMS
               }
             ]
           }
