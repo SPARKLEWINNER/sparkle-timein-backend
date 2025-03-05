@@ -464,15 +464,16 @@ var controllers = {
     },
     send_otp_for_mobile_change: async function (req, res) {
       const { userId, oldMobile, newMobile } = req.body;
+      
       try {
-        const user = await User.findById(userId);
+        const user = await User.findOne({_id: userId});
         if (!user) {
           return res.status(400).json({
             success: false,
             msg: "User not found",
           });
         }
-
+        console.log('🚀 ~ req.body:', user)
         const numberFormatOldPhone =
         String(oldMobile).charAt(0) +
         String(oldMobile).charAt(1) +
@@ -537,6 +538,7 @@ var controllers = {
         )
 
         token = response.data.Token
+        console.log('New token:', token)
         if(token) {
           const url = 'https://svc.app.cast.ph/api/announcement/send'
 
@@ -585,7 +587,7 @@ var controllers = {
           console.log('🚀 ~ response:', response.data)
           
         }
-        console.log('New token:', token)
+        
 
         return res.status(200).json({
           success: true,
