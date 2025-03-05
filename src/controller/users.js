@@ -537,7 +537,7 @@ var controllers = {
         )
 
         token = response.data.Token
-        console.log('New token:', response)
+        console.log('New token:', token)
         if(token) {
           const url = 'https://svc.app.cast.ph/api/announcement/send'
 
@@ -557,8 +557,9 @@ var controllers = {
             'Content-Type': 'application/json',
             Authorization: 'Bearer ' + token
           }
-          const response = await axios.post(url, dataForNewMobile, {headers})
-          if(response.status !== 200) {
+          const responseNewSMS = await axios.post(url, dataForNewMobile, {headers})
+          if(responseNewSMS.status !== 200) {
+            console.log('🚀 ~ response:', responseNewSMS)
               return res.status(500).json({
                 success: false,
                 msg: "Failed to send OTP. Please try again."
@@ -577,6 +578,7 @@ var controllers = {
 
           const responseForOldMobile = await axios.post(url, dataForOldMobile, {headers})
           if(responseForOldMobile.status !== 200) {
+            console.log('🚀 ~ response:', responseForOldMobile)
             return res.status(500).json({
               success: false,
               msg: "Failed to send OTP to old mobile number. Please try again."
