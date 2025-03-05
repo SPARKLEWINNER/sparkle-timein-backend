@@ -1395,6 +1395,8 @@ var controllers = {
   },
     get_schedule_range: async function(req, res) {
     const { id, from, to } = req.body;
+
+    console.log(req.body)
     let records = []
     let personnelName
     let legalHoliday = 0
@@ -1409,7 +1411,8 @@ var controllers = {
       let personnels = await User.findOne({_id: mongoose.Types.ObjectId(id), isArchived: false})
       .lean()
       .exec();
-      personnelName = personnels.displayName
+
+      personnelName = personnels?.displayName || ''
     }
     let formattedDate = new Date(to);
     formattedDate.setDate(formattedDate.getDate() + 0);
@@ -1587,7 +1590,7 @@ var controllers = {
                 timeIn: timeIn,
                 timeOut: timeOut,
                 hourswork: data.totalHours - totalUndertimeHours,
-                hoursTardy: totalMinutesDifference,
+                hoursTardy: totalMinutesDifference || data.hoursTardy,
                 overtime: data.otHours,
                 nightdiff: data.nightdiff,
                 rd: data.restday,
@@ -1618,7 +1621,7 @@ var controllers = {
                 timeIn: timeIn,
                 timeOut: timeOut,
                 hourswork: data.totalHours - totalUndertimeHours,
-                hoursTardy: totalMinutesDifference,
+                hoursTardy: totalMinutesDifference || data.hoursTardy,
                 overtime: data.otHours,
                 nightdiff: data.nightdiff,
                 rd: data.restday,
@@ -3973,6 +3976,92 @@ var controllers = {
         });
       }
     },
+
+    update_employee_schedule: async function(req, res){
+       const { uid, date, updates, breaklistId, diff } = req.body;
+       console.log(req.body)
+
+      const [year, month, day] = date.split('-');
+      const formattedDate = new Date(Date.UTC(year, month - 1, day));
+      console.log(formattedDate)
+
+
+      //no breaklist id throw err
+      if(!breaklistId && !uid && !updates && !date && !diff) return res.status(403).json({
+        message: 'Cannot update resource'
+      })
+
+      //no updates throw error
+      if(Object.keys(updates).length === 0) return res.status(403).json({
+        message: 'Cannot update resource.'
+      })
+
+      //updates should be one field only
+      if(Object.keys(updates).length > 1) return res.status(422).json({
+        message: 'Cannot update resource'
+      })
+
+  
+      let PayrollUpdate = {
+        $set:updates,
+      }; 
+
+      let BreaklistInfoUpdate = {} 
+
+
+      /**
+       * must generate {"sample name of field": -1}
+       * */
+      Object.keys(updates).forEach(key => {
+        if(key === 'hoursTardy')
+          BreaklistInfoUpdate[`hourstardy`] = diff
+        else if (key === 'otHours')
+          BreaklistInfoUpdate[`overtime`] = diff
+        else if (key === 'nightdiff')
+          BreaklistInfoUpdate['nightdiff'] = diff
+        else if (key === 'rd')
+          BreaklistInfoUpdate['restday'] = diff
+      })
+
+      console.log(BreaklistInfoUpdate)
+
+      result = await Payroll.updateOne( { uid: uid, date: formattedDate }, PayrollUpdate ).lean().exec()
+
+      await Breaklistinfo.update({breaklistid: breaklistId, employeeid: new mongoose.Types.ObjectId(uid)}, {
+        $inc: BreaklistInfoUpdate
+      })
+
+      if (result.nModified > 0) {
+        return res.json({
+          success: true,
+          msg: "Schedule updated successfully",
+        });
+      } else {
+        return res.status(404).json({
+          success: false,
+          msg: "No matching record found to update",
+        });
+      }
+    }, 
+    update_schedule_remarks: async function(req, res){
+      let {id, remark, breaklistId} = req.body
+
+      console.log(id)
+
+      if(!id && !body && !breaklistId)
+       return res.status(422).json({
+        message: "Cannot process this request"
+      })
+
+     let newRemark = await BreaklistRemark.update({
+      id: id, 
+     }, {remark: remark, breaklistId: breaklistId}, {upsert: true})
+
+
+      return res.status(200).json({
+        newRemark: newRemark 
+      }) 
+    }
 
 }
 module.exports = controllers;
