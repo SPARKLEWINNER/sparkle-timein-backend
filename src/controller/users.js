@@ -560,6 +560,7 @@ var controllers = {
             Authorization: 'Bearer ' + token
           }
           const responseNewSMS = await axios.post(url, dataForNewMobile, {headers})
+          console.log('🚀 ~ response:', responseNewSMS)
           if(responseNewSMS.status !== 200) {
             console.log('🚀 ~ response:', responseNewSMS)
               return res.status(500).json({
@@ -579,6 +580,7 @@ var controllers = {
           }
 
           const responseForOldMobile = await axios.post(url, dataForOldMobile, {headers})
+          console.log('🚀 ~ response:', responseForOldMobile)
           if(responseForOldMobile.status !== 200) {
             console.log('🚀 ~ response:', responseForOldMobile)
             return res.status(500).json({
