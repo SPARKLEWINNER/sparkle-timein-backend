@@ -7,6 +7,7 @@ const Feedback = require('../models/Feedback')
 const logError = require("../services/logger");
 const logDevice = require("../services/devices");
 const nodemailer = require("nodemailer");
+const Mailer = require('../services/mailer')
 const {emailVerificationHTML} = require("../helpers/mailFormat");
 const axios = require("axios");
 const maxAge = 3 * 24 * 60 * 60;
@@ -321,7 +322,8 @@ var controllers = {
       }
     },
     set_reset_token: async function (req, res) {
-      const { email } = req.body;
+      const { email, type } = req.body;
+      
       try {
         const chkUser = await User.findOne({email: email}).lean().exec();
         if (!chkUser) {
@@ -358,8 +360,31 @@ var controllers = {
               }
             };
 
-            const subject = "Forgot Password";
-            const htmlTemplate = emailVerificationHTML({ verificationToken: token });
+            let subject = "";
+            let htmlTemplate = "";
+            if(type === 'forgot_password') {
+               subject = "Forgot Password";
+               htmlTemplate = emailVerificationHTML({ verificationToken: token });
+            } else if(type === 'change_password') {
+               subject = "Change Password";
+               htmlTemplate = `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                  <h2 style="color: #4a4a4a;">Sparkle Timekeeping</h2>
+                </div>
+                <p style="color: #4a4a4a; font-size: 16px;">Sparkling Hello!</p>
+                <p style="color: #4a4a4a; font-size: 16px;">You have requested to change your password. Please use the following OTP code to complete the process:</p>
+                <div style="background-color: #f7f7f7; padding: 15px; text-align: center; margin: 20px 0; border-radius: 4px;">
+                  <h1 style="color: #4285f4; letter-spacing: 5px; font-size: 32px; margin: 0;">${token}</h1>
+                </div>
+                <p style="color: #4a4a4a; font-size: 14px;">If you did not request this change, please ignore this email or contact support.</p>
+                <p style="color: #4a4a4a; font-size: 14px;">This OTP will expire shortly for security reasons.</p>
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center; color: #888; font-size: 12px;">
+                  <p>© ${new Date().getFullYear()} Sparkle Timekeeping. All rights reserved.</p>
+                </div>
+              </div>
+            `;
+            }
 
             await sendEmail(subject, htmlTemplate);
 
@@ -403,7 +428,386 @@ var controllers = {
         await logError(err, "Users", null, null, "GET");
         res.status(400).json({
           success: false,
-          msg: "No such users",
+          msg: "Something went wrong",
+        });
+      }
+    },
+    edit_profile_pic: async function (req, res) {
+      const { id, image } = req.body;
+      if (!id || !image) {
+        return res.status(400).json({
+          success: false,
+          msg: "Missing required fields",
+        });
+      }
+      try {
+        const user = await User.findOne({ _id: mongoose.Types.ObjectId(id) });
+        if (!user) {
+          return res.status(400).json({
+            success: false,
+            msg: "User not found",
+          });
+        }
+        user.image = image;
+        await user.save();
+        return res.status(200).json({
+          success: true,
+          msg: "Profile picture updated successfully",
+        });
+      } catch (err) {
+        await logError(err, "Users", null, null, "GET");
+        return res.status(500).json({
+          success: false,
+          msg: "Failed to update profile picture",
+        });
+      }
+    },
+    send_otp_for_mobile_change: async function (req, res) {
+      let { userId, oldMobile, newMobile } = req.body;
+      try {
+        const user = await User.findOne({_id: userId});
+        if (!user) {
+          return res.status(400).json({
+            success: false,
+            msg: "User not found",
+          });
+        }
+        console.log('🚀 ~ req.body:', user)
+        const numberFormatOldPhone =
+        String(oldMobile).charAt(0) +
+        String(oldMobile).charAt(1) +
+        String(oldMobile).charAt(2);
+
+        if (numberFormatOldPhone !== "+63") {
+          oldMobile = "+63" + oldMobile.substring(1);
+        }
+        
+        if (user.phone !== oldMobile) {
+          return res.status(400).json({
+            success: false,
+            msg: "Old mobile number is not valid",
+          });
+        }
+
+        const numberFormatNewPhone =
+        String(newMobile).charAt(0) +
+        String(newMobile).charAt(1) +
+        String(newMobile).charAt(2);
+
+        if (numberFormatNewPhone !== "+63") {
+          newMobile = "+63" + newMobile.substring(1);
+        }
+
+        if (numberFormatOldPhone === "+63") {
+          oldMobile = "0" + oldMobile.substring(3);
+        }
+        
+        
+        if (user.phone === newMobile) {
+          return res.status(400).json({
+            success: false,
+            msg: "New mobile number is the same as the old one",
+          });
+        }
+
+        if (numberFormatNewPhone === "+63") {
+          newMobile = "0" + newMobile.substring(3);
+        }
+        
+        const otpNumber = Math.trunc(Math.random() * 999999)
+        user.mobileChangeOtp = otpNumber
+        user.mobileChangeOtpValidDate = new Date(Date.now() + 10 * 60 * 1000)
+        await user.save()
+    
+        const messageForNewMobile = `Sparkling Hello! Here is your OTP code for Sparkle Timekeeping to change your Mobile Number: ${otpNumber}`
+        const messageForOldMobile = `Sparkling Hello! Here is your OTP code for Sparkle Timekeeping to change your Mobile Number: ${otpNumber}`
+        let token
+        // Generate a new token
+        const response = await axios.post(
+          'https://svc.app.cast.ph/api/auth/signin',
+          {
+            username: process.env.CAST_USERNAME,
+            password: process.env.CAST_PASSWORD
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          }
+        )
+
+        token = response.data.Token
+        console.log('New token:', token)
+        console.log('New token:', newMobile)
+        console.log('New token:', messageForNewMobile)
+        if(token) {
+          const url = 'https://svc.app.cast.ph/api/announcement/send'
+
+          const dataForNewMobile = {
+            MessageFrom: "Sparkle",
+            Message: messageForNewMobile,
+            Recipients: [
+              {
+                "ContactNumber": newMobile
+              }
+            ]
+          }
+          
+          console.log('🚀 ~ data:', data)
+
+          const headers = {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer ' + token
+          }
+          const responseNewSMS = await axios.post(url, dataForNewMobile, {headers})
+          console.log('🚀 ~ response:', responseNewSMS)
+          if(responseNewSMS.status !== 200) {
+            console.log('🚀 ~ response:', responseNewSMS)
+              return res.status(500).json({
+                success: false,
+                msg: "Failed to send OTP. Please try again."
+              });
+          }
+
+          const dataForOldMobile = {
+            MessageFrom: "Sparkle",
+            Message: messageForOldMobile,
+            Recipients: [
+              {
+                "ContactNumber": oldMobile
+              }
+            ]
+          }
+
+          const responseForOldMobile = await axios.post(url, dataForOldMobile, {headers})
+          console.log('🚀 ~ response:', responseForOldMobile)
+          if(responseForOldMobile.status !== 200) {
+            console.log('🚀 ~ response:', responseForOldMobile)
+            return res.status(500).json({
+              success: false,
+              msg: "Failed to send OTP to old mobile number. Please try again."
+            });
+          }
+
+          console.log('🚀 ~ response:', response.data)
+          
+        }
+        
+
+        return res.status(200).json({
+          success: true,
+          msg: "OTP sent successfully",
+        });
+
+      } catch (err) {
+        await logError(err, "Users", null, null, "GET");
+        return res.status(500).json({
+          success: false,
+          msg: "Failed to send OTP",
+        });
+      }
+    },
+    verify_mobile_change_otp: async function (req, res) {
+      let { userId, otp, newMobile } = req.body;
+      try {
+        const user = await User.findById(userId);
+        if (!user) {
+          return res.status(400).json({
+            success: false,
+            msg: "User not found",
+          });
+        }
+
+        const numberFormatNewPhone =
+        String(newMobile).charAt(0) +
+        String(newMobile).charAt(1) +
+        String(newMobile).charAt(2);
+        
+        if (numberFormatNewPhone !== "+63") {
+          newMobile = "+63" + newMobile.substring(1);
+        }
+        
+        if (user.mobileChangeOtp !== otp) {
+          return res.status(400).json({
+            success: false,
+            msg: "OTP is not valid",
+          });
+        }
+        
+        if (user.mobileChangeOtpValidDate < new Date()) {
+          return res.status(400).json({
+            success: false,
+            msg: "OTP has expired",
+          });
+        }
+
+        user.phone = newMobile
+        await user.save()
+        
+        return res.status(200).json({
+          success: true,
+          msg: "Mobile number updated successfully",
+        });
+      } catch (err) {
+        await logError(err, "Users", null, null, "GET");
+        return res.status(500).json({
+          success: false,
+          msg: "Failed to verify OTP",
+        });
+      }
+    },
+    send_email_change_otps: async function (req, res) {
+      const { userId, oldEmail, newEmail } = req.body;
+      try {
+        const user = await User.findById(userId);
+        if (!user) {
+          return res.status(400).json({
+            success: false,
+            msg: "User not found",
+          });
+        }
+
+        // Generate OTPs for both old and new email
+        const oldEmailOtp = Math.trunc(Math.random() * 999999).toString().padStart(6, '0');
+        const newEmailOtp = Math.trunc(Math.random() * 999999).toString().padStart(6, '0');
+
+        // Set expiry time (30 minutes from now)
+        const otpValidDate = new Date(Date.now() + 30 * 60 * 1000);
+
+        // Update user with OTPs and pending new email
+        user.oldEmailOtp = oldEmailOtp;
+        user.newEmailOtp = newEmailOtp; 
+        user.emailOtpValidDate = otpValidDate;
+        await user.save();
+
+        const htmlTemplateOld = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+            <div style="text-align: center; margin-bottom: 20px;">
+              <h2 style="color: #4a4a4a;">Sparkle Timekeeping</h2>
+            </div>
+            <p style="color: #4a4a4a; font-size: 16px;">Sparkling Hello!</p>
+            <p style="color: #4a4a4a; font-size: 16px;">You have requested to change your email. Please use the following OTP code to complete the process:</p>
+            <div style="background-color: #f7f7f7; padding: 15px; text-align: center; margin: 20px 0; border-radius: 4px;">
+              <h1 style="color: #4285f4; letter-spacing: 5px; font-size: 32px; margin: 0;">${oldEmailOtp}</h1>
+            </div>
+            <p style="color: #4a4a4a; font-size: 14px;">If you did not request this change, please ignore this email or contact support.</p>
+            <p style="color: #4a4a4a; font-size: 14px;">This OTP will expire shortly for security reasons.</p>
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center; color: #888; font-size: 12px;">
+              <p>© ${new Date().getFullYear()} Sparkle Timekeeping. All rights reserved.</p>
+            </div>
+          </div>
+        `;
+        const htmlTemplateNew = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+            <div style="text-align: center; margin-bottom: 20px;">
+              <h2 style="color: #4a4a4a;">Sparkle Timekeeping</h2>
+            </div>
+            <p style="color: #4a4a4a; font-size: 16px;">Sparkling Hello!</p>
+            <p style="color: #4a4a4a; font-size: 16px;">You have requested to change your email. Please use the following OTP code to complete the process:</p>
+            <div style="background-color: #f7f7f7; padding: 15px; text-align: center; margin: 20px 0; border-radius: 4px;">
+              <h1 style="color: #4285f4; letter-spacing: 5px; font-size: 32px; margin: 0;">${newEmailOtp}</h1>
+            </div>
+            <p style="color: #4a4a4a; font-size: 14px;">If you did not request this change, please ignore this email or contact support.</p>
+            <p style="color: #4a4a4a; font-size: 14px;">This OTP will expire shortly for security reasons.</p>
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center; color: #888; font-size: 12px;">
+              <p>© ${new Date().getFullYear()} Sparkle Timekeeping. All rights reserved.</p>
+            </div>
+          </div>
+        `;
+        const subject = "Email Change Verification";
+
+        // Send emails with OTPs
+        await Promise.all([
+          Mailer.send_mail_resend(oldEmail, subject, htmlTemplateOld),
+          Mailer.send_mail_resend(newEmail, subject, htmlTemplateNew)
+        ]);
+
+        return res.status(200).json({
+          success: true,
+          msg: "Verification codes sent successfully",
+        });
+
+      } catch (err) {
+        await logError(err, "Users", null, null, "GET");
+        return res.status(500).json({
+          success: false,
+          msg: "Failed to send OTP",
+        });
+      }
+    },
+    verify_email_change_otp: async function (req, res) {
+      const { userId, emailType, otp, newEmail } = req.body;
+      try {
+        const user = await User.findById(userId);
+        if (!user) {
+          return res.status(400).json({
+            success: false,
+            msg: "User not found",
+          });
+        }
+
+        // Check if OTP is still valid
+        const now = new Date();
+        if (now > user.emailOtpValidDate) {
+          return res.status(400).json({
+            success: false,
+            msg: "OTP has expired",
+          });
+        }
+
+        // Verify OTP based on email type
+        if (emailType === 'old' && otp !== user.oldEmailOtp) {
+          return res.status(400).json({
+            success: false,
+            msg: "Invalid OTP",
+          });
+        }
+
+        if (emailType === 'new' && otp !== user.newEmailOtp && (!newEmail || newEmail === '')) {
+          return res.status(400).json({
+            success: false,
+            msg: "Invalid OTP", 
+          });
+        }
+
+        // If verifying new email OTP, update the user's email
+        if (emailType === 'new' && otp === user.newEmailOtp) {
+          if(user.email === newEmail) {
+            return res.status(400).json({
+              success: false,
+              msg: "New email is the same as the old one",
+            });
+          }
+
+          if(newEmail && newEmail !== '') {
+            user.email = newEmail;
+            user.oldEmailOtp = '';
+            user.newEmailOtp = '';
+            user.emailOtpValidDate = null;
+            await user.save();
+
+            return res.status(200).json({
+              success: true,
+              msg: "OTP verified and email updated successfully",
+            });
+          } else {
+            return res.status(400).json({
+              success: false,
+              msg: "New email is required",
+            });
+          }
+        }
+
+        return res.status(200).json({
+          success: true,
+          msg: "OTP verified successfully",
+        });
+
+      } catch (err) {
+        await logError(err, "Users", null, null, "GET");
+        return res.status(500).json({
+          success: false,
+          msg: "Failed to verify OTP",
         });
       }
     },
@@ -433,13 +837,18 @@ var controllers = {
     },
     set_mpin: async function (req, res) {
       let { id, mpin, otp, phone } = req.body;
-
+      
       try {
-
+        if((!phone || phone === '') && (!id || id === '')) {
+          return res.status(400).json({
+            success: false,
+            msg: "Phone/Id is required"
+          });
+        }
         const numberFormat =
-        String(phone).charAt(0) +
-        String(phone).charAt(1) +
-        String(phone).charAt(2);
+          String(phone).charAt(0) +
+          String(phone).charAt(1) +
+          String(phone).charAt(2);
 
         if (numberFormat !== "+63") {
           phone = "+63" + phone.substring(1);

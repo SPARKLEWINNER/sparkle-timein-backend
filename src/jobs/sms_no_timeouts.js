@@ -6,11 +6,11 @@ const SMSService = require('../services/sms')
 module.exports = async function () {
     try {
 
-        let message  = `⚠️ URGENT: Time Out Missing!
+        let message  = `⚠️ Uy! Nakalimutan mo mag-Time Out!
 
-You haven’t Timed Out, and it’s already 1 hour past your schedule. This is important to keep your records accurate and avoid payroll issues.
+Lagpas na ng isang oras sa schedule mo. Importante ’to para tama ang record mo at walang maging aberya sa sahod.
 
-Please Time Out now, or inform your supervisor if you need help.
+Mag-Time Out na, o sabihan kami kung may kailangan kang tulong!
     `
         const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
         const currentDate = new Date(now);

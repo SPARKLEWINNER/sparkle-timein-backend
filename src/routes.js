@@ -16,6 +16,7 @@ var feedback = require('./controller/feedback')
 const {messaging} = require('./services/firebase');
 
 module.exports = function (app) {
+
   app.get('/health', (req, res) => {
     res.status(200).json({status: 'ok', timestamp: new Date()})
   })
@@ -25,9 +26,12 @@ module.exports = function (app) {
   app.route('/api/user/:id/feedback').post(auth.require_sign_in, feedback.post_save_feedback)
   app.route("/api/user/reset").post(user.set_reset_token);
   app.route("/api/user/verify").post(user.verify_reset_token);
+  app.route("/api/user/profile_pic/edit").post(user.edit_profile_pic);
   app.route("/api/set/MPIN").post(user.set_mpin);
   app.route("/api/auth/check").post(auth.auth_check);
   app.route("/api/auth/otp/mpin_change/send").post(auth.send_change_mpin_otp)
+  app.route("/api/user/otp/mobile/send").post(auth.require_sign_in, user.send_otp_for_mobile_change)
+  app.route("/api/user/otp/mobile/verify").post(auth.require_sign_in, user.verify_mobile_change_otp)
 
   app.route("/api/login").post(auth.sign_in);
   app.route("/api/employee/register").post(auth.sign_up);
@@ -35,6 +39,8 @@ module.exports = function (app) {
   app.route("/api/phone").post(auth.phone_sign_in);
   app.route("/api/phone/check").post(auth.phone_check);
   app.route("/api/phone/signup").post(auth.phone_sign_up);
+  app.route("/api/user/otp/email/send").post(auth.require_sign_in, user.send_email_change_otps)
+  app.route("/api/user/otp/email/verify").post(auth.require_sign_in, user.verify_email_change_otp)
   app
     .route("/api/phone/verify/:id")
     .post(auth.require_sign_in, auth.phone_verify);
@@ -383,6 +389,7 @@ app
   app.route("/api/specific/schedule/:id").get(reports.get_schedule_specific);
   app.route("/api/specific/schedule/with/date").post(reports.get_schedule_specific_with_date);
   app.route("/api/specific/schedule/employee").post(reports.post_schedule_employee);
+  app.route("/api/otp/myschedule/send").post(stores.employeeMyScheduleSendOtp);
   app.route("/api/specific/schedule/employee").patch(reports.update_employee_schedule);
   app.route('/api/specific/schedule/employee/remarks').patch(reports.update_schedule_remarks)
 };
