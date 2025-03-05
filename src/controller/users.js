@@ -539,9 +539,6 @@ var controllers = {
         )
 
         token = response.data.Token
-        console.log('New token:', token)
-        console.log('New token:', newMobile)
-        console.log('New token:', messageForNewMobile)
         if(token) {
           const url = 'https://svc.app.cast.ph/api/announcement/send'
 
@@ -555,7 +552,7 @@ var controllers = {
             ]
           }
           
-          console.log('🚀 ~ data:', data)
+          console.log('🚀 ~ data:', dataForNewMobile)
 
           const headers = {
             'Content-Type': 'application/json',
