@@ -6,12 +6,7 @@ const SMSService = require('../services/sms')
 module.exports = async function () {
     try {
 
-        let message  = `⚠️ Uy! Nakalimutan mo mag-Time Out!
-
-Lagpas na ng isang oras sa schedule mo. Importante ’to para tama ang record mo at walang maging aberya sa sahod.
-
-Mag-Time Out na, o sabihan kami kung may kailangan kang tulong!
-    `
+        let message  = `Ka-Sparkle, Huwag kalimutan mag-time out sa system! ⏳ Walang time in/out, walang sweldo—sayang ‘yan! Secure your kita, tap that button now!.
         const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
         const currentDate = new Date(now);
         currentDate.setUTCHours(0, 0, 0, 0);
