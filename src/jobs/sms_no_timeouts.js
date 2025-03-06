@@ -6,7 +6,7 @@ const SMSService = require('../services/sms')
 module.exports = async function () {
     try {
 
-        let message  = `Ka-Sparkle, Huwag kalimutan mag-time out sa system! ⏳ Walang time in/out, walang sweldo—sayang ‘yan! Secure your kita, tap that button now!.
+        let message  = `Ka-Sparkle, Huwag kalimutan mag-time out sa system! ⏳ Walang time in/out, walang sweldo—sayang ‘yan! Secure your kita, tap that button now!.`
         const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
         const currentDate = new Date(now);
         currentDate.setUTCHours(0, 0, 0, 0);
