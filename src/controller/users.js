@@ -467,6 +467,24 @@ var controllers = {
       const newMobileSMS = newMobile
       const oldMobileSMS = oldMobile
       try {
+
+        const numberFormatNewPhone =
+        String(newMobile).charAt(0) +
+        String(newMobile).charAt(1) +
+        String(newMobile).charAt(2);
+
+        if (numberFormatNewPhone !== "+63") {
+          newMobile = "+63" + newMobile.substring(1);
+        }
+
+        const checkMobileExist = await User.findOne({phone: newMobile})
+        if(checkMobileExist) {
+          return res.status(400).json({
+            success: false,
+            msg: "Mobile number already exists",
+          });
+        }
+        
         const user = await User.findOne({_id: userId});
         if (!user) {
           return res.status(400).json({
@@ -491,15 +509,6 @@ var controllers = {
           });
         }
 
-        const numberFormatNewPhone =
-        String(newMobile).charAt(0) +
-        String(newMobile).charAt(1) +
-        String(newMobile).charAt(2);
-
-        if (numberFormatNewPhone !== "+63") {
-          newMobile = "+63" + newMobile.substring(1);
-        }
-
         if (numberFormatOldPhone === "+63") {
           oldMobile = "0" + oldMobile.substring(3);
         }
@@ -522,7 +531,7 @@ var controllers = {
         await user.save()
     
         const messageForNewMobile = `Sparkling Hello! Here is your OTP code for Sparkle Timekeeping to change your Mobile Number: ${otpNumber}`
-        const messageForOldMobile = `Sparkling Hello! Here is your OTP code for Sparkle Timekeeping to change your Mobile Number: ${otpNumber}`
+        const messageForOldMobile = `Sparkling Hello! your mobile number is being changed to ${newMobile}, Please contact your admin or support if you did not request this change.`
         let token
         // Generate a new token
         const response = await axios.post(
@@ -686,6 +695,19 @@ var controllers = {
         user.oldEmailOtp = undefined;
         await user.save();
 
+        const htmlTemplateOld = `
+         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+            <div style="text-align: center; margin-bottom: 20px;">
+              <h2 style="color: #4a4a4a;">Sparkle Timekeeping</h2>
+            </div>
+            <p style="color: #4a4a4a; font-size: 16px;">Sparkling Hello!</p>
+            <p style="color: #4a4a4a; font-size: 16px;">Your email is being changed to ${newEmail}</p>
+            <p style="color: #4a4a4a; font-size: 14px;">If you requested this change, please ignore this email, if not please contact support.</p>
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center; color: #888; font-size: 12px;">
+              <p>© ${new Date().getFullYear()} Sparkle Timekeeping. All rights reserved.</p>
+            </div>
+          </div>
+        `
         const htmlTemplateNew = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
             <div style="text-align: center; margin-bottom: 20px;">
@@ -706,8 +728,11 @@ var controllers = {
         const subject = "Email Change Verification";
 
         // Send email with OTP only to new email
-        await Mailer.send_mail_resend(newEmail, subject, htmlTemplateNew);
-
+        await Promise.all([
+          Mailer.send_mail_resend(newEmail, subject, htmlTemplateNew),
+          Mailer.send_mail_resend(user.email, subject, htmlTemplateOld)
+        ]);
+        
         return res.status(200).json({
           success: true,
           msg: "Verification code sent successfully",
