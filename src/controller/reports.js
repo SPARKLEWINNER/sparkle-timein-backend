@@ -4058,9 +4058,12 @@ var controllers = {
       Object.keys(totals[0]).forEach(key => {
         let value = totals[0][`${key}`]
 
+        /*
+
         if(key === 'totalHoursTardy')
           BreaklistInfoUpdate[`hourstardy`] = value
-        else if (key === 'totalOtHours')
+        else*/
+        if (key === 'totalOtHours')
           BreaklistInfoUpdate[`overtime`] = value
         else if (key === 'totalNightDiff')
           BreaklistInfoUpdate['nightdiff'] = value
