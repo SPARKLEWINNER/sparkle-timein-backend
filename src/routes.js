@@ -392,4 +392,5 @@ app
   app.route("/api/otp/myschedule/send").post(stores.employeeMyScheduleSendOtp);
   app.route("/api/specific/schedule/employee").patch(reports.update_employee_schedule);
   app.route('/api/specific/schedule/employee/remarks').patch(reports.update_schedule_remarks)
+  app.route('/api/groups').get(reports.get_groups)
 };
