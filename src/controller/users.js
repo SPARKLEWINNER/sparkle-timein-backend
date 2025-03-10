@@ -656,6 +656,15 @@ var controllers = {
     send_email_change_otps: async function (req, res) {
       const { userId, newEmail } = req.body;
       try {
+
+        const checkEmailExist = await User.findOne({email: newEmail})
+        if(checkEmailExist) {
+          return res.status(400).json({
+            success: false,
+            msg: "Email already exists",
+          });
+        }
+
         const user = await User.findById(userId);
         if (!user) {
           return res.status(400).json({
@@ -715,15 +724,6 @@ var controllers = {
     verify_email_change_otp: async function (req, res) {
       const { userId, otp, newEmail } = req.body;
       try {
-
-        const checkEmailExist = await User.findOne({email: newEmail})
-        if(checkEmailExist) {
-          return res.status(400).json({
-            success: false,
-            msg: "Email already exists",
-          });
-        }
-        
         const user = await User.findById(userId);
         if (!user) {
           return res.status(400).json({
