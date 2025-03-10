@@ -2303,7 +2303,7 @@ var controllers = {
       const earliestDateFromDoc = await Breaklist.findOne({store: store}).sort({ datefrom: -1 }).exec();
 
 
-      if (latestDateToDoc && earliestDateFromDoc) {
+      /*if (latestDateToDoc && earliestDateFromDoc) {
         const latestDateTo = moment(latestDateToDoc.dateto).startOf('day');
         const earliestDateFrom = moment(earliestDateFromDoc.datefrom).startOf('day');
         const fromDate = moment(from).startOf('day');
@@ -2318,7 +2318,7 @@ var controllers = {
             msg: "Invalid Dates. Breaklist date already submitted and saved.",
           });
         }
-      }
+      }*/
 
       let personnels = await User.find({company: store, role:0, isArchived: false})
       .lean()
@@ -4064,6 +4064,17 @@ var controllers = {
       return res.status(200).json({
         newRemark: newRemark 
       }) 
+    },
+    get_groups: async function(req, res){
+
+      let groups = await Group.find({})
+      .lean()
+      .exec()
+      return res.status(200).json({
+        success: true,
+        groups: groups 
+      }) 
+      
     }
 
 }
