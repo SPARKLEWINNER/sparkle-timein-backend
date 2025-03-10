@@ -654,7 +654,7 @@ var controllers = {
       }
     },
     send_email_change_otps: async function (req, res) {
-      const { userId, oldEmail, newEmail } = req.body;
+      const { userId, newEmail } = req.body;
       try {
         const user = await User.findById(userId);
         if (!user) {
@@ -664,36 +664,19 @@ var controllers = {
           });
         }
 
-        // Generate OTPs for both old and new email
-        const oldEmailOtp = Math.trunc(Math.random() * 999999).toString().padStart(6, '0');
+        // Generate OTP only for new email
         const newEmailOtp = Math.trunc(Math.random() * 999999).toString().padStart(6, '0');
 
         // Set expiry time (30 minutes from now)
         const otpValidDate = new Date(Date.now() + 30 * 60 * 1000);
 
-        // Update user with OTPs and pending new email
-        user.oldEmailOtp = oldEmailOtp;
+        // Update user with OTP and pending new email
         user.newEmailOtp = newEmailOtp; 
         user.emailOtpValidDate = otpValidDate;
+        // Remove old email OTP field if it exists
+        user.oldEmailOtp = undefined;
         await user.save();
 
-        const htmlTemplateOld = `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
-            <div style="text-align: center; margin-bottom: 20px;">
-              <h2 style="color: #4a4a4a;">Sparkle Timekeeping</h2>
-            </div>
-            <p style="color: #4a4a4a; font-size: 16px;">Sparkling Hello!</p>
-            <p style="color: #4a4a4a; font-size: 16px;">You have requested to change your email. Please use the following OTP code to complete the process:</p>
-            <div style="background-color: #f7f7f7; padding: 15px; text-align: center; margin: 20px 0; border-radius: 4px;">
-              <h1 style="color: #4285f4; letter-spacing: 5px; font-size: 32px; margin: 0;">${oldEmailOtp}</h1>
-            </div>
-            <p style="color: #4a4a4a; font-size: 14px;">If you did not request this change, please ignore this email or contact support.</p>
-            <p style="color: #4a4a4a; font-size: 14px;">This OTP will expire shortly for security reasons.</p>
-            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center; color: #888; font-size: 12px;">
-              <p>© ${new Date().getFullYear()} Sparkle Timekeeping. All rights reserved.</p>
-            </div>
-          </div>
-        `;
         const htmlTemplateNew = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
             <div style="text-align: center; margin-bottom: 20px;">
@@ -713,15 +696,12 @@ var controllers = {
         `;
         const subject = "Email Change Verification";
 
-        // Send emails with OTPs
-        await Promise.all([
-          Mailer.send_mail_resend(oldEmail, subject, htmlTemplateOld),
-          Mailer.send_mail_resend(newEmail, subject, htmlTemplateNew)
-        ]);
+        // Send email with OTP only to new email
+        await Mailer.send_mail_resend(newEmail, subject, htmlTemplateNew);
 
         return res.status(200).json({
           success: true,
-          msg: "Verification codes sent successfully",
+          msg: "Verification code sent successfully",
         });
 
       } catch (err) {
@@ -733,8 +713,17 @@ var controllers = {
       }
     },
     verify_email_change_otp: async function (req, res) {
-      const { userId, emailType, otp, newEmail } = req.body;
+      const { userId, otp, newEmail } = req.body;
       try {
+
+        const checkEmailExist = await User.findOne({email: newEmail})
+        if(checkEmailExist) {
+          return res.status(400).json({
+            success: false,
+            msg: "Email already exists",
+          });
+        }
+        
         const user = await User.findById(userId);
         if (!user) {
           return res.status(400).json({
@@ -752,53 +741,38 @@ var controllers = {
           });
         }
 
-        // Verify OTP based on email type
-        if (emailType === 'old' && otp !== user.oldEmailOtp) {
+        // Only verify new email OTP now
+        if (otp !== user.newEmailOtp) {
           return res.status(400).json({
             success: false,
             msg: "Invalid OTP",
           });
         }
 
-        if (emailType === 'new' && otp !== user.newEmailOtp && (!newEmail || newEmail === '')) {
+        // Update the user's email if OTP is valid
+        if(user.email === newEmail) {
           return res.status(400).json({
             success: false,
-            msg: "Invalid OTP", 
+            msg: "New email is the same as the old one",
           });
         }
 
-        // If verifying new email OTP, update the user's email
-        if (emailType === 'new' && otp === user.newEmailOtp) {
-          if(user.email === newEmail) {
-            return res.status(400).json({
-              success: false,
-              msg: "New email is the same as the old one",
-            });
-          }
+        if(newEmail && newEmail !== '') {
+          user.email = newEmail;
+          user.newEmailOtp = '';
+          user.emailOtpValidDate = null;
+          await user.save();
 
-          if(newEmail && newEmail !== '') {
-            user.email = newEmail;
-            user.oldEmailOtp = '';
-            user.newEmailOtp = '';
-            user.emailOtpValidDate = null;
-            await user.save();
-
-            return res.status(200).json({
-              success: true,
-              msg: "OTP verified and email updated successfully",
-            });
-          } else {
-            return res.status(400).json({
-              success: false,
-              msg: "New email is required",
-            });
-          }
+          return res.status(200).json({
+            success: true,
+            msg: "OTP verified and email updated successfully",
+          });
+        } else {
+          return res.status(400).json({
+            success: false,
+            msg: "New email is required",
+          });
         }
-
-        return res.status(200).json({
-          success: true,
-          msg: "OTP verified successfully",
-        });
 
       } catch (err) {
         await logError(err, "Users", null, null, "GET");

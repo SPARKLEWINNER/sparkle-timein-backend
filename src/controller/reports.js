@@ -1590,7 +1590,7 @@ var controllers = {
                 timeIn: timeIn,
                 timeOut: timeOut,
                 hourswork: data.totalHours - totalUndertimeHours,
-                hoursTardy: totalMinutesDifference || data.hoursTardy,
+                hoursTardy: data.hoursTardy || totalMinutesDifference ,
                 overtime: data.otHours,
                 nightdiff: data.nightdiff,
                 rd: data.restday,
@@ -1621,7 +1621,7 @@ var controllers = {
                 timeIn: timeIn,
                 timeOut: timeOut,
                 hourswork: data.totalHours - totalUndertimeHours,
-                hoursTardy: totalMinutesDifference || data.hoursTardy,
+                hoursTardy: data.hoursTardy || totalMinutesDifference ,
                 overtime: data.otHours,
                 nightdiff: data.nightdiff,
                 rd: data.restday,
@@ -4025,7 +4025,10 @@ var controllers = {
 
       console.log(BreaklistInfoUpdate)
 
-      result = await Payroll.updateOne( { uid: uid, date: formattedDate }, PayrollUpdate ).lean().exec()
+
+      let query = { uid: uid, date: formattedDate }
+
+      let result = await Payroll.updateOne( query, PayrollUpdate ).lean().exec()
 
       await Breaklistinfo.update({breaklistid: breaklistId, employeeid: new mongoose.Types.ObjectId(uid)}, {
         $inc: BreaklistInfoUpdate
