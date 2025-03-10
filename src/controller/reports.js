@@ -3983,7 +3983,6 @@ var controllers = {
 
       const [year, month, day] = date.split('-');
       const formattedDate = new Date(Date.UTC(year, month - 1, day));
-      console.log(formattedDate)
 
 
       //no breaklist id throw err
@@ -4003,36 +4002,75 @@ var controllers = {
 
   
       let PayrollUpdate = {
-        $set:updates,
       }; 
 
-      let BreaklistInfoUpdate = {} 
+    
 
 
-      /**
-       * must generate {"sample name of field": -1}
-       * */
+
+      /*generating update object for payroll model*/
+
       Object.keys(updates).forEach(key => {
         if(key === 'hoursTardy')
-          BreaklistInfoUpdate[`hourstardy`] = diff
+          PayrollUpdate[`hoursTardy`] = updates[`${key}`]
         else if (key === 'otHours')
-          BreaklistInfoUpdate[`overtime`] = diff
+          PayrollUpdate[`otHours`] = updates[`${key}`]
         else if (key === 'nightdiff')
-          BreaklistInfoUpdate['nightdiff'] = diff
+          PayrollUpdate['nightdiff'] = updates[`${key}`]
         else if (key === 'rd')
-          BreaklistInfoUpdate['restday'] = diff
+          PayrollUpdate['restday'] = updates[`${key}`]
       })
 
-      console.log(BreaklistInfoUpdate)
 
 
       let query = { uid: uid, date: formattedDate }
 
+      console.log('payroll update', query, PayrollUpdate)
+
       let result = await Payroll.updateOne( query, PayrollUpdate ).lean().exec()
 
-      await Breaklistinfo.update({breaklistid: breaklistId, employeeid: new mongoose.Types.ObjectId(uid)}, {
-        $inc: BreaklistInfoUpdate
+
+      //updating totals
+
+      let BreaklistInfoUpdate = {} 
+      let BreaklistInformation = await Breaklist.findOne({breaklistid: breaklistId}).lean().exec()
+
+      let totals = await Payroll.aggregate([
+        {$match: {
+          uid: uid,
+          date: {
+            $lte: BreaklistInformation.dateto, 
+            $gte: BreaklistInformation.datefrom
+          }
+        }}, 
+        {$group: {
+          _id: "_id", 
+          totalNightDiff: {$sum: "$nightdiff"},
+          totalOtHours: {$sum: "$otHours"},
+          totalHoursTardy: {$sum: "$hoursTardy"},
+          totalRestday: {$sum: "$restday"}
+        }}
+      ])
+
+        /**
+       * must generate update obj for breaklist info of an employee 
+       * */
+      Object.keys(totals[0]).forEach(key => {
+        let value = totals[0][`${key}`]
+
+        if(key === 'totalHoursTardy')
+          BreaklistInfoUpdate[`hourstardy`] = value
+        else if (key === 'totalOtHours')
+          BreaklistInfoUpdate[`overtime`] = value
+        else if (key === 'totalNightDiff')
+          BreaklistInfoUpdate['nightdiff'] = value
+        else if (key === 'totalRestday')
+          BreaklistInfoUpdate['restday'] = value
       })
+
+
+      console.log('breaklist info update', BreaklistInfoUpdate)
+      await Breaklistinfo.updateOne({breaklistid: breaklistId, employeeid: new mongoose.Types.ObjectId(uid)}, BreaklistInfoUpdate)
 
       if (result.nModified > 0) {
         return res.json({
@@ -4045,6 +4083,7 @@ var controllers = {
           msg: "No matching record found to update",
         });
       }
+      
     }, 
     update_schedule_remarks: async function(req, res){
       let {id, remark, breaklistId} = req.body
