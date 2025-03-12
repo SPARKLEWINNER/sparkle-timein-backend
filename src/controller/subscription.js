@@ -3,6 +3,8 @@ const createError = require("http-errors");
 const mongoose = require('mongoose')
 const Subscription = require("../models/Subscription");
 const logError = require("../services/logger");
+const User = require("../models/Users");
+const Group = require("../models/Group");
 
 
 var controllers = {
@@ -39,20 +41,21 @@ var controllers = {
         }
     },
     post_subscription: async function (req, res) {
-        const { store, feature, length } = req.body;
+        const { store, feature, id, length } = req.body;
         const today = new Date();
         let expiry;
         let price = 0;
-        if (!store || !feature || !length) return res.status(400).json({ success: false, msg: 'Missing required fields' });
+        if (!store || !feature /*|| !length*/) return res.status(400).json({ success: false, msg: 'Missing required fields' });
         try {
-            const isSubscriptionExist = await Subscription.find({ store: store, feature: feature, expiry: { $gte: today } })
+            const isSubscriptionExist = await Subscription.find({ store: store, feature: feature/*, expiry: { $gte: today }*/ })
             .lean()
             .exec(); 
             if (isSubscriptionExist.length > 0) {
-                res.status(400).json({ success: false, msg: "Subscription still exist" });
+                /*res.status(400).json({ success: false, msg: "Subscription still exist" });*/
+                res.status(400).json({ success: false, msg: "Subscription already enrolled" });
             } 
             else {
-                if (length === "Monthly") {
+/*                if (length === "Monthly") {
                     price = 200;
                     expiry = new Date(today.getFullYear(), today.getMonth() + 1, today.getDate(), today.getHours(), today.getMinutes(), today.getSeconds())
                 } 
@@ -68,23 +71,37 @@ var controllers = {
                     expiry,
                     today,
                     today
+                };*/
+                let _params = {
+                    store,
+                    feature,
+                    id,
+/*                    price,
+                    length,
+                    expiry,
+                    today,
+                    today*/
                 };
 
                 let new_subscription = new Subscription(_params);
-                try {
-                    let result = await Subscription.create(new_subscription);
-                    if (!result)
-                        res.status(201).json({ success: false, msg: `No such subscription.` });
-                    res.status(200).json({ success: true, msg: `Subription save` });
-                } catch (err) {
-                    await logError(err, "Subscription.post_settings", null, JSON.stringify(req.body), "POST");
-                    res.status(400).json({ success: false, msg: err });
-                    throw new createError.InternalServerError(err);
-                }
+                let result = await Subscription.create(new_subscription);
+                if (!result)
+                    res.status(201).json({ success: false, msg: `No such subscription.` });
+                res.status(200).json({ success: true, msg: `Subription save` });
+                // try {
+                //     let result = await Subscription.create(new_subscription);
+                //     if (!result)
+                //         res.status(201).json({ success: false, msg: `No such subscription.` });
+                //     res.status(200).json({ success: true, msg: `Subription save` });
+                // } catch (err) {
+                //     /*await logError(err, "Subscription.post_settings", null, JSON.stringify(req.body), "POST");*/
+                //     res.status(400).json({ success: false, msg: err });
+                //     throw new createError.InternalServerError(err);
+                // }
             }     
         } 
         catch (err) {
-            await logError(err, "Subscription.post_subscription", null, id, "POST");
+            /*await logError(err, "Subscription.post_subscription", null, id, "POST");*/
             res.status(400).json({ success: false, msg: err });
             throw new createError.InternalServerError(err);  
         }
@@ -121,6 +138,62 @@ var controllers = {
             throw new createError.InternalServerError(err);
         }
 
+    },
+
+    delete_group_feature: async function(req, res) {
+      try {
+
+        const { id } = req.params;
+        if (!id) {
+          return res.status(422).json({ message: "Group feature ID is required" });
+        }
+
+        const deletedGroup = await Subscription.findByIdAndDelete(id).lean().exec();
+
+        if (!deletedGroup) {
+          return res.status(404).json({ success: false, message: "Group feature not found" });
+        }
+
+        return res.status(200).json({
+          success: true,
+          message: "Group feature deleted successfully",
+          deletedGroup: deletedGroup
+        });
+
+      } catch (err) {
+        console.error("Error deleting group feature:", err);
+        return res.status(500).json({ success: false, message: "Internal Server Error" });
+      }
+    },
+
+    check_group_feature: async function(req, res) {
+        try {
+            const { store } = req.body;
+            let group = await Group.findOne({ store: { $in: [store] } }).lean().exec();
+            if(!group) {
+                return res.status(404).json({ success: false, message: "Group not found" });    
+            }
+            else {
+                let storeName = await User.findOne({ _id:  new mongoose.Types.ObjectId(group.groupid)}).lean().exec();
+                let feature = await Subscription.find({store: storeName.company}).select("feature -_id").lean().exec();
+                if(feature){
+                    return res.status(200).json({
+                      success: true,
+                      features: feature,
+                    });
+                }
+                else {
+                    return res.status(404).json({ success: false, message: "Feature not found" });  
+                }
+            }
+
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({
+              success: false,
+              message: "Internal Server Error",
+            });
+        }
     }
 };
 

@@ -12,15 +12,15 @@ const data = {
     },
     price: {
         type: String,
-        required: true,
+        required: false,
     },
     length: {
         type: String,
-        required: true,
+        required: false,
     },
     expiry: {
         type: Date,
-        required: true,
+        required: false,
         default: new Date()
     },
     createdAt: {

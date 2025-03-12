@@ -259,7 +259,7 @@ app
   // Subscription
   app.route('/api/v2/subscriptions/:id').get(auth.require_sign_in, auth.is_admin_authenticated, subscription.get_subscription)
 
-  app.route('/api/v2/subscriptions').get(auth.require_sign_in, auth.is_admin_authenticated, subscription.get_subscriptions)
+  app.route('/api/v2/subscriptions').get(/*auth.require_sign_in, auth.is_admin_authenticated,*/ subscription.get_subscriptions)
 
   app.route('/api/v2/subscriptions').post(auth.require_sign_in, auth.is_admin_authenticated, subscription.post_subscription)
 
@@ -393,4 +393,6 @@ app
   app.route("/api/specific/schedule/employee").patch(reports.update_employee_schedule);
   app.route('/api/specific/schedule/employee/remarks').patch(reports.update_schedule_remarks)
   app.route('/api/groups').get(reports.get_groups)
+  app.route('/api/remove/group/:id').get(subscription.delete_group_feature)
+  app.route('/api/check/feature').post(subscription.check_group_feature)
 };

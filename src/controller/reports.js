@@ -4107,17 +4107,29 @@ var controllers = {
         newRemark: newRemark 
       }) 
     },
-    get_groups: async function(req, res){
+    get_groups: async function (req, res) {
+      try {
+        let groups = await Group.find({}).lean().exec();
+        let formattedGroups = await Promise.all(
+          groups.map(async (group) => {
+            let user = await User.findOne({ _id: group.groupid }).lean().exec();
+            return {
+              companyName: user ? user.company : null,
+            };
+          })
+        );
 
-      let groups = await Group.find({})
-      .lean()
-      .exec()
-      return res.status(200).json({
-        success: true,
-        groups: groups 
-      }) 
-      
+        return res.status(200).json({
+          success: true,
+          groups: formattedGroups,
+        });
+      } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+          success: false,
+          message: "Internal Server Error",
+        });
+      }
     }
-
 }
 module.exports = controllers;
