@@ -169,22 +169,35 @@ var controllers = {
     check_group_feature: async function(req, res) {
         try {
             const { store } = req.body;
-            let group = await Group.findOne({ store: { $in: [store] } }).lean().exec();
+
+            let group = await Group.find({ store: { $in: [store] } }).lean().exec();
             if(!group) {
                 return res.status(404).json({ success: false, message: "Group not found" });    
             }
             else {
-                let storeName = await User.findOne({ _id:  new mongoose.Types.ObjectId(group.groupid)}).lean().exec();
-                let feature = await Subscription.find({store: storeName.company}).select("feature -_id").lean().exec();
-                if(feature){
-                    return res.status(200).json({
-                      success: true,
-                      features: feature,
-                    });
-                }
-                else {
-                    return res.status(404).json({ success: false, message: "Feature not found" });  
-                }
+                const results = await Promise.all(
+                  group.map(async (data) => {
+                    try {
+                      let storeName = await User.findOne({ _id: new mongoose.Types.ObjectId(data.groupid) }).lean().exec();
+                      
+                      if (!storeName) {
+                        return { success: false, message: "Store not found" };
+                      }
+
+                      let features = await Subscription.find({ store: storeName.company })
+                        .select("feature -_id")
+                        .lean()
+                        .exec();
+
+                      return { success: true, features };
+                    } catch (error) {
+                      return { success: false, message: error.message };
+                    }
+                  })
+                );
+
+                // Return the response
+                return res.status(200).json(results);
             }
 
         } catch (error) {
