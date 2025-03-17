@@ -2807,10 +2807,6 @@ var controllers = {
           breaklistid: breaklistId,
           employeeid: _id,
           employeename: empName,
-          hourstardy: Number(updatedScheduleValues?.hoursTardy) || 0, 
-          overtime: Number(updatedScheduleValues?.overtime) || 0, 
-          nightdiff: Number(updatedScheduleValues?.nightdiff) || 0, 
-          restday: Number(updatedScheduleValues?.rd) || 0,
         });
 
         // Save the document
@@ -3978,7 +3974,7 @@ var controllers = {
     },
 
     update_employee_schedule: async function(req, res){
-       const { uid, date, updates, breaklistId, diff } = req.body;
+       const { uid, date, updates, breaklistId, diff, totals } = req.body;
        console.log(req.body)
 
       const [year, month, day] = date.split('-');
@@ -4035,6 +4031,7 @@ var controllers = {
       let BreaklistInfoUpdate = {} 
       let BreaklistInformation = await Breaklist.findOne({breaklistid: breaklistId}).lean().exec()
 
+      /*
       let totals = await Payroll.aggregate([
         {$match: {
           uid: uid,
@@ -4051,29 +4048,28 @@ var controllers = {
           totalRestday: {$sum: "$restday"}
         }}
       ])
+      */
 
         /**
-       * must generate update obj for breaklist info of an employee 
+       * must generate update sample of {"field": -1} 
        * */
-      Object.keys(totals[0]).forEach(key => {
-        let value = totals[0][`${key}`]
+      
+      Object.keys(totals).forEach(key => {
+        let value = totals[`${key}`]
 
-        /*
-
-        if(key === 'totalHoursTardy')
+        if(key === 'hoursTardy')
           BreaklistInfoUpdate[`hourstardy`] = value
-        else*/
-        if (key === 'totalOtHours')
+        else if (key === 'otHours')
           BreaklistInfoUpdate[`overtime`] = value
-        else if (key === 'totalNightDiff')
+        else if (key === 'nightdiff')
           BreaklistInfoUpdate['nightdiff'] = value
-        else if (key === 'totalRestday')
+        else if (key === 'rd')
           BreaklistInfoUpdate['restday'] = value
       })
 
 
       console.log('breaklist info update', BreaklistInfoUpdate)
-      await Breaklistinfo.updateOne({breaklistid: breaklistId, employeeid: new mongoose.Types.ObjectId(uid)}, BreaklistInfoUpdate)
+      await Breaklistinfo.findOneAndUpdate({breaklistid: breaklistId, employeeid: new mongoose.Types.ObjectId(uid)}, BreaklistInfoUpdate)
 
       if (result.nModified > 0) {
         return res.json({
