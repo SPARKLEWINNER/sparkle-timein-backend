@@ -352,17 +352,17 @@ var controllers = {
       await send_sms(phone, `Sparkle Time in verification code ${code}`);
     }
 
-    // if(mpin !== ''){
-    //   if (user[0].mpin === '') return res
-    //   .status(400)
-    //   .json({ success: false, msg: `MPIN not set` });
+    if(mpin !== ''){
+      if (user[0].mpin === '') return res
+      .status(400)
+      .json({ success: false, msg: `MPIN not set` });
 
-    //   if (!userAuth.mpinAuthenticate(mpin)) {
-    //     return res
-    //       .status(400)
-    //       .json({ success: false, msg: `Invalid MPIN` });
-    //   }
-    // }
+      if (!userAuth.mpinAuthenticate(mpin)) {
+        return res
+          .status(400)
+          .json({ success: false, msg: `Invalid MPIN` });
+      }
+    }
 
     try {
       await User.findOneAndUpdate({ phone: phone, isArchived: false }, { lastLogin: now }, {upsert: true}).lean().exec();
@@ -392,6 +392,14 @@ var controllers = {
         success: false,
         msg: "Phone number is required",
       });
+
+      if (!email || email.trim() === '') {
+        res.status(400).json({
+          success: false,
+          msg: "Email is required",
+        });
+        return;
+      } 
     
       const otpNumber = Math.floor(100000 + Math.random() * 900000);
 
@@ -404,17 +412,16 @@ var controllers = {
         phone = "+63" + phone.substring(1);
       }
     
-      const user = await User.findOne({ phone: phone, isArchived: false });
+      const user = await User.findOne({ phone: phone, email: email, isArchived: false });
 
       if (!user) return res.status(404).json({
         success: false,
         msg: "User not found",
       });
       
-      user.changeMpinOtp = otpNumber
+      user.changeMpinOtp = otpNumber;
       user.changeMpinOtpValidDate = new Date();
-    
-      await user.save()
+      await user.save();
 
       const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
@@ -434,11 +441,7 @@ var controllers = {
         </div>
       `;
 
-      if (!!email && email.trim() !== '') {
-        await Mailer.send_mail_resend(email, "Sparkle Time In - MPIN Change OTP", html);
-      } else {
-        await Mailer.send_mail_resend(user.email, "Sparkle Time In - MPIN Change OTP", html);
-      }
+      
 
       // if (numberFormat === "+63") {
       //   phone = "0" + phone.substring(3);
@@ -492,6 +495,8 @@ var controllers = {
         
       // }
       // console.log('New token:', token)
+
+      await Mailer.send_mail_resend(email, "Sparkle Time In - MPIN Change OTP", html);
 
       return res.status(200).json({
         success: true,
