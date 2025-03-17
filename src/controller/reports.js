@@ -2807,10 +2807,6 @@ var controllers = {
           breaklistid: breaklistId,
           employeeid: _id,
           employeename: empName,
-          hourstardy: Number(updatedScheduleValues?.hoursTardy) || 0, 
-          overtime: Number(updatedScheduleValues?.overtime) || 0, 
-          nightdiff: Number(updatedScheduleValues?.nightdiff) || 0, 
-          restday: Number(updatedScheduleValues?.rd) || 0,
         });
 
         // Save the document
@@ -3978,7 +3974,7 @@ var controllers = {
     },
 
     update_employee_schedule: async function(req, res){
-       const { uid, date, updates, breaklistId, diff } = req.body;
+       const { uid, date, updates, breaklistId, diff, totals } = req.body;
        console.log(req.body)
 
       const [year, month, day] = date.split('-');
