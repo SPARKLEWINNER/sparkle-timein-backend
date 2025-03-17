@@ -4035,6 +4035,7 @@ var controllers = {
       let BreaklistInfoUpdate = {} 
       let BreaklistInformation = await Breaklist.findOne({breaklistid: breaklistId}).lean().exec()
 
+      /*
       let totals = await Payroll.aggregate([
         {$match: {
           uid: uid,
@@ -4051,29 +4052,28 @@ var controllers = {
           totalRestday: {$sum: "$restday"}
         }}
       ])
+      */
 
         /**
-       * must generate update obj for breaklist info of an employee 
+       * must generate update sample of {"field": -1} 
        * */
-      Object.keys(totals[0]).forEach(key => {
-        let value = totals[0][`${key}`]
+      
+      Object.keys(totals).forEach(key => {
+        let value = totals[`${key}`]
 
-        /*
-
-        if(key === 'totalHoursTardy')
+        if(key === 'hoursTardy')
           BreaklistInfoUpdate[`hourstardy`] = value
-        else*/
-        if (key === 'totalOtHours')
+        else if (key === 'otHours')
           BreaklistInfoUpdate[`overtime`] = value
-        else if (key === 'totalNightDiff')
+        else if (key === 'nightdiff')
           BreaklistInfoUpdate['nightdiff'] = value
-        else if (key === 'totalRestday')
+        else if (key === 'rd')
           BreaklistInfoUpdate['restday'] = value
       })
 
 
       console.log('breaklist info update', BreaklistInfoUpdate)
-      await Breaklistinfo.updateOne({breaklistid: breaklistId, employeeid: new mongoose.Types.ObjectId(uid)}, BreaklistInfoUpdate)
+      await Breaklistinfo.findOneAndUpdate({breaklistid: breaklistId, employeeid: new mongoose.Types.ObjectId(uid)}, BreaklistInfoUpdate)
 
       if (result.nModified > 0) {
         return res.json({
