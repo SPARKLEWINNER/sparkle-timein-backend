@@ -1380,23 +1380,41 @@ var controllers = {
 
   },
   get_schedule: async function(req, res) {
-    const { id } = req.params;
+      const { id } = req.params;
 
-    if (!id) {
-      return res.status(400).json({
-        success: false,
-        msg: `Missing fields`,
-      });
-    }
-    const record = await Payroll.find({uid: mongoose.Types.ObjectId(id)}).sort({date: -1})
-      .lean()
-      .exec();
-    res.json(record)
+      if (!id) {
+          return res.status(400).json({
+              success: false,
+              msg: "Missing fields",
+          });
+      }
+
+      // Validate ObjectId format
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+          return res.status(400).json({
+              success: false,
+              msg: "Invalid ID format",
+          });
+      }
+
+      try {
+          const record = await Payroll.find({ uid: mongoose.Types.ObjectId(id) })
+              .sort({ date: -1 })
+              .lean()
+              .exec();
+          
+          res.json(record);
+      } catch (error) {
+          res.status(500).json({
+              success: false,
+              msg: "Server error",
+              error: error.message,
+          });
+      }
   },
     get_schedule_range: async function(req, res) {
     const { id, from, to } = req.body;
 
-    console.log(req.body)
     let records = []
     let personnelName
     let legalHoliday = 0
