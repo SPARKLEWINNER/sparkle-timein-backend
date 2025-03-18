@@ -3961,10 +3961,10 @@ var controllers = {
         msg: `Missing fields`,
       });
     }
-    const now = new Date(`${moment().tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
+    const now = new Date(`${moment(date).tz('Asia/Manila').toISOString(true).substring(0, 23)}Z`);
     now.setUTCHours(0, 0, 0, 0);
     const formattedDate = now.toISOString().replace("Z", "+00:00");
-    const record = await Payroll.find({uid: id, date: date}).sort({date: -1})
+    const record = await Payroll.find({uid: id, date: formattedDate}).sort({date: -1})
       .lean()
       .exec();
     res.json(record)
