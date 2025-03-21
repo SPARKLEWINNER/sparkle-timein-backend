@@ -851,7 +851,7 @@ var controllers = {
         }
 
         if(phone && phone.trim() !== '') {
-          await User.findOne({ phone: phone })
+          await User.findOne({ phone: phone, isArchived: false })
           .then((user) => {
             if (!user)
               return res
@@ -885,7 +885,7 @@ var controllers = {
               msg: "User ID/Phone is required"
             });
           }
-          await User.findOne({ _id: mongoose.Types.ObjectId(id) })
+          await User.findOne({ _id: mongoose.Types.ObjectId(id), isArchived: false })
           .then((user) => {
             if (!user)
               return res
